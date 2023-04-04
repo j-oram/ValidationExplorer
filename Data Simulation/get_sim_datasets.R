@@ -101,7 +101,7 @@ get_props_to_val <- function(x){
   
 }
 
-# Get distinct validation effort scenarios. 
+# Get distinct validation effort scenarios. LOVE = level of validation effort
 LOVEs <- val_efforts %>% select(-theta_cat) %>% distinct()
 
 # Get the matrix with proportions to validate for each species under each 
@@ -127,13 +127,13 @@ get_mDF <- function(props, list_of_dfs){
 # containing the masked datasets under that vetting scenario.
 
 byLOVE <- apply(props_matrix, 1, get_mDF, list_of_dfs = theta1_datasets)
-saveRDS(byLOVE, file = "Simulation data/theta1_masked_datasets.rds")
+#saveRDS(byLOVE, file = "Simulation data/theta1_masked_datasets.rds")
 
 byLOVE2 <- apply(props_matrix, 1, get_mDF, list_of_dfs = theta2_datasets)
-saveRDS(byLOVE2, file = "Simulation data/theta2_masked_datasets.rds")
+#saveRDS(byLOVE2, file = "Simulation data/theta2_masked_datasets.rds")
 
 byLOVE3 <- apply(props_matrix, 1, get_mDF, list_of_dfs = theta3_datasets)
-saveRDS(byLOVE3, file = "Simulation data/theta3_masked_datasets.rds")
+#saveRDS(byLOVE3, file = "Simulation data/theta3_masked_datasets.rds")
 
 
 # To get the masking/validation summary, once masked datasets have been obtained
