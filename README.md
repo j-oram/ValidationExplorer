@@ -6,7 +6,7 @@ This repository contains supplementary files to accompany the manuscript "Verify
 The information is provided on the condition that neither the U.S. Geological Survey nor the U.S. Government shall be
 held liable for any damages resulting from the authorized or unauthorized use of the information.
 
-The files in this repo are organized into three folders: Data simulation, model fitting and simulation, and summary figures. To replicate our simulation study, begin with files in the Data Simulation folder. 
+The files in this repo are organized into three folders: Data simulation, model fitting and simulation, and summary figures. To replicate our simulation study, begin with files in the Data Simulation folder. To "test drive" the simulation study with a smaller number of species and datasets, use the testing folder, described below. 
 
 - Data Simulation: 
   - `get_sim_datasets.R`: This file replicates all datasets simulated under all vetting and classifier scenarios that are described in the main text. Because specific seeds were used in the data simulation, the resulting datasets will be exactly the ones we used in our simulation study. In order to avoid errors, the working directory must have a folder named "Simulation data" within it. Data simulation requires the other files in this folder, described below. Notice that the output is a nested list. The outer layer corresponds with the vetting scenario. Within each of the 'vetting scenario' list elements, there is a list of the 50  dataframes that were output from `mask_by_spp.R` according to that vetting scenario. 
@@ -21,3 +21,8 @@ The files in this repo are organized into three folders: Data simulation, model 
   
 - Summary Figures: 
   - `Appendix_figures.R`: This file contains code to generate the figures contained in the supplementary material (all vetting scenarios, all classifiers). It assumes that an object called `results` has already been read into the global environment. Assuming simulations have run correctly, this can be obtained from the output of `run_sims.r`. 
+  
+- Testing: This is a lightweight version of this repo. All files are configured to be run in their entirety in the 2 spp case. The testing folder contains the following: 
+  - `get_testing_datasets.R`: Analogous to `get_sim_datasets.R` in the Data Simulation folder, but for the two-species case. To test drive this repo, run this file first. 
+  - `run_sims_test.R`: This is the "testing" version of `run_sims.R`. After generating test data, run this file. Fitting all models takes 5-10 minutes.
+  - `simulation` folder: empty directory required to run simulations and save fits. It contains two empty subdirectories for fits and individual summaries. 
