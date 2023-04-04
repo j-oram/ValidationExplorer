@@ -15,7 +15,7 @@ The files in this repo are organized into three folders: Data simulation, model 
   - `simulation_scenarios.R`: A file containing the simulation scenarios that are fed to `mask_by_spp.R` to obtain the masked data. 
   
 - Model Fitting: 
-  - `run_sims.R`: This is the main file in this folder, and it is used for fitting the simulated data obtained by running `get_sim_datasets.R`. It is designed to work with the nested list output from `get_sim_datasets.R`. To save simulation results, the folders Simulation/ThetaX/fits and Simulation/ThetaX/individual_summaries are expected. This function depends on functions contained in `MCMC_sum.R` and `runMCMC_fit.R`. 
+  - `run_sims.R`: This is the main file in this folder, and it is used for fitting the simulated data obtained by running `get_sim_datasets.R`. It is designed to work with the nested list output from `get_sim_datasets.R`. To save simulation results, the folders Simulation/ThetaX/fits and Simulation/ThetaX/individual_summaries are expected (X = 1,2,3). This function depends on functions contained in `MCMC_sum.R` and `runMCMC_fit.R`. 
   - `MCMC_sum.R`: Functions for summarizing MCMC output. 
   - `runMCMC_fit`: This file automates the NIMBLE workflow of defining inits functions, configuring and compiling modesl and MCMC and then running chains. Notice that by default, the number of chains is set to 1 because this is used to parallelize model fitting in `run_sims.R`. 
   
