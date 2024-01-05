@@ -36,7 +36,7 @@ mask_spp2 <- function(data, props_to_val){
     ) 
   ) %>% arrange(call)
   
-  # Compute a summary of the maske dataset (good check to make sure masking is 
+  # Compute a summary of the masked dataset (good check to make sure masking is 
   # working as expected) 
   data_summary <- final_df %>% 
     group_by(id_spp) %>% 

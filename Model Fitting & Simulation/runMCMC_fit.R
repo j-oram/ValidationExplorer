@@ -12,7 +12,7 @@
 # alpha0 = vector of length n_spp that controls priors on classification pars
 # inits = initial values for all other pars
 
-runMCMC_fit <- function(seed = 1, code, data, lambda_init, constants, alpha0, inits, 
+runMCMC_fit <- function(seed = 1, code, data, lambda_init, constants,
                         nchains = 1, niter = 20000, nburn = 12000, thin = 8){
   
   library(nimble)
@@ -23,8 +23,9 @@ runMCMC_fit <- function(seed = 1, code, data, lambda_init, constants, alpha0, in
     out <- list(
       psi = runif(constants$nspecies),
       lambda = unlist(lambda_init),
-      theta = t(apply(alpha0, 1, function(x) rdirch(1,x))),
-      z = matrix(1, nrow = constants$nsites, ncol = constants$nspecies)
+      theta = t(apply(data$alpha0, 1, function(x) rdirch(1,x))),
+      z = matrix(1, nrow = constants$nsites, ncol = constants$nspecies), 
+      k = data$y
     )
     
     return(out)
@@ -32,7 +33,7 @@ runMCMC_fit <- function(seed = 1, code, data, lambda_init, constants, alpha0, in
   }
   
   
-  disag_model <- nimbleModel(code = code, constants = constants, data = data)
+  disag_model <- nimbleModel(code = code, constants = constants, data = data, inits = inits_fun())
   model_c <- compileNimble(disag_model)
   model_conf <- configureMCMC(disag_model)
   mcmc <- buildMCMC(model_conf)

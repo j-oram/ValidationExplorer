@@ -91,4 +91,4 @@ byLOVE <- apply(props_matrix, 1, get_mDF, list_of_dfs = testing_datasets)
 
 # Save simulated data
 saveRDS(byLOVE, file = "Testing/masked_test_dfs.rds")
-
+rm(list = ls())

@@ -1,7 +1,10 @@
 library(nimble)
 library(tidyverse)
 
-# rds objects
+# convenience
+options(dplyr.summarise.inform = FALSE)
+
+# rds objects -- these are the result of runing Testing/get_testing_datasets.R
 test_data_list <- readRDS("Testing/masked_test_dfs.rds") 
 test_zeros_list <- readRDS("Testing/test_zeros_list.rds") 
 test_DGVs <- readRDS("Testing/test_DGVs.rds") 
@@ -10,24 +13,10 @@ test_DGVs <- readRDS("Testing/test_DGVs.rds")
 source("Model Fitting & Simulation/runMCMC_fit.R")
 source("Model Fitting & Simulation/MCMC_sum.R")
 
-inits_fun <- function(){
-  
-  out <- list(
-    psi = runif(constants$nspecies, min = 0.1, max = .5),
-    lambda = abs(rnorm(constants$nspecies, mean = 0, sd = 10)),
-    theta = t(apply(alpha0, 1, function(x) rdirch(1,x))),
-    z = matrix(1, nrow = constants$nsites, ncol = constants$nspecies)
-  )
-  
-  return(out)
-  
-}
-
-# convenience
-options(dplyr.summarise.inform = FALSE)
 
 # simulation function
-run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id, parallel = TRUE) {
+run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id, 
+                     init_lambda_near_naive = TRUE, parallel = FALSE) {
   
   # housekeeping
   ndatasets <- length(data_list[[1]])
@@ -111,7 +100,7 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id, parallel = 
       nimble_data <- list(
         y = df7$id_spp,
         k = df7$true_spp,
-        alpha0 = matrix(0.2,
+        alpha0 = matrix(1/constants$nspecies,
                         nrow = n_distinct(df7$id_spp),
                         ncol = n_distinct(df7$id_spp)),
         
@@ -133,41 +122,49 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id, parallel = 
       # # Number of columns will need to change with number of visits. 
       nimble_data$L. <- nimble_data$L.[,2:5]
       
-      alpha0 <- matrix(.5, length(unique(df8$id_spp)), length(unique(df8$id_spp)))
+      # alpha0 <- matrix(1/constants$nspecies, length(unique(df8$id_spp)), length(unique(df8$id_spp)))
       
-      lambda_init <- rep(-1,5)
-      naive_lambda <- as.data.frame(df8) %>% 
-        group_by(site, visit, id_spp, z) %>% 
-        summarize(n = n()) %>% 
-        filter(z ==1) %>% 
-        ungroup() %>% 
-        group_by(id_spp) %>% 
-        summarise(naive_lam = mean(n)) %>% 
-        select(naive_lam)
       
-      while(any(lambda_init < 0)) lambda_init <- naive_lambda + rnorm(5)
+      if(init_lambda_near_naive == TRUE){
+        
+        lambda_init <- rep(-1,5)
+        naive_lambda <- as.data.frame(df8) %>% 
+          group_by(site, visit, id_spp, z) %>% 
+          summarize(n = n()) %>% 
+          filter(z ==1) %>% 
+          ungroup() %>% 
+          group_by(id_spp) %>% 
+          summarise(naive_lam = mean(n)) %>% 
+          select(naive_lam)
+        
+        while(any(lambda_init < 0)) lambda_init <- naive_lambda + rnorm(5)
+        
+      } else {
+        
+        lambda_init <- abs(rnorm(constants$nspecies, mean = 0, sd = 10))
+        
+      }
+      
       
       if(parallel){
         
         library(parallel)
         this_cluster <- makeCluster(3)
         fit <- parLapply(cl = this_cluster, 
-                                  X = 1:3, 
-                                  fun = runMCMC_fit, 
-                                  code = code,
-                                  data = nimble_data,  
-                                  constants = constants, 
-                                  inits = inits_fun,
-                                  lambda_init = lambda_init,
-                                  alpha0 = alpha0
-        )
+                         X = 1:3, 
+                         fun = runMCMC_fit, 
+                         code = code,
+                         data = nimble_data,  
+                         constants = constants, 
+                         lambda_init = lambda_init,
+                         alpha0 = alpha0)
+        
         stopCluster(this_cluster)
         
       } else {
         
-        fit <- runMCMC_fit(code = code, data = nimble_data, 
-                                    constants = constants, alpha0 = alpha0, 
-                                    inits = inits_fun, nchains = 3, seed = 1:3)
+        fit <- runMCMC_fit(code = code, data = nimble_data, constants = constants, 
+                           lambda_init = lambda_init, nchains = 3, seed = 1:3)
         
       }
       
@@ -216,3 +213,4 @@ theta_scenario_1 <- run_sims(
 )
 
 saveRDS(theta_scenario_1, "Testing/simulation/theta_scenario_1.rds") # This is the 'results' object used for visualization
+rm(list = ls())
