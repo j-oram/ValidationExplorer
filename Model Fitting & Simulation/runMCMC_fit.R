@@ -20,9 +20,15 @@ runMCMC_fit <- function(seed = 1, code, data, lambda_init, constants,
   
   inits_fun <- function(){
     
+    if (!is.null(lambda_init)){
+      lambda <- unlist(lambda_init)
+    } else {
+      lambda <- abs(rnorm(constants$nspecies, sd = 10))
+    }
+    
     out <- list(
       psi = runif(constants$nspecies),
-      lambda = unlist(lambda_init),
+      lambda = lambda,
       theta = t(apply(data$alpha0, 1, function(x) rdirch(1,x))),
       z = matrix(1, nrow = constants$nsites, ncol = constants$nspecies), 
       k = data$y

@@ -28,7 +28,7 @@ for(i in 1:n_datasets){
                   theta = theta1)$full_df
   
   # L. = total calls at each site-visit (notation from Spiers et el., 2022).
-  df6 <- data %>% group_by(site, visit) %>% mutate(L. = sum(count)) 
+  df6 <- data %>% group_by(site, visit) %>% mutate(Y. = sum(count)) 
   
   # Disaggregated count detection data gets stored in ith entry of the 
   # theta1_datasets list
@@ -54,7 +54,7 @@ for(i in 1:n_datasets){
                   seed = i,
                   theta = theta2)$full_df
   
-  df6 <- data %>% group_by(site, visit) %>% mutate(L. = sum(count))
+  df6 <- data %>% group_by(site, visit) %>% mutate(Y. = sum(count))
   theta2_datasets[[i]] <- df6 %>% uncount(., weights = count, .remove = FALSE)
   theta2_noCounts[[i]] <- df6 %>% filter(count == 0)
   
@@ -74,7 +74,7 @@ for(i in 1:n_datasets){
                   seed = i,
                   theta = theta3)$full_df
   
-  df6 <- data %>% group_by(site, visit) %>% mutate(L. = sum(count))
+  df6 <- data %>% group_by(site, visit) %>% mutate(Y. = sum(count))
   theta3_datasets[[i]] <- df6 %>% uncount(., weights = count, .remove = FALSE)
   theta3_noCounts[[i]] <- df6 %>% filter(count == 0)
 }

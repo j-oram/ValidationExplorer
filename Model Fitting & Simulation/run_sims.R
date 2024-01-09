@@ -20,8 +20,11 @@ library(tidyverse)
 source("runMCMC_fit.r")
 source("MCMC_sum.r")
 
-run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id, parallel = TRUE, 
-                     niter = 20000, nburn = 12000, thin = 8) {
+run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id, 
+                     parallel = TRUE, initialize_lambda_near_naive_val = FALSE,
+                     niter = 2000, nburn = floor(niter/2), thin = 1, 
+                     save_fits = FALSE,
+                     save_individual_summaries_list,) {
   
   # housekeeping
   ndatasets <- length(data_list[[1]])
@@ -42,9 +45,9 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id, parallel = 
     # progress
     pb <- txtProgressBar(min = 0, max = ndatasets, style = 3, width = 50, char = "=")
     for(dataset in 1:ndatasets){
-      df7 <- data_list[[scenario]][[dataset]]
+      observed_df <- data_list[[scenario]][[dataset]] # was df7
       zeros <- zeros_list[[dataset]]
-      df8 <- bind_rows(df7, zeros) %>% arrange(site, visit, true_spp, id_spp)
+      all_sites_and_visits <- bind_rows(observed_df, zeros) %>% arrange(site, visit, true_spp, id_spp) # was df8
       
       ## NIMBLE --------- 
       
@@ -94,57 +97,63 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id, parallel = 
       
       # values passed to Nimble for indexing.
       constants <- list(
-        site = df7$site, # Only sites where at least one call was made
-        nspecies = n_distinct(df7$id_spp),
-        nvisits = 4,
-        nsites = n_distinct(df8$site), # we want to have a value for all possible site, even if that val is 0
-        total_calls = nrow(df7)
+        site = observed_df$site, # Only sites where at least one call was made
+        nspecies = n_distinct(observed_df$id_spp),
+        nvisits = n_distinct(observed_df$visit),
+        nsites = n_distinct(all_sites_and_visits$site), # we want to have a value for all possible site, even if that val is 0
+        total_calls = nrow(observed_df) # each row is a distinct recording
       )
       
       # y = observed autoID, k = partially-observed true spp label
       # alpha0 = reference distance prior specification for classification pars
       # Y. = total number of calls observed (all spp) at each site-visit
       nimble_data <- list(
-        y = df7$id_spp,
-        k = df7$true_spp,
-        alpha0 = matrix(0.2,
-                        nrow = n_distinct(df7$id_spp),
-                        ncol = n_distinct(df7$id_spp)),
+        y = observed_df$id_spp,
+        k = observed_df$true_spp,
+        alpha0 = matrix(1/constants$nspecies,
+                        nrow = n_distinct(observed_df$id_spp),
+                        ncol = n_distinct(observed_df$id_spp)),
         
-        # Define Y. based on all site-visits, even if it had no calls
-        Y. = bind_rows(df7, zeros) %>% 
+        # Define Y._matrix based on all site-visits, even if it had no calls. The 
+        # matrix is nsites x nvisits in dimension.
+        Y._mat = bind_rows(observed_df, zeros) %>% 
           arrange(site, visit, true_spp, id_spp) %>% 
           group_by(site, visit) %>%
-          summarize(total = unique(L.)) %>% # L. = leftover notation from Spiers et al., (2022)
+          summarize(total = unique(Y.)) %>%
           pivot_wider(
             names_from = visit,
             names_prefix = "visit",
             values_from = total,
             values_fill = 0 # if NA, turn into a 0, since the NA is due to no calls being detected at that site-visit
           ) %>%
+          ungroup() %>% 
+          select(-site) %>% 
           as.matrix()
       )
       
-      # correct the dimensions: drop the extra column for site "grouping variable" 
-      # Number of columns will need to change with number of visits. 
-      nimble_data$Y. <- nimble_data$Y.[,2:5]
       
-      alpha0 <- matrix(.2, length(unique(df8$id_spp)), length(unique(df8$id_spp)))
-      df <- as.data.frame(df7)
+      if(initialize_lambda_near_naive_val == TRUE){
+        
+        # randomly initialize lambda values near the observed autoID count for each spp
+        # at each site-visit
+        lambda_init <- rep(-1,5)
+        naive_lambda <- as.data.frame(df) %>% 
+          group_by(site, visit, id_spp, z) %>% 
+          summarize(n = n()) %>% 
+          filter(z == 1) %>% 
+          ungroup() %>% 
+          group_by(id_spp) %>% 
+          summarise(naive_lam = mean(n)) %>% 
+          select(naive_lam)
+        
+        while(any(lambda_init < 0)) lambda_init <- naive_lambda + rnorm(constants$nspecies)
+        
+      } else {
+        
+        lambda_init <- NULL
+        
+      }
       
-      # randomly initialize lambda values near the observed autoID count for each spp
-      # at each site-visit
-      lambda_init <- rep(-1,5)
-      naive_lambda <- as.data.frame(df) %>% 
-        group_by(site, visit, id_spp, z) %>% 
-        summarize(n = n()) %>% 
-        filter(z ==1) %>% 
-        ungroup() %>% 
-        group_by(id_spp) %>% 
-        summarise(naive_lam = mean(n)) %>% 
-        select(naive_lam)
-      
-      while(any(lambda_init < 0)) lambda_init <- naive_lambda + rnorm(5)
       
       if(parallel){
         
@@ -157,8 +166,6 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id, parallel = 
                          data = nimble_data, 
                          lambda_init = lambda_init, 
                          constants = constants, 
-                         inits = inits_fun,
-                         alpha0 = alpha0, 
                          niter = niter,
                          nburn = nburn, 
                          thin = thin
@@ -167,16 +174,23 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id, parallel = 
         
       } else {
         
-        fit <- runMCMC_fit(code = code, df = df7, data = nimble_data, 
-                           constants = constants, alpha0 = alpha0, 
-                           inits = inits_fun, nchains = 3, 
-                           niter = niter, nburn = nburn, thin = thin, seed = 1:3)
+        fit <- runMCMC_fit(code = code, 
+                           data = nimble_data, 
+                           constants = constants,
+                           nchains = 3, 
+                           niter = niter, 
+                           nburn = nburn, 
+                           thin = thin, 
+                           seed = 1:3)
         
       }
       
+      if (save_fits == TRUE){
+        
+        saveRDS(fit, paste0(directory, "/Theta", theta_scenario_id,"/fits/fit_", scenario, "_", dataset, ".rds"))
+        
+      }
       
-      # save fit
-      saveRDS(fit, paste0("Simulation/Theta", theta_scenario_id,"/fits/fit_", scenario, "_", dataset, ".rds"))
       
       # summarize fit
       scenario_tmp <- scenario
@@ -191,21 +205,27 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id, parallel = 
         )
       individual_summaries_list[[dataset]] <- fit_summary
       
-      # output individual summary list for each dataset
-      saveRDS(individual_summaries_list, paste0("Simulation/Theta", theta_scenario_id,"/individual_summaries/list_", scenario, ".rds"))
+      if (save_individual_summaries_list == TRUE){
+        
+        saveRDS(individual_summaries_list, paste0(directory, "/Theta", theta_scenario_id,"/individual_summaries/list_", scenario, ".rds"))
+        
+      }
       
       # increment progress bar
       setTxtProgressBar(pb, dataset)
     }
     close(pb)
     
-    # individual summary df after all datasets have been fit and summarized
+    # summary df for the entire scenario after all datasets have been fit and summarized
     individual_summary_df <- do.call("bind_rows", individual_summaries_list)
-    saveRDS(individual_summary_df, paste0("Simulation/Theta", theta_scenario_id,"/individual_summaries/df_", scenario, ".rds"))
+    individual_summary_df$scenario <- scenario
+    individual_summary_df$theta_scenario <- theta_scenario_id
+    
+    saveRDS(individual_summary_df, paste0(directory, "/Theta", theta_scenario_id,"/summary_df_for_scenario_", scenario, ".rds"))
     
     big_list[[scenario]] <- individual_summary_df
   }
   
-  out <- do.call("bind_rows", big_list) # bind summary dfs for all scenarios into big df
+  out <- do.call("bind_rows", big_list) # bind summary dfs for all scenarios into big df (all scenarios, all datasets)
   return(out)
 }
