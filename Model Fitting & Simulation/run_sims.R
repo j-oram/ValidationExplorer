@@ -24,7 +24,8 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
                      parallel = TRUE, initialize_lambda_near_naive_val = FALSE,
                      niter = 2000, nburn = floor(niter/2), thin = 1, 
                      save_fits = FALSE,
-                     save_individual_summaries_list,) {
+                     save_individual_summaries_list = FALSE, 
+                     directory = here::here()) {
   
   # housekeeping
   ndatasets <- length(data_list[[1]])
@@ -77,7 +78,7 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
         for(i in 1:nsites){
           for(j in 1:nvisits){
             
-            Y.[i,j] ~ dpois(sum(z[i,1:nspecies] * lambda[1:nspecies])) # Total number of calls from all spp
+            Y._mat[i,j] ~ dpois(sum(z[i,1:nspecies] * lambda[1:nspecies])) # Total number of calls from all spp
             
           }
         }
@@ -177,6 +178,7 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
         fit <- runMCMC_fit(code = code, 
                            data = nimble_data, 
                            constants = constants,
+                           lambda_init = lambda_init,
                            nchains = 3, 
                            niter = niter, 
                            nburn = nburn, 

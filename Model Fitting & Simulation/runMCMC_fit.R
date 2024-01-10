@@ -30,8 +30,7 @@ runMCMC_fit <- function(seed = 1, code, data, lambda_init, constants,
       psi = runif(constants$nspecies),
       lambda = lambda,
       theta = t(apply(data$alpha0, 1, function(x) rdirch(1,x))),
-      z = matrix(1, nrow = constants$nsites, ncol = constants$nspecies), 
-      k = data$y
+      z = matrix(1, nrow = constants$nsites, ncol = constants$nspecies)
     )
     
     return(out)
