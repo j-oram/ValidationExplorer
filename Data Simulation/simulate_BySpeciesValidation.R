@@ -21,7 +21,7 @@ simulate_BySpeciesValidation <- function(n_datasets,
       
       # sim_dat simulates from the (aggregated) count-detection model as specified in 
       # Stratton et al., (2022). To obtain the disaggregated dataset, we use 
-      # tidyr::uncount 
+      # tidyr::uncount below
       aggregate_CD <- sim_dat(nsites = nsites,
                       nspecies = nspecies,
                       nvisits = nvisits,
