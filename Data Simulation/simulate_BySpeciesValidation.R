@@ -1,3 +1,61 @@
+## Function for simulating data using a stratified-by-species validation design. 
+# For more details, see Vignette.pdf in this repo! 
+
+# ====================== Inputs ========================== #
+#
+# n_datasets: the number of datasets you would like to have simulated. Each of these 
+# simulated datasets will be subjected to all validation designs specified in the scenarios_dataframe
+#
+# scenarios_dataframe: a dataframe with each row corresponding to a specific validation scenario. The 
+# columns contain the level of effort for each autoID label. See vignette for an example.
+# 
+# nsites: number of sites in each dataset
+#
+# nspecies: size of the species assemblage
+#
+# nvisits: the number of visits to each site. Note that these simulations assume a balanced design.
+#
+# psi: a vector of length nspecies with the assumed occurrence probabilities for each species
+# 
+# lambda: a vector of length nspecies with the assumed relative activity levels for each species. 
+# Make sure the order is correct and matches psi. 
+#
+# theta: a matrix containing the (mis)classification probabilities. The rows of this matrix must sum
+# to 1. See vignette for an example.
+# 
+# save_datasets: logical. If TRUE (default), the datasets without any masking of true species labels (i.e., 
+# corresponding to complete validation of all recordings) will be saved. 
+# 
+# save_masked_datasets: logical. If TRUE (default), the masked datasets (i.e., the simulated datasets with 
+# partial validation according to the simulation scenario) will be saved. This means that there will be 
+# n_datasets x nrow(scenarios_dataframe) datasets saved: one for each dataset under each validation scenario.
+#
+# directory: character. Required if save_datasets = TRUE or save_masked_datasets = TRUE. This is where the 
+# datasets will be saved. By default, the current working directory (i.e., here::here()) will be used.
+
+# ====================== Output ========================== # 
+
+# The output of this function is a list containing the following items: 
+# 
+# full_datasets: A list of length n_datasets with unmasked datasets (i.e., full validation of all recordings).
+# If `save_datasets = TRUE`, then these will be saved individually in `directory` as dataset_n.rds, where n 
+# is the dataset number.
+#
+# zeros: A list of length n_datasets containing all of the site-visits where no recordings of a certain 
+# classification were observed. For example, if, in dataset 10, there were no calls from species 1 that were 
+# classified as  3 on visit 4 to site 156, then the 10th entry of this list would contain a dataset with 
+# a row corresponding tosite = 156, visit = 4, true_spp = 1, id_spp = 3, with count = 0. These zeros are 
+# necessary for housekeeping in the model-fitting process. If `save_datasets = TRUE`, the zeros for each 
+# each dataset will be saved in `directory` individually as site_visits_without_calls_in_dataset_n.rds, where
+# n is the dataset number.
+#
+# masked_dfs: A nested list containing each dataset masked under each scenario. masked_dfs[[9]][[27]] contains
+# dataset 27, assuming validation scenario 9. If `save_masked_datasets = TRUE`, then each dataset/scenario 
+# scenario combination is saved individually in `directory` as dataset_n_masked_under_scenario_s.rds, 
+# where n is the dataset number and s is the scenario number. 
+
+
+
 simulate_BySpeciesValidation <- function(n_datasets, 
                                          scenarios_dataframe, 
                                          nsites, 
