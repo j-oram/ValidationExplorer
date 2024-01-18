@@ -1,0 +1,31 @@
+---
+title: "Vignette: How to simulate and fit data with stratified-by-species sampling
+  for validation"
+author: "Jacob Oram"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction 
+
+## Conducting your own simulation study
+
+### Step 1: Clone this repo
+
+### Step 2: Set up your working directory
+
+### Step 3: Simulate data 
+
+### Step 4: Fit the data 
+
+### Step 5: Visualize parameters 
+
+## Using saved datasets and model fits 
+
+```{r}
+here::here()
+```
