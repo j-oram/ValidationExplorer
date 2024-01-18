@@ -57,11 +57,16 @@ In the course of the simulation study, several objects are saved:
 - individual summaries for one dataset/validation scenario combination (optional)
 - overall summaries for each validation scenario (always saved)
 
-Functions that save any part of the simulation require a `directory` argument be specified. If you choose to save model fits or individual summaries, our simulation functions expect your working directory to contain the folders `your/working/directory/ThetaID/fits` and `your/working/directory/ThetaID/individual_summaries`, where `ID` is replaced with the classifier scenario ID. Visually, this file structure should appear as  follows: 
+Functions that save any part of the simulation require a `directory` argument be specified. If you choose to save model fits or individual summaries, our simulation functions expect your working directory to contain the folders 
+
+- `PathToYourWorkingDirectory/ThetaID/fits` 
+- `PathToYourWorkingDirectory/ThetaID/individual_summaries` 
+
+Above,  `PathToYourWorkingDirectory` is replaced with the file path to your working directory (e.g. `~/Documents` for the local Documents folder on Mac) and `ID` is replaced with the classifier scenario ID. Visually, this file structure should appear as  follows: 
 
 ```{=latex}
 \begin{itemize}
- \item Your working directory
+ \item YourWorkingDirectory
  \begin{itemize}
     \item ThetaID
     \begin{itemize}
@@ -72,7 +77,7 @@ Functions that save any part of the simulation require a `directory` argument be
 \end{itemize}
 ```
 
-The Testing folder in this repo provides an example. Here, we use numbers for the classifier scenarios. The first scenario has `ID=1`, giving the paths to the necessary directories  `your/working/directory/Testing/Theta1/fits` and `your/working/directory/Testing/Theta1/individual_summaries`. 
+See the Testing folder in this repo for an example. Here, we use numbers for the classifier scenarios. The first scenario has `ID=1`, giving the paths to the necessary directories  `your/working/directory/Testing/Theta1/fits` and `your/working/directory/Testing/Theta1/individual_summaries`. 
 
 ### Step 3: Simulate data 
 
