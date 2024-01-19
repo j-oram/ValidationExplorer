@@ -26,9 +26,7 @@ visualize_parameter_group <- function(sim_summary,
                                       pars, 
                                       theta_scenario, 
                                       scenarios, 
-                                      convergence_threshold = 1.1,
-                                      scales = NULL,
-                                      save_plot = FALSE){
+                                      convergence_threshold = 1.1){
   results <- sim_summary %>% 
     mutate(
       below_threshold = ifelse(round(Rhat, 4) <= convergence_threshold, 1, 0)
@@ -100,9 +98,7 @@ visualize_single_parameter <- function(sim_summary,
                                        par, 
                                        theta_scenario, 
                                        scenarios, 
-                                       convergence_threshold = 1.1,
-                                       scales = NULL,
-                                       save_plot = FALSE){
+                                       convergence_threshold = 1.1){
   results <- sim_summary %>% 
     mutate(
       below_threshold = ifelse(round(Rhat, 4) <= convergence_threshold, 1, 0)
