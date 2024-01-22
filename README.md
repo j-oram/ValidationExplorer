@@ -15,7 +15,7 @@ The files in this repo are organized into three folders: Data simulation, model 
   - `simulation_scenarios.R`: A file containing the simulation scenarios that are fed to `mask_by_spp.R` to obtain the masked data used in the main text.
   - `get_sim_datasets.R`: This file replicates all datasets simulated under all validation and classifier scenarios that are described in the main text. Because specific seeds were used in the data simulation, the resulting datasets will be exactly the ones we used in our simulation study. In order to avoid errors, the working directory must have a folder named "Simulation data" within it. Data simulation requires the other files in this folder, described below. Notice that the output is a nested list. The outer layer corresponds with the vetting scenario. Within each of the 'vetting scenario' list elements, there is a list of the 50  dataframes that were output from `mask_by_spp.R` according to that vetting scenario. 
   
-- Model Fitting: 
+- Model Fitting & Simulation: 
   - `run_sims.R`: This is the main file in this folder, and it is used for fitting the simulated data obtained by running `simulate_BySpeciesValidation.R`.  Note: to save simulation results, the folders /ThetaX/fits and /ThetaX/individual_summaries are expected (X is the classifier scenario ID). This function depends on functions contained in `MCMC_sum.R` and `runMCMC_fit.R`. For an example of how to use this function, see the vignette.
   - `MCMC_sum.R`: Functions for summarizing MCMC output. 
   - `runMCMC_fit`: This file automates the NIMBLE workflow of defining inits functions, configuring and compiling models and MCMC and then running chains. Notice that by default, the number of chains is set to 1 because this is used to parallelize model fitting in `run_sims.R`. 
@@ -24,7 +24,5 @@ The files in this repo are organized into three folders: Data simulation, model 
   - `visualize_sims.R`: This script contains two wrapper functions that can visualize the simulation output from `run_sims.R`. See the pdf vignette for an example of how to use these.  
   - `Appendix_figures.R`: This file contains code to generate the figures contained in the supplementary material (all validation scenarios, all classifiers). It assumes that an object called `results` has already been read into the global environment. Assuming simulations have run correctly, this can be obtained from the output of `run_sims.r`. 
   
-- Testing: This is a lightweight version of this repo. All files are configured to be run in their entirety in the 2 spp case. The testing folder contains the following: 
-  - `get_testing_datasets.R`: Analogous to `get_sim_datasets.R` in the Data Simulation folder, but for the two-species case. To test drive this repo, run this file first. 
-  - `run_sims_test.R`: This is the "testing" version of `run_sims.R`. After generating test data, run this file. Fitting all models takes 5-10 minutes.
-  - `simulation` folder: empty directory required to run simulations and save fits. It contains two empty subdirectories for fits and individual summaries. 
+- Testing: This is an empty directory with the requisite file structure for testing.  lightweight version of this repo. All files are configured to be run in their entirety in the 2 spp case. The testing folder contains blank text files called placeHold.txt to hold the file structure. These can be ignored. 
+  
