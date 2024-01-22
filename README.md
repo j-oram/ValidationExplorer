@@ -6,7 +6,7 @@ This repository contains supplementary files to accompany the manuscript "Invest
 The information is provided on the condition that neither the U.S. Geological Survey nor the U.S. Government shall be
 held liable for any damages resulting from the authorized or unauthorized use of the information.
 
-To familiarize yourself with the contents of the repo, see the description below. For instructions on how to use the code, see the pdf version of the vignette. You can follow along (or conduct an entire simulation study by running `runall.R`
+To familiarize yourself with the contents of the repo, see the description below. For instructions on how to use the code, see the pdf version of the vignette. You can follow along (or conduct an entire simulation study) by running `runall.R`
 
 The files in this repo are organized into three folders: Data simulation, model fitting and simulation, and summary figures. To replicate our simulation study, begin with files in the Data Simulation folder. To "test drive" the simulation study with a smaller number of species and datasets, use the testing folder, described below. 
 
