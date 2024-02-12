@@ -6,7 +6,28 @@ This repository contains supplementary files to accompany the manuscript "Invest
 The information is provided on the condition that neither the U.S. Geological Survey nor the U.S. Government shall be
 held liable for any damages resulting from the authorized or unauthorized use of the information.
 
-To familiarize yourself with the contents of the repo, see the description below. For instructions on how to use the code, see the pdf version of the vignette. You can follow along (or conduct an entire simulation study) by running `runall.R`
+## Getting started 
+
+To get started with this repo, follow these steps: 
+
+1. Clone the repo from GitHub. You can do this by following these substeps:
+  - On GitHub, click on the green "Code" button and copy the repo URL.
+  ![repo URL](pngs/URL.png)
+  - Open RStudio on your computer then in the top right corner clicking on "Project: (None)"
+  !["Project: (None)""](pngs/project.png)
+  - Selecting New Project > Version Control > Git. 
+  - Paste the repo URL.
+  - Name the directory.
+  - Set the location where you'd like to set the project as a subdirectory. 
+  - Click "Create Project".
+
+2. When cloning is complete, run `runall.R`, which conducts an entire small-scale simulation study. You can expect this to take approximately 2-3 minutes.
+3. Knit `vignette.Rmd` and read this document to see how the code in this repo holds together.
+
+To familiarize yourself with the contents of the repo, see the description of contents below.
+
+
+## Contents 
 
 The files in this repo are organized into three folders: Data simulation, model fitting and simulation, and summary figures. To replicate our simulation study, begin with files in the Data Simulation folder. To "test drive" the simulation study with a smaller number of species and datasets, use the testing folder, described below. 
 
@@ -26,5 +47,5 @@ The files in this repo are organized into three folders: Data simulation, model 
   - `visualize_sims.R`: This script contains two wrapper functions that can visualize the simulation output from `run_sims.R`. See the pdf vignette for an example of how to use these.  
   - `Appendix_figures.R`: This file contains code to generate the figures contained in the supplementary material (all validation scenarios, all classifiers). It assumes that an object called `results` has already been read into the global environment. Assuming simulations have run correctly, this can be obtained from the output of `run_sims.r`. 
   
-- Testing: This is an empty directory with the requisite file structure for testing.  lightweight version of this repo. All files are configured to be run in their entirety in the 2 spp case. The testing folder contains blank text files called placeHold.txt to hold the file structure. These can be ignored. 
+- Testing: This is an empty directory with the requisite file structure for testing. The testing folder contains blank text files called placeHold.txt to hold the file structure. These can be ignored.  After running `runall.R` this directory will contain the full datasets, masked datasets, and site-visit-true-autoID combinations with counts of zero for each simulated dataset. 
   
