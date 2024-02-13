@@ -1,4 +1,10 @@
-# Test 
+# This script runs an entire miniature simulation study with 2 datasets 
+# from a two species assemblage masked under 4 different validation scenarios. 
+# In addition of serving as an example about how one would use the functions in 
+# this repo to conduct a simulation study, the output from this script is required
+# to knit the vignette.Rmd file. See this file for more detailed instructions on 
+# how to use these functions. 
+
 library(tidyverse)
 library(nimble) 
 
@@ -15,10 +21,11 @@ fake_data <- simulate_BySpeciesValidation(n_datasets = 2,
                              save_datasets = FALSE, 
                              save_masked_datasets = FALSE, directory = paste0(here::here(), "/Testing"))
 
+# This line will take 2-4 minutes to run depending on machine capacity
 sims_output <- run_sims(data_list = fake_data$masked_dfs, zeros_list = fake_data$zeros, 
          DGVs = list(lambda = c(4,13), psi = c(.8, .35), theta = test_theta), 
          theta_scenario_id = 1, parallel = TRUE, 
-         save_fits = FALSE, 
+         save_fits = TRUE, 
          save_individual_summaries_list = FALSE, 
          directory = paste0(here::here(), "/Testing"))
 

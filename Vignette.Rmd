@@ -8,13 +8,17 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+theme_set(theme_bw())
 ```
 
 ## Overview 
 
 This document accompanies the manuscript "Investigation into stratified-by-species validation of species labels for acoustic surveys", so that the reader may conduct similar simulations on their own. The manuscript provides a complete example analysis; here, we focus on the mechanics of setting up and running the necessary code to recreate the simulation study and explore alternative validation designs for different species assemblages. 
 
-__[A brief paragraph or two describing the necessary terms and key workflow attributes for this vignette to make sense.]__
+### Background 
+
+The simulations we describe here and in the main manuscript are designed to explore the implications of using a stratified-by-species design to validate acoustic recordings that have already been classified by automated software algorithms. This simulation assumes an individual-level version of the count-detection model (as described in Section 2 of the main manuscript). Validation designs are determined by the proportion of calls with a given autoID label that are manually reviewed by human experts to determine the true species labels. These true species labels are assumed to be error free. The goal of the simulations described here is to explore how the level of effort assigned to each species may change posterior inference for a species assemblage of interest. The inputs for the simulations are the species assemblage, the classifier scenario, and the validation scenarios. The outputs are a summary dataframe for all datasets under all classifiers and scenarios; optionally, you may also save the raw summaries and draws from the fitted model. We describe how to set up these simulations below. 
 
 ## Conducting your own simulation study
 
@@ -28,6 +32,8 @@ After cloning this repo, the next step is loading the necessary packages in R. T
 - `rstan`
 - `parallel`
 - `here`
+- `viridis`
+- `bayesplot` (optional)
 
 If you do not have one or more of these packages installed, run the following, with the name of the missing package in place of `your_package_name_here`: 
 
@@ -99,7 +105,9 @@ nsites <- 100
 nvisits <- 4
 ```
 
-The data simulation function also requires that we define the classifier and validation scenarios to be used in the simulations. To define a classifier, you can manually enter a matrix:
+The data simulation function also requires that we define the classifier and validation scenarios to be used in the simulations. Here, the classifier is encoded as a matrix with rows corresponding to the true species that generated the call, and columns corresponding to the assigned autoID label. Thus the $i,j^\text{th}$ entry of the matrix (denoted $\theta_{ij}$) is the probability that species $i$ is classified as species $j.$ In `test_theta1` below, the probability that species 2 is classified as species 1 is 0.1, and the probability that species 3 is correctly classified as species 3 is 0.95. 
+
+To define a classifier, you can manually enter a matrix:
 
 ```{r}
 test_theta1 <- matrix(c(0.9, 0.05, 0.05,
@@ -153,7 +161,7 @@ To see what is available, we can investigate `fake_data`. The output is a list, 
 If `save_datasets = TRUE`, then these will be saved individually in `directory` as dataset_n.rds, where n 
 is the dataset number.
 - `zeros`: A list of length `n_datasets` containing all of the site-visits where no recordings of a certain classification were observed. For example, if, in dataset 10, there were no calls from species 1 that were classified as  3 on visit 4 to site 156, then the 10th entry of this list would contain a dataset with a row corresponding to site = 156, visit = 4, true_spp = 1, id_spp = 3, with count = 0. These zeros are necessary for housekeeping in the model-fitting process. If `save_datasets = TRUE`, the zeros for each dataset will be saved in `directory` individually as site_visits_without_calls_in_dataset_n.rds, where n is the dataset number.
-- `masked_dfs`: A nested list containing each dataset masked under each scenario. `masked_dfs[[9]][[27]]` contains dataset 27, assuming validation scenario 9. If `save_masked_datasets = TRUE`, then each dataset/scenario combination is saved individually in `directory` as 
+- `masked_dfs`: A nested list containing each dataset masked under each scenario. For example, `masked_dfs[[9]][[27]]` contains dataset 27, assuming validation scenario 9. If `save_masked_datasets = TRUE`, then each dataset/scenario combination is saved individually in `directory` as 
 dataset_n_masked_under_scenario_s.rds, where n is the dataset number and s is the scenario number. 
 
 Examples of each are given below: 
@@ -182,7 +190,7 @@ With the simulated data stored in the global environment, we can now fit models 
 - `data_list`: The list of masked datasets output from `simulate_BySpeciesValidation`. 
 - `zeros_list`: The list of site-visit-true-autoID combinations that were never observed. This is the `zeros` object output from `simulate_BySpeciesValidation`.
 - `theta_scenario_id`: An ID to show which classifier the scenario is under. This must match the name of the directory `.../ThetaID` if you want to save model fits and summaries.
-- `parallel`: A logical indicating whether models should be fit in parallel (default setting is TRUE). If you have many datasets and many scenarios, we recommend this setting. 
+- `parallel`: A logical indicating whether MCMC sampling should be fit in parallel (default setting is TRUE). If you have many datasets and many scenarios, we recommend this setting. 
 - `initialize_lambda_near_naive_val`: A logical indicating whether to initialize chains for $\lambda_k$ near the naive average count of recordings from each species. 
 - `n_iter`: The number of iterations for each chain in the MCMC. Default value is 2000.
 - `nburn`: The number of warmup iterations before MCMC draws are retained. By default, half of `n_iter` draws are discarded as warmup.
@@ -195,6 +203,7 @@ An example of using this function with the simulated data from step 3 is given b
 
 ```{r eval = FALSE}
 source("Model Fitting & Simulation/run_sims.R")
+# takes about 2-4 minutes 
 sims_output <- run_sims(data_list = fake_data$masked_dfs, zeros_list = fake_data$zeros, 
          DGVs = list(lambda = lambda, psi = psi, theta = test_theta2), 
          theta_scenario_id = 1, parallel = TRUE, 
@@ -223,7 +232,7 @@ for(i in 1:4){
   biglist[[i]] <- readRDS(paste0(here::here(), "/Testing/Theta1/summary_df_for_scenario_",i,".rds"))
 }
 
-sims_output <- do.call(bind_rows, biglist)
+sims_output <- do.call("bind_rows", biglist)
 ```
 
 ```{r}
@@ -232,7 +241,7 @@ visualize_parameter_group(sim_summary = sims_output,
                           pars = "lambda", 
                           theta_scenario = 1, 
                           scenarios = 1:3, 
-                          convergence_threshold = 1.6)
+                          convergence_threshold = 1.6) # for illustration only! 
 ```
 
 The features of the plot are as follows: 
@@ -250,7 +259,7 @@ If you would like to visualize a single parameter, use `visualize_single_paramet
 
 ```{r}
 # note the space between the indices for theta[2, 3]
-visualize_single_parameter(sims_output, par = "theta[2, 3]", 
+visualize_single_parameter(sims_output, par = "theta[2, 1]", 
                            theta_scenario = 1, 
                            scenarios = 1:3, 
                            convergence_threshold = 1.2)
@@ -259,4 +268,20 @@ Note that in scenario 2, only one dataset yielded a fitted model where all param
 
 ## Using saved datasets and model fits 
 
+If you selected `save_fits = TRUE` in the `run_sims` function, then individual model fits will be available in `your/directory/fits`. You can use these, together with the Bayesplot package (run `install.packages("bayesplot")` and then `library(bayesplot)` if you do not have this package installed), to visualize model fits through a wide variety of plots. For example, if you would like to see a density plot for species 1's relative activity level in the first dataset under the first validation scenario, you would read in the fit and visualize using `mcmc_dens_overlay`: 
 
+```{r}
+# read in fit object
+fit_1_1 <- readRDS("Testing/Theta1/fits/fit_1_1.rds")
+
+# visualize using bayesplot
+bayesplot::mcmc_dens_overlay(fit_1_1, pars = "lambda[1]")
+```
+
+To see a traceplot for all $lambda$ parameters, run the following:
+
+```{r}
+bayesplot::mcmc_trace(fit_1_1, regex_pars = "lambda")
+```
+
+The Bayesplot package has many other visualizations that are available. See their [website](http://mc-stan.org/bayesplot/) for more examples and details (http://mc-stan.org/bayesplot/).
