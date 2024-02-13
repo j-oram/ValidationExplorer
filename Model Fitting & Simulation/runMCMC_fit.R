@@ -1,16 +1,34 @@
-
-
 # Fit NIMBLE model (automates workflow of defining inits function, 
 # configuring/compiling models and MCMC, and running chains). 
 # Note: this is designed to be fit in parallel, so by default, the number of 
 # chains is set to 1. 
-
-# code = NimbleCode object
-# data = nimble_data (list)
-# inits = initial values for lambda 
-# constants = nimble_constants 
-# alpha0 = vector of length n_spp that controls priors on classification pars
-# inits = initial values for all other pars
+# 
+## ============== Inputs ============= ## 
+# seed: the seed to reproduce the starting values of the chain. This is required for 
+# running this function with parLapply.
+#
+# code: NimbleCode object
+#
+# data: a list containing the data for the NIMBLE model.
+#
+# lambda_inits: initial values for lambda 
+#
+# constants: a list object containing the constants required for indexing NIMBLE code. 
+#
+# nchains: how many chains to run. By default, 1, so that each chain can be fit 
+# on a separate core. 
+# 
+# niter: integer number of iterations per chain. 
+# 
+# nburn: integer value for the number of warmup draws per chain. 
+# 
+# thin: integer-valued thinning interval for each chain.
+#
+## ============ Outputs ============== ## 
+# 
+# out: Samples from the posterior distribution specified in the code input. This
+# will be a list of length nchains; each entry in the list will be a matrix with 
+# (niter - nburn)/thin rows and columns for each model parameter. 
 
 runMCMC_fit <- function(seed = 1, code, data, lambda_init, constants,
                         nchains = 1, niter = 20000, nburn = 12000, thin = 8){

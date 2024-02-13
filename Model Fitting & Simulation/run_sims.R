@@ -1,22 +1,30 @@
-# Function for running simulations. Required inputs are 
-# data_list = nested list of masked datasets (datasets within scenarios -- see output of 
+# Function for running simulations as described in the main text. 
+#
+## ================== Inputs ================ ## 
+# data_list: nested list of masked datasets (datasets within scenarios -- see output of 
 # get_sim_datasets.r)
 #
-# zeros_list = list of length 50 dataframes containing the site visits where no calls 
+# zeros_list: list of length 50 dataframes containing the site visits where no calls 
 # were observed (under the corresponding theta classifier -- These are the noCounts from
 # the get_sim_datasets.r and are needed for housekeeping).
 #
-# DGVs = data-generating values; needed to evaluate whether posterior intervals contain 
+# DGVs: data-generating values; needed to evaluate whether posterior intervals contain 
 # the true value. This is expected to be a list with entries psi, lambda and theta containing 
 # the respective parameters
 #
 # theta_scenario_id: keep track of which assumed classifier
 #
 # parallel: should the model be fit in parallel? 
-# n_iter, nburn,thin: user-specified MCMC settings
+#
+# n_iter, nburn,thin: user-specified MCMC settings as in runMCMC_fit.R
+#
+## ================ Outputs ================== ## 
+#
+# out: a dataframe with the summaries (from MCMC_sum.R) for all scenarios and datasets.
 
 library(nimble)
 library(tidyverse)
+
 source("Model Fitting & Simulation/runMCMC_fit.r")
 source("Model Fitting & Simulation/MCMC_sum.r")
 
