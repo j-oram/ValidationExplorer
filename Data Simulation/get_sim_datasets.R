@@ -1,10 +1,13 @@
+# This script generates the 50 datasets and masks them according to the scenarios
+# described in the main text. It is provided for the purposes of reproducibility, 
+# but to conduct your own simulation study, you should use simulate_BySpeciesValidation.R
+
 library(nimble)
 library(tidyverse)
 
 source("count_detection_sim.R")
 source("mask_by_spp.R")
 source("simulation_scenarios.R")
-
 
 
 n_datasets <- 50
@@ -188,8 +191,6 @@ val_matrix <- apply(ad_sims, 1, get_props_to_val2) %>% t()
 # val_matrix
 
 
-
-
 # ------ Theta 1 ------- #
 
 # Obtain masked datasets
@@ -201,9 +202,6 @@ theta1_adl_mDFs_sums <- lapply(theta1_adl_masked_datasets, get_mDF_summary)
 #saveRDS(theta1_adl_mDFs_sums, file = "Simulation data/theta1_adl_mDFs_sums.rds") 
 
 
-
-
-
 # ------ Theta 2 ------- #
 
 # obtain masked dfs
@@ -212,9 +210,6 @@ theta2_adl_masked_datasets <- apply(val_matrix, 1, get_mDF, list_of_dfs = t2_dat
 
 theta2_adl_mDFs_sums <- lapply(theta2_adl_masked_datasets, get_mDF_summary)
 # saveRDS(theta2_adl_mDFs_sums, file = "Simulation data/theta2_adl_mDFs_sums.rds") 
-
-
-
 
 
 # ------ Theta 3 ------- #

@@ -1,3 +1,8 @@
+# This script determines the parameter values for the simulations described in 
+# the main text. It is provided for the purposes of reproducibility, 
+# but to conduct your own simulation study, you should use simulate_BySpeciesValidation.R
+
+
 # MYLU, MYEV, MYCI, TABR, LACI
 psi_lambda <- rbind(c(.90, 28),
                     c(.70, 2.4),
@@ -8,7 +13,7 @@ psi_lambda <- rbind(c(.90, 28),
 
 colnames(psi_lambda) <- c("psi", "lambda")   
   
-  # vanilla
+
   (theta1 <- rbind(
     c(.95, .02, .01, .01, .01),
     c(.05, .90, .02, .02, .01),
@@ -17,7 +22,6 @@ colnames(psi_lambda) <- c("psi", "lambda")
     c(.04, .01, .01, .01, .93)
   ))
 
-# common spp sucks, you're hosed?
 (theta2 <- rbind(
   c(.55, .10, .10, .15, .10),
   c(.05, .90, .02, .02, .01),
@@ -26,7 +30,7 @@ colnames(psi_lambda) <- c("psi", "lambda")
   c(.04, .01, .01, .01, .93)
 ))
 
-# rare species is bad and misidentified as common species
+
 (theta3 <- rbind(
   c(.95, .02, .01, .01, .01),
   c(.05, .90, .02, .02, .01),

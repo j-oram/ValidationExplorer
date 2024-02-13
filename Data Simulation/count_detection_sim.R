@@ -1,7 +1,37 @@
+## This function simulates data from the aggregated count detection model (see 
+# Wright et al., 2020 and Stratton et al., (2022) for model notation). 
+#
+## ================= Inputs ============ ## 
+# nsites: the number of sites assumed in the design. Default value is 100. 
+#
+# nspecies: the number of species in the assemblage. Default is 8. 
+# 
+# nvisits: the number of visits (detector nights) assumed for each site. Default is 4. 
+#
+# seed: optional seed if you would like to reproduce the data simulation. 
+#
+# psi: a vector of length nspecies that contains the occurrence probabilities for each species in the 
+# assemblage. These values must be in [0,1]. Default is to draw a random vector from a U(.4, .9) distribution.
+# 
+# lambda: a vector of length nspecies that contains the relative activity parameters for each species. Note
+# these values need to be positive. By default, lambda values are the absolute value of normal(0, 100) random variables.
+# 
+# theta: an nspecies x nspecies matrix containing the (mis)classification probabilities for each species. 
+# All entries must be in (0,1], with the rows of the matrix summing to 1. The default draws rows from a dirichlet 
+# distribution with concentrations determined by location in the matrix (diagonal values have higher concentrations).
+# 
+## =================== Outputs ===================== ##
+# 
+# df: A dataframe that is masked according to the design described in Stratton et al., (2022). This is not necessary for 
+# any functions in this repo, but it could be useful for comparison by the curious user. 
+# 
+# full_df: A complete dataframe with no masking. This output is necessary for running simulate_BySpeciesValidation.R and 
+# get_sim_datasets.R. 
+# 
+# params: a list containing the data-generating parameter values. 
+
 library(tidyverse)
 library(nimble)
-
-# Simulate data that comes from (aggregated) count detection model
 
 sim_dat <- function(
   nsites = 100, nspecies = 8, nvisits = 4, seed = NULL, 
@@ -21,6 +51,7 @@ sim_dat <- function(
     id_spp = rep(rep(1:nspecies, each = nspecies), nsites * nvisits)
   )
   
+  # add lambda, psi and theta values
   df2 <- left_join(
     df, 
     tibble(
@@ -38,7 +69,7 @@ sim_dat <- function(
       ), by = c("true_spp", "id_spp")
     )
   
-  # latent z state
+  # add latent z state and counts for each true-autoID pair at each site-night
   df3 <- df2 %>%
     select(site, true_spp, psi) %>%
     distinct() %>%
@@ -53,11 +84,11 @@ sim_dat <- function(
       # on visit j to site i
       count = rpois(n(), z * lambda * theta)  
     )
-  full_df <- df3 # Output required for the data simulation contained in get_sim_datasets.r
+  full_df <- df3 # Output required for the data simulation contained in simulate_BySpeciesValidation.R
   
   # The remaining code is for selecting all calls within a site-night. (Alt. vetting design)
   # (See Stratton et al., (2022) for details 
-  # To begin, allocate some unambiguous calls:
+  # To begin, allocate some ambiguous calls:
   df4 <- df3 %>%
     select(site, visit) %>%
     distinct %>%

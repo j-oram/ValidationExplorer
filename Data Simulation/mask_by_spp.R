@@ -1,5 +1,28 @@
 # Masking true species labels based on the assigned autoIDs
 # Function allows user to specify the proportions to sample from each ID'd spp
+#
+## ================== Inputs ================= ## 
+#
+# data: A dataframe containing the columns: 
+#   - site
+#   - visit
+#   - true_spp
+#   - id_spp
+#   - count
+#
+# props_to_val: a vector containing the proportion of recordings to validate for each species
+# 
+## ================ Outputs ================== ## 
+#
+# final_df: A dataframe with the same number of rows as the input data. The true species labels 
+# are shown for each autoID category according to props_to_val; all other true species labels 
+# masked as NA. 
+#
+# data_sum: A small tibble containing summaries for each autoID containing 
+#   - n: the number of recordings with that autoID label
+#   - n_NA: the proportion of that autoID with unknown true species labels
+#   - prop_NA: the proportion of recordings with that autoID label that are masked. This should be 
+#     (1 - props_to_val[autoID]). 
 
 mask_spp2 <- function(data, props_to_val){
   
