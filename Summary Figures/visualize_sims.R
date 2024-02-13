@@ -1,4 +1,5 @@
-# Code for visualizing the simulations.
+# Code for visualizing the simulations. These are designed to mimic the figures
+# in the manuscript. 
 # First, define some helper functions: 
 
 # For convenience
@@ -21,7 +22,37 @@ class(L) <- "labeller"
 
 ############ functions for visualizing simulation results #############
 
-# visualize_parameter_group creates figures
+# visualize_parameter_group visualizes all parameters in a group (e.g., all 
+# relative activity parameters). 
+# 
+## ============= Inputs ============= ## 
+#
+# sum_summary: A summary of simulations with the following required columns 
+#   - Rhat
+#   - theta_scenario
+#   - scenario
+#   - dataset
+#   - `2.5%`
+#   - `97.5%`
+#   - Mean
+#   - parameter
+#   - capture
+# 
+# pars: A string containing the parameters to be visualized. Use one of the 
+# following: "psi", "lambda", or "theta". 
+# 
+# theta_scenarios: the classifier ID to be visualized. 
+# 
+# scenarios: the ID's corresponding to the validation scenarios to be visualized. 
+# 
+# convergence threshold: A double containing the Rhat threshold below which a model is 
+# considered to be "converged". This function will only visualize parameter estimates 
+# from model fits where all parameters are below the threshold. Default values is 1.1.
+#
+## ================== Outputs ================== ## 
+# 
+# plt: a ggplot object. To see the plot you will need to call the output in your script. 
+
 visualize_parameter_group <- function(sim_summary, 
                                       pars, 
                                       theta_scenario, 
@@ -74,7 +105,7 @@ visualize_parameter_group <- function(sim_summary,
         color = coverage
       )
     ) +
-    scale_color_gradient(low = "red", high = "blue", limits = c(0,1)) +
+    viridis::scale_color_viridis(limits = c(0,1)) +
     geom_point(color = "red") +
     geom_point(
       inherit.aes = FALSE,
@@ -95,7 +126,7 @@ visualize_parameter_group <- function(sim_summary,
 }
 
 visualize_single_parameter <- function(sim_summary, 
-                                       par, 
+                                       par, # use a specific parameter (e.g., "psi[1]" or "theta[3, 2]")
                                        theta_scenario, 
                                        scenarios, 
                                        convergence_threshold = 1.1){
@@ -146,17 +177,12 @@ visualize_single_parameter <- function(sim_summary,
         color = coverage
       )
     ) +
-    scale_color_gradient(low = "red", high = "blue", limits = c(0,1)) +
+    viridis::scale_color_viridis(limits = c(0,1)) +
     geom_point(color = "red") +
     geom_point(
       inherit.aes = FALSE,
       aes(x = scenario, y = truth)
     ) + 
-    # facet_wrap(
-    #   ~scenario, 
-    #   #scales = "free_y"
-    #   labeller = L
-    # ) +
     labs(
       x = "Manual Verification Scenario", 
       y = "", 
