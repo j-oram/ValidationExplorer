@@ -24,7 +24,7 @@ fake_data <- simulate_BySpeciesValidation(n_datasets = 2,
 # This line will take 2-4 minutes to run depending on machine capacity
 sims_output <- run_sims(data_list = fake_data$masked_dfs, zeros_list = fake_data$zeros, 
          DGVs = list(lambda = c(4,13), psi = c(.8, .35), theta = test_theta), 
-         theta_scenario_id = 1, parallel = TRUE, 
+         theta_scenario_id = 1, parallel = FALSE, 
          save_fits = TRUE, 
          save_individual_summaries_list = FALSE, 
          directory = paste0(here::here(), "/Testing"))

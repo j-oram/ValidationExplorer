@@ -29,7 +29,7 @@ source("Model Fitting & Simulation/runMCMC_fit.r")
 source("Model Fitting & Simulation/MCMC_sum.r")
 
 run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id, 
-                     parallel = TRUE, initialize_lambda_near_naive_val = FALSE,
+                     parallel = TRUE,
                      niter = 2000, nburn = floor(niter/2), thin = 1, 
                      save_fits = FALSE,
                      save_individual_summaries_list = FALSE, 
@@ -60,20 +60,20 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
       
       ## NIMBLE --------- 
       
-      code <- nimbleCode({
+      obs_lhood_code <- nimbleCode({
         
         # priors
         for(species in 1:nspecies){
           
           psi[species] ~ dbeta(1,1)
-          lambda[species] ~ T(dnorm(0, sd = 100), 0, Inf)
+          lambda[species] ~ T(dnorm(0, sd = 10), 0, Inf)
           theta[species, 1:nspecies] ~ ddirch(alpha = alpha0[species, 1:nspecies])
           
         }
         
         ##  --- Likelihood --- ##
         
-        # state model
+        ## Nothing changed here
         for(i in 1:nsites){
           for(species in 1:nspecies){
             
@@ -82,53 +82,70 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
           }
         }
         
-        # encounter model: should be for all sites and visits
+        
         for(i in 1:nsites){
           for(j in 1:nvisits){
             
-            Y._mat[i,j] ~ dpois(sum(z[i,1:nspecies] * lambda[1:nspecies])) # Total number of calls from all spp
+            Y.[i,j] ~ dpois(sum(z[i,1:nspecies] * lambda[1:nspecies]))
             
           }
         }
         
-        # observation model: needs to be only for sites where we know that something happened (else sum(zlam) = 0 and
-        # this likelihood specification doesn't make any sense)
-        for(row in 1:total_calls){
+        
+        ## This code chunk is the likelihood contribution from the recordings where we observed 
+        # both the autoID and the true species label
+        for(row in 1:n_confirmed_calls){
+          pi[row, 1:nspecies] <- z[site1[row], 1:nspecies] * lambda[1:nspecies] /
+            sum(z[site1[row], 1:nspecies] * lambda[1:nspecies])
           
-          pi[row, 1:nspecies] <- z[site[row], 1:nspecies] * lambda[1:nspecies] /
-            sum(z[site[row], 1:nspecies] * lambda[1:nspecies])
           k[row] ~ dcat(pi[row, 1:nspecies])
           y[row] ~ dcat(theta[k[row], 1:nspecies])
-          
+        }
+        
+        ## The next chunk is the product \prod_{l_{ij}: I_{l_{ij}} =0}, with the unobserved 
+        # true species labels summed out. 
+        for(row in 1:n_ambiguous_calls){
+          pi2[row, 1:nspecies] <- z[site2[row], 1:nspecies] * lambda[1:nspecies] /
+            sum(z[site2[row], 1:nspecies] * lambda[1:nspecies])
+          y2[row] ~ dmarginal_autoID(theta_mat = theta[1:nspecies, 1:nspecies], 
+                                     pi = pi2[row, 1:nspecies])
         }
         
       })
       
+      
+      # Define the ambiguous and unambiguous datasets
+      amb <- observed_df[is.na(observed_df$true_spp), ]
+      uamb <- observed_df[!is.na(observed_df$true_spp), ]
+      
+      
       # values passed to Nimble for indexing.
       constants <- list(
-        site = observed_df$site, # Only sites where at least one call was made
+        site1 = uamb$site, # Only sites where at least one call was made
+        site2 = amb$site,
         nspecies = n_distinct(observed_df$id_spp),
         nvisits = n_distinct(observed_df$visit),
         nsites = n_distinct(all_sites_and_visits$site), # we want to have a value for all possible site, even if that val is 0
-        total_calls = nrow(observed_df) # each row is a distinct recording
+        n_confirmed_calls = nrow(uamb), 
+        n_ambiguous_calls = nrow(amb)
       )
       
-      # y = observed autoID, k = partially-observed true spp label
+      # y = observed autoID, k = observed true spp label
+      # y2 = observed autoIDs from ambiguous data, k2 = unobserved true label
       # alpha0 = reference distance prior specification for classification pars
       # Y. = total number of calls observed (all spp) at each site-visit
       nimble_data <- list(
-        y = observed_df$id_spp,
-        k = observed_df$true_spp,
-        alpha0 = matrix(1/constants$nspecies,
-                        nrow = n_distinct(observed_df$id_spp),
-                        ncol = n_distinct(observed_df$id_spp)),
+        y = uamb$id_spp,
+        k = uamb$true_spp,
+        y2 = amb$id_spp,
+        alpha0 = matrix(1/(constants$nspecies),
+                        nrow = n_distinct(all_sites_and_visits$id_spp),
+                        ncol = n_distinct(all_sites_and_visits$id_spp)),
         
-        # Define Y._matrix based on all site-visits, even if it had no calls. The 
-        # matrix is nsites x nvisits in dimension.
-        Y._mat = bind_rows(observed_df, zeros) %>% 
-          arrange(site, visit, true_spp, id_spp) %>% 
+        # Define Y. based on all site-visits, even if it had no calls
+        Y. = all_sites_and_visits %>% 
           group_by(site, visit) %>%
-          summarize(total = unique(Y.)) %>%
+          summarize(total = unique(Y.)) %>% 
           pivot_wider(
             names_from = visit,
             names_prefix = "visit",
@@ -140,30 +157,6 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
           as.matrix()
       )
       
-      
-      if(initialize_lambda_near_naive_val == TRUE){
-        
-        # randomly initialize lambda values near the observed autoID count for each spp
-        # at each site-visit
-        lambda_init <- rep(-1,5)
-        naive_lambda <- as.data.frame(df) %>% 
-          group_by(site, visit, id_spp, z) %>% 
-          summarize(n = n()) %>% 
-          filter(z == 1) %>% 
-          ungroup() %>% 
-          group_by(id_spp) %>% 
-          summarise(naive_lam = mean(n)) %>% 
-          select(naive_lam)
-        
-        while(any(lambda_init < 0)) lambda_init <- naive_lambda + rnorm(constants$nspecies)
-        
-      } else {
-        
-        lambda_init <- NULL
-        
-      }
-      
-      
       if(parallel){
         
         library(parallel)
@@ -171,9 +164,8 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
         fit <- parLapply(cl = this_cluster, 
                          X = 1:3, 
                          fun = runMCMC_fit, 
-                         code = code,
+                         code = obs_lhood_code,
                          data = nimble_data, 
-                         lambda_init = lambda_init, 
                          constants = constants, 
                          niter = niter,
                          nburn = nburn, 
@@ -183,10 +175,9 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
         
       } else {
         
-        fit <- runMCMC_fit(code = code, 
+        fit <- runMCMC_fit(code = obs_lhood_code, 
                            data = nimble_data, 
                            constants = constants,
-                           lambda_init = lambda_init,
                            nchains = 3, 
                            niter = niter, 
                            nburn = nburn, 
