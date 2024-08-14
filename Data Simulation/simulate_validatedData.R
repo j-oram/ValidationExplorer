@@ -1,4 +1,5 @@
-## Function for simulating data using a stratified-by-species validation design. 
+## Function for simulating data using either a stratified-by-species validation design or a 
+# fixed effort design. 
 # For more details, see Vignette.pdf in this repo! 
 
 # ====================== Inputs ========================== #
@@ -6,8 +7,13 @@
 # n_datasets: the number of datasets you would like to have simulated. Each of these 
 # simulated datasets will be subjected to all validation designs specified in the scenarios_dataframe
 #
-# scenarios_dataframe: a dataframe with each row corresponding to a specific validation scenario. The 
-# columns contain the level of effort for each autoID label. See vignette for an example.
+# validation_design: Character string, either "BySpecies" for a stratified-by-species design,
+# or "FixedPercentage" for a fixed effort design (see Oram et al., 2024 for more details on each of these)
+# 
+# scenarios: if validation_design == "BySpecies", `scenarios` argument must be a dataframe with each row corresponding 
+# to a specific validation scenario. The columns contain the level of effort for each autoID label. If 
+# validation_design == "FixedPercent", then `scenarios` argument must be a vector with each entry corresponding to 
+# a potential percent of calls to be sampled from the first visit at each site. See vignette for an example. 
 # 
 # nsites: number of sites in each dataset
 #
@@ -54,22 +60,22 @@
 # scenario combination is saved individually in `directory` as dataset_n_masked_under_scenario_s.rds, 
 # where n is the dataset number and s is the scenario number. 
 
+source("Data Simulation/count_detection_sim.R")
+source("Data Simulation/mask_by_spp.R")
+source("Data Simulation/mask_FE.R")
 
-
-simulate_BySpeciesValidation <- function(n_datasets, 
-                                         scenarios_dataframe, 
-                                         nsites, 
-                                         nspecies, 
-                                         nvisits, 
-                                         psi, 
-                                         lambda, 
-                                         theta, 
-                                         save_datasets = TRUE, 
-                                         save_masked_datasets = TRUE,
-                                         directory = here::here()){
-  
-  source("Data Simulation/count_detection_sim.R")
-  source("Data Simulation/mask_by_spp.R")
+simulate_validatedData <- function(n_datasets,
+                                   validation_design = c("BySpecies", "FixedPercent"),
+                                   scenarios, 
+                                   nsites, 
+                                   nspecies, 
+                                   nvisits, 
+                                   psi, 
+                                   lambda, 
+                                   theta, 
+                                   save_datasets = TRUE, 
+                                   save_masked_datasets = TRUE,
+                                   directory = here::here()){
     
   # Initialize storage lists
   datasets_list <- list()
@@ -116,22 +122,52 @@ simulate_BySpeciesValidation <- function(n_datasets,
   # set up storage for the masked datasets
   masked_dataset_list <- list()
   
-  # loop over scenarios and datasets, saving each masked dataset and 
-  for(s in 1:nrow(scenarios_dataframe)){
-    masked_dataset_list[[s]] <- list()
-    for(d in 1:length(datasets_list)){
-      
-      masked_df <- mask_spp2(datasets_list[[d]], scenarios_dataframe[s,])$final_df
-      masked_df$scenario <- s
-      
-      if(save_masked_datasets == TRUE){
-        saveRDS(masked_df, 
-                file = paste0(directory, "/dataset_", d, "_masked_under_scenario_", s, ".rds"))
+  if(validation_design == "BySpecies"){
+    
+    # loop over scenarios and datasets, saving each masked dataset
+    # Note that for this design, `scenarios` is a dataframe object
+    for(s in 1:nrow(scenarios)){
+      masked_dataset_list[[s]] <- list()
+      for(d in 1:length(datasets_list)){
+        
+        masked_df <- mask_spp2(datasets_list[[d]], scenarios[s,])$final_df
+        masked_df$scenario <- s
+        
+        if(save_masked_datasets == TRUE){
+          saveRDS(masked_df, 
+                  file = paste0(directory, "/dataset_", d, "_masked_under_BSV_scenario_", s, ".rds"))
+        }
+        
+        masked_dataset_list[[s]][[d]] <- masked_df
+        
       }
-      
-      masked_dataset_list[[s]][[d]] <- masked_df
-      
     }
+    
+  } else {
+    
+    # Loop over the specified vector of percentages
+    # Note: here `scenarios` is a vector! 
+    for(s in 1:length(scenarios)){
+      masked_dataset_list[[s]] <- list() # initiate interior storage for each scenario (i.e., for each distinct percentage)
+      for(d in 1:length(datasets_list)) { # loop over the datasets list, masking each according to the scenario 
+        
+        masked_df <- mask_FE(
+          df = datasets_list[[d]], 
+          effort_prop = scenarios[s]
+        ) %>% mutate(scenario = s)
+        
+        if(save_masked_datasets == TRUE) {
+          saveRDS(
+            masked_df, 
+            file = paste0(directory, "/dataset_", d, "_masked_under_FE_scenario_", s, ".rds")
+          )
+        }
+        
+        masked_dataset_list[[s]][[d]] <- masked_df
+        
+      }
+    }
+    
   }
     
   return(list(full_datasets = datasets_list, 
