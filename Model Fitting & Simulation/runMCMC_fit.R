@@ -66,7 +66,8 @@ runMCMC_fit <- function(seed = 1, code, data, constants,
   )
   
   # placeholder function to avoid error during compiling. NIMBLE will never use 
-  # this function. 
+  # this function, but it is required to be specified for fitting in parallel. 
+  # This placeholder is taken exactly from the NIMBLE manual.
   rmarginal_autoID <- nimbleFunction(
     run = function(n = integer(0, default = 1), theta_mat = double(2), pi = double(1)) {
       returnType(double(0))
@@ -75,6 +76,9 @@ runMCMC_fit <- function(seed = 1, code, data, constants,
     }
   )
   
+  # Register the distribution, will yield an informational warning because we are 
+  # "overwriting" the user-specified distribution that NIMBLE detects when it 
+  # compiles the code 
   assign('dmarginal_autoID', dmarginal_autoID, envir = .GlobalEnv)
   assign('rmarginal_autoID', rmarginal_autoID, envir = .GlobalEnv)
   registerDistributions("dmarginal_autoID")
