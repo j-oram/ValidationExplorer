@@ -25,8 +25,8 @@
 library(nimble)
 library(tidyverse)
 
-source("Model Fitting & Simulation/runMCMC_fit.r")
-source("Model Fitting & Simulation/MCMC_sum.r")
+source("../Model Fitting & Simulation/runMCMC_fit.r")
+source("../Model Fitting & Simulation/MCMC_sum.r")
 
 run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id, 
                      parallel = TRUE,

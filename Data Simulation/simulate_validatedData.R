@@ -52,7 +52,7 @@
 # classified as  3 on visit 4 to site 156, then the 10th entry of this list would contain a dataset with 
 # a row corresponding tosite = 156, visit = 4, true_spp = 1, id_spp = 3, with count = 0. These zeros are 
 # necessary for housekeeping in the model-fitting process. If `save_datasets = TRUE`, the zeros for each 
-# each dataset will be saved in `directory` individually as site_visits_without_calls_in_dataset_n.rds, where
+# each dataset will be saved in `directory` individually as zeros_in_dataset_n.rds, where
 # n is the dataset number.
 #
 # masked_dfs: A nested list containing each dataset masked under each scenario. masked_dfs[[9]][[27]] contains
@@ -60,9 +60,9 @@
 # scenario combination is saved individually in `directory` as dataset_n_masked_under_scenario_s.rds, 
 # where n is the dataset number and s is the scenario number. 
 
-source("Data Simulation/count_detection_sim.R")
-source("Data Simulation/mask_by_spp.R")
-source("Data Simulation/mask_FE.R")
+source("../Data Simulation/count_detection_sim.R")
+source("../Data Simulation/mask_by_spp.R")
+source("../Data Simulation/mask_FE.R")
 
 simulate_validatedData <- function(n_datasets,
                                    validation_design = c("BySpecies", "FixedPercent"),
@@ -79,7 +79,7 @@ simulate_validatedData <- function(n_datasets,
     
   # Initialize storage lists
   datasets_list <- list()
-  site_visits_without_calls <- list()
+  zeros <- list()
     
     for(m in 1:n_datasets){
       
@@ -105,14 +105,14 @@ simulate_validatedData <- function(n_datasets,
         uncount(., weights = count, .remove = FALSE)
       
       # Store the zeros in a list for houskeeping 
-      site_visits_without_calls[[m]] <- agg_CD_with_total %>% filter(count == 0)
+      zeros[[m]] <- agg_CD_with_total %>% filter(count == 0)
       
       # If user wants individual rds files for each dataframe, save them and the zeros
       # in the specified directory
       if(save_datasets == TRUE){
         saveRDS(datasets_list[[m]], file = paste0(directory, "/dataset_", m, ".rds"))
-        saveRDS(site_visits_without_calls[[m]], 
-                file = paste0(directory, "/site_visits_without_calls_in_dataset_", m, ".rds"))
+        saveRDS(zeros[[m]], 
+                file = paste0(directory, "/zeros_in_dataset_", m, ".rds"))
       }  
       
     }
@@ -171,7 +171,7 @@ simulate_validatedData <- function(n_datasets,
   }
     
   return(list(full_datasets = datasets_list, 
-              zeros = site_visits_without_calls, 
+              zeros = zeros, 
               masked_dfs = masked_dataset_list))
   
 }

@@ -14,6 +14,7 @@ source("Summary Figures/visualize_sims.R")
 
 test_theta <- t(apply(18*diag(nrow = 2) + 2, 1, function(x) nimble::rdirch(alpha = x)))
 
+# Use `scenarios = bsv_scenarios` in `simulate_validatedData` if `validation_design = "BySpecies"`
 bsv_scenarios <- tibble(spp1 = rep(c(0.5, 0.25), 2), spp2 = rep(c(.5, .25), each = 2))
 
 fake_data <- simulate_validatedData(

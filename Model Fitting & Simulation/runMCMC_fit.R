@@ -76,7 +76,7 @@ runMCMC_fit <- function(seed = 1, code, data, constants,
     }
   )
   
-  # Register the distribution, will yield an informational warning because we are 
+  # Register the distribution, which will yield an informational warning because we are 
   # "overwriting" the user-specified distribution that NIMBLE detects when it 
   # compiles the code 
   assign('dmarginal_autoID', dmarginal_autoID, envir = .GlobalEnv)
