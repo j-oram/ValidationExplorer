@@ -59,103 +59,108 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
       all_sites_and_visits <- bind_rows(observed_df, zeros) %>% arrange(site, visit, true_spp, id_spp) # was df8
       
       ## NIMBLE --------- 
-      
-      obs_lhood_code <- nimbleCode({
         
-        # priors
-        for(species in 1:nspecies){
+        code <- nimbleCode({
           
-          psi[species] ~ dbeta(1,1)
-          lambda[species] ~ T(dnorm(0, sd = 10), 0, Inf)
-          theta[species, 1:nspecies] ~ ddirch(alpha = alpha0[species, 1:nspecies])
-          
-        }
-        
-        ##  --- Likelihood --- ##
-        
-        ## Nothing changed here
-        for(i in 1:nsites){
+          # priors
           for(species in 1:nspecies){
             
-            z[i, species] ~ dbern(psi[species])
+            psi[species] ~ dbeta(1,1)
+            lambda[species] ~ T(dnorm(0, sd = 10), 0, Inf)
+            theta[species, 1:nspecies] ~ ddirch(alpha = alpha0[species, 1:nspecies])
             
           }
-        }
-        
-        
-        for(i in 1:nsites){
-          for(j in 1:nvisits){
-            
-            Y.[i,j] ~ dpois(sum(z[i,1:nspecies] * lambda[1:nspecies]))
-            
-          }
-        }
-        
-        
-        ## This code chunk is the likelihood contribution from the recordings where we observed 
-        # both the autoID and the true species label
-        for(row in 1:n_confirmed_calls){
-          pi[row, 1:nspecies] <- z[site1[row], 1:nspecies] * lambda[1:nspecies] /
-            sum(z[site1[row], 1:nspecies] * lambda[1:nspecies])
           
-          k[row] ~ dcat(pi[row, 1:nspecies])
-          y[row] ~ dcat(theta[k[row], 1:nspecies])
-        }
+          ##  --- Likelihood --- ##
+          
+          ## Nothing changed here
+          for(i in 1:nsites){
+            for(species in 1:nspecies){
+              
+              z[i, species] ~ dbern(psi[species])
+              
+            }
+          }
+          
+          
+          for(i in 1:nsites){
+            for(j in 1:nvisits){
+              
+              Y.[i,j] ~ dpois(sum(z[i,1:nspecies] * lambda[1:nspecies]))
+              
+            }
+          }
+          
+          
+          ## This code chunk is the likelihood contribution from the recordings where we observed 
+          # both the autoID and the true species label
+          for(row in 1:n_confirmed_calls){
+            
+            pi[row, 1:nspecies] <- z[site1[row], 1:nspecies] * lambda[1:nspecies] /
+              sum(z[site1[row], 1:nspecies] * lambda[1:nspecies])
+            
+            k[row] ~ dcat(pi[row, 1:nspecies])
+            y[row] ~ dcat(theta[k[row], 1:nspecies])
+            
+          }
+          
+          ## The next chunk is the product \prod_{l_{ij}: I_{l_{ij}} =0}, with the unobserved 
+          # true species labels summed out. 
+          for(row in 1:n_ambiguous_calls){
+            
+            pi2[row, 1:nspecies] <- z[site2[row], 1:nspecies] * lambda[1:nspecies] /
+              sum(z[site2[row], 1:nspecies] * lambda[1:nspecies])
+            y2[row] ~ dmarginal_autoID(theta_mat = theta[1:nspecies, 1:nspecies], 
+                                       pi = pi2[row, 1:nspecies])
+            
+          }
+          
+        })
         
-        ## The next chunk is the product \prod_{l_{ij}: I_{l_{ij}} =0}, with the unobserved 
-        # true species labels summed out. 
-        for(row in 1:n_ambiguous_calls){
-          pi2[row, 1:nspecies] <- z[site2[row], 1:nspecies] * lambda[1:nspecies] /
-            sum(z[site2[row], 1:nspecies] * lambda[1:nspecies])
-          y2[row] ~ dmarginal_autoID(theta_mat = theta[1:nspecies, 1:nspecies], 
-                                     pi = pi2[row, 1:nspecies])
-        }
         
-      })
-      
-      
-      # Define the ambiguous and unambiguous datasets
-      amb <- observed_df[is.na(observed_df$true_spp), ]
-      uamb <- observed_df[!is.na(observed_df$true_spp), ]
-      
-      
-      # values passed to Nimble for indexing.
-      constants <- list(
-        site1 = uamb$site, # Only sites where at least one call was made
-        site2 = amb$site,
-        nspecies = n_distinct(observed_df$id_spp),
-        nvisits = n_distinct(observed_df$visit),
-        nsites = n_distinct(all_sites_and_visits$site), # we want to have a value for all possible site, even if that val is 0
-        n_confirmed_calls = nrow(uamb), 
-        n_ambiguous_calls = nrow(amb)
-      )
-      
-      # y = observed autoID, k = observed true spp label
-      # y2 = observed autoIDs from ambiguous data, k2 = unobserved true label
-      # alpha0 = reference distance prior specification for classification pars
-      # Y. = total number of calls observed (all spp) at each site-visit
-      nimble_data <- list(
-        y = uamb$id_spp,
-        k = uamb$true_spp,
-        y2 = amb$id_spp,
-        alpha0 = matrix(1/(constants$nspecies),
-                        nrow = n_distinct(all_sites_and_visits$id_spp),
-                        ncol = n_distinct(all_sites_and_visits$id_spp)),
+        # Define the ambiguous and unambiguous datasets
+        amb <- observed_df[is.na(observed_df$true_spp), ]
+        uamb <- observed_df[!is.na(observed_df$true_spp), ]
         
-        # Define Y. based on all site-visits, even if it had no calls
-        Y. = all_sites_and_visits %>% 
-          group_by(site, visit) %>%
-          summarize(total = unique(Y.)) %>% 
-          pivot_wider(
-            names_from = visit,
-            names_prefix = "visit",
-            values_from = total,
-            values_fill = 0 # if NA, turn into a 0, since the NA is due to no calls being detected at that site-visit
-          ) %>%
-          ungroup() %>% 
-          select(-site) %>% 
-          as.matrix()
-      )
+        
+        # values passed to Nimble for indexing.
+        constants <- list(
+          site1 = uamb$site, # Only sites where at least one call was made
+          site2 = amb$site,
+          nspecies = n_distinct(observed_df$id_spp),
+          nvisits = n_distinct(observed_df$visit),
+          nsites = n_distinct(all_sites_and_visits$site), # we want to have a value for all possible site, even if that val is 0
+          n_confirmed_calls = nrow(uamb), 
+          n_ambiguous_calls = nrow(amb)
+        )
+        
+        # y = observed autoID, k = observed true spp label
+        # y2 = observed autoIDs from ambiguous data, k2 = unobserved true label
+        # alpha0 = reference distance prior specification for classification pars
+        # Y. = total number of calls observed (all spp) at each site-visit
+        nimble_data <- list(
+          y = uamb$id_spp,
+          k = uamb$true_spp,
+          y2 = amb$id_spp,
+          alpha0 = matrix(1/(constants$nspecies),
+                          nrow = n_distinct(all_sites_and_visits$id_spp),
+                          ncol = n_distinct(all_sites_and_visits$id_spp)),
+          
+          # Define Y. based on all site-visits, even if it had no calls
+          Y. = all_sites_and_visits %>% 
+            group_by(site, visit) %>%
+            summarize(total = unique(Y.)) %>% 
+            pivot_wider(
+              names_from = visit,
+              names_prefix = "visit",
+              values_from = total,
+              values_fill = 0 # if NA, turn into a 0, since the NA is due to no calls being detected at that site-visit
+            ) %>%
+            ungroup() %>% 
+            select(-site) %>% 
+            as.matrix()
+        )
+      
       
       if(parallel){
         
@@ -164,7 +169,7 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
         fit <- parLapply(cl = this_cluster, 
                          X = 1:3, 
                          fun = runMCMC_fit, 
-                         code = obs_lhood_code,
+                         code = code,
                          data = nimble_data, 
                          constants = constants, 
                          niter = niter,
@@ -175,7 +180,7 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
         
       } else {
         
-        fit <- runMCMC_fit(code = obs_lhood_code, 
+        fit <- runMCMC_fit(code = code, 
                            data = nimble_data, 
                            constants = constants,
                            nchains = 3, 

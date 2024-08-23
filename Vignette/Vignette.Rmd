@@ -440,7 +440,9 @@ Note that the scale of the y-axis is free to change from one visualization to th
 
 The previous section outlined the mechanics of using the functions contained in the ValidationExplorer repo. Here, we provide a streamlined example with a fixed-effort validation design, and emphasize how the tool may be used to aid the decision process about the appropriate level of effort for reliable inference. Our example uses the second validation design available in the ValidationExplorer: a fixed-effort design. Under this validation design, a random sample of $p$ percent of all recordings is taken from the first detector night at each site, where $p$ is specified by the user.
 
-We begin by selecting the parameter values for each species (i.e., assumed occurrence probability and relative activity rate). If estimates exist for the species of interest, one option could be to adopt those. For instance, if we assumed an assemblage comprised of *Eptesicus fuscus* (EPFU)*, Lasiurus cinereus* (LACI)*, Lasinoycteris noctivagans* (LANO), and *Myotis lucifugus* (MYLU), we could use posterior estimates obtained by @stratton22. These are shown in Table \ref{parVals}.
+We begin the simulation process by selecting the occurrence probabilities $\psi_k$ and relative activity rates $\lambda_k$ for each species $k$. We must also specify the assumed classification probabilities. 
+
+If estimates exist for the species of interest, one option could be to adopt those. For instance, if we assumed an assemblage comprised of *Eptesicus fuscus* (EPFU)*, Lasiurus cinereus* (LACI)*, Lasinoycteris noctivagans* (LANO), and *Myotis lucifugus* (MYLU), we could use posterior estimates obtained by @stratton22. These are shown in Table 1.
 
 ```{=latex}
 \begin{table}
@@ -460,11 +462,49 @@ We begin by selecting the parameter values for each species (i.e., assumed occur
 \end{table}
 ```
 
-With the parameter values chosen, we can Note that the `scenarios` argument is now a vector, in contrast with the proceeding example.
+The classification matrix estimated by @stratton22 was for an assemblage of 11 species, and due to the sum-to-one constraint on the rows, values cannot be borrowed directly. However, we might use these to choose realistic values, starting with the diagonal entries: 
+$$\Theta = \begin{bmatrix}
+  0.788 & & &\\
+   & 0.983 & &\\
+   & & 0.983 & \\
+   & & & 0.965 \\
+\end{bmatrix}.$$
+
+A strategy for filling in off-diagonal entries could be to use the estimates from @stratton22 and augment each value by the difference between each row sum and 1, divided by the number species. For example, we might fill in the first row with the estimates from @stratton22: 
+
+$$\Theta = \begin{bmatrix}
+  0.7878 & 0.176 & 0.0245 & 0.0014 \\
+  0.0090 & 0.9826 & 0.0018 & 0.0009 \\
+  0.0071 & 0.0051 & 0.9829 & 0.0028 \\
+  0.0002 & 0.0003 & 0.0002 & 0.9650 \\
+\end{bmatrix}.$$
+
+However, the first row sums to 0.788 + 0.176 + 0.0245 + 0.0014 $\approx$ `r round(0.788 + 0.176 + 0.0245 + 0.0014, 3)`. The remaining 0.01 can be divided by four and added to each entry, so that the first row of $\Theta$ is now $(0.7905, 0.1785, 0.027, 0.0039).$ This process can be repeated to obtain an empirically-informed classification matrix. Alternatively, simulated matrices can be simulated in `test_theta2` with the entries of the matrix inside the call to apply adjusted to yield classification matrices that align with expert opinions.
+
+With the parameter values chosen, we begin data simulation. Note that the `scenarios` argument is now a vector, in contrast with the proceeding example.
 
 ```{r}
+psi <- c(0.633, 0.612, 0.849, 0.898)
+lambda <- c(5.934, 4.160, 14.25, 28.25)
+
+Theta_FE <- matrix(
+  c(
+    0.7905, 0.1785, 0.027, 0.0039, 
+    0.010425, 0.984025, 0.00322, 0.002325, 
+    0.007625, 0.005625, 0.983425, 0.003325,
+    0.008775, 0.008875, 0.008775, 0.973575
+  ), 
+  nrow = 4, 
+  byrow = TRUE
+)
+
+nsites <- 100
+nvisits <- 4
+nspecies <- length(psi)
+
+
 FE_data <- simulate_validatedData(
-  n_datasets = 2, 
+  n_datasets = 5, 
   validation_design = "FixedPercent",
   scenarios = c(0.05, .25,  0.5, 0.75), # Note the vector of possible scenarios
   nsites = nsites, 
@@ -472,7 +512,7 @@ FE_data <- simulate_validatedData(
   nspecies = nspecies,
   psi = psi, 
   lambda = lambda,
-  theta = test_theta2, 
+  theta = Theta_FE, 
   save_datasets = TRUE,
   save_masked_datasets = TRUE,
   directory = paste0(here::here("Testing", "FixedEffortExample"))
@@ -485,10 +525,10 @@ Next, we fit the model to the simulated data:
 FE_model_fits <- run_sims(
   data_list = FE_data$masked_dfs,
   zeros_list = FE_data$zeros, 
-  theta_scenario_id = 1, 
+  theta_scenario_id = 1,
   save_fits = FALSE,
-  DGVs = list(lambda = lambda, psi = psi, theta = test_theta2),
-  save_individual_summaries_list = TRUE,
+  DGVs = list(lambda = lambda, psi = psi, theta = Theta_FE),
+  save_individual_summaries_list = FALSE,
   directory = here("Testing", "FixedEffortExample")
 )
 ```
@@ -497,7 +537,7 @@ We can visualize the results from the model for each parameter group:
 
 ```{r echo=FALSE}
 # For faster knitting
-# saveRDS(FE_model_fits, paste0(here("Testing", "FixedEffortExample"), "/FE_model_fits.rds"))
+#saveRDS(FE_model_fits, paste0(here("Testing", "FixedEffortExample"), "/FE_model_fits.rds"))
 FE_model_fits <- readRDS(paste0(here("Testing", "FixedEffortExample"), "/FE_model_fits.rds"))
 ```
 
