@@ -10,9 +10,9 @@
 # validation_design: Character string, either "BySpecies" for a stratified-by-species design,
 # or "FixedPercentage" for a fixed effort design (see Oram et al., 2024 for more details on each of these)
 # 
-# scenarios: if validation_design == "BySpecies", `scenarios` argument must be a dataframe with each row corresponding 
-# to a specific validation scenario. The columns contain the level of effort for each autoID label. If 
-# validation_design == "FixedPercent", then `scenarios` argument must be a vector with each entry corresponding to 
+# scenarios: if `validation_design = "BySpecies"`, the `scenarios` argument must be a list with each entry corresponding 
+# to the potential levels of effort for a particular autoID label. If 
+# `validation_design == "FixedPercent"`, then the `scenarios` argument must be a vector with each entry corresponding to 
 # a potential percent of calls to be sampled from the first visit at each site. See vignette for an example. 
 # 
 # nsites: number of sites in each dataset
@@ -29,12 +29,13 @@
 # theta: a matrix containing the (mis)classification probabilities. The rows of this matrix must sum
 # to 1. See vignette for an example.
 # 
-# save_datasets: logical. If TRUE (default), the datasets without any masking of true species labels (i.e., 
-# corresponding to complete validation of all recordings) will be saved. 
+# save_datasets: logical. If TRUE, the datasets without any masking of true species labels (i.e., 
+# corresponding to complete validation of all recordings) will be saved. Default value is FALSE.
 # 
-# save_masked_datasets: logical. If TRUE (default), the masked datasets (i.e., the simulated datasets with 
+# save_masked_datasets: logical. If TRUE, the masked datasets (i.e., the simulated datasets with 
 # partial validation according to the simulation scenario) will be saved. This means that there will be 
 # n_datasets x nrow(scenarios_dataframe) datasets saved: one for each dataset under each validation scenario.
+# Default value is FALSE. 
 #
 # directory: character. Required if save_datasets = TRUE or save_masked_datasets = TRUE. This is where the 
 # datasets will be saved. By default, the current working directory (i.e., here::here()) will be used.
@@ -73,10 +74,19 @@ simulate_validatedData <- function(n_datasets,
                                    psi, 
                                    lambda, 
                                    theta, 
-                                   save_datasets = TRUE, 
-                                   save_masked_datasets = TRUE,
+                                   save_datasets = FALSE, 
+                                   save_masked_datasets = FALSE,
                                    directory = here::here()){
     
+  
+  if(any(rowSums(theta) != 1)) {
+    stop("The rows of theta do not sum to 1.")
+  }
+  
+  if(validation_design == "BySpecies" & length(scenarios) != nspecies) {
+    stop("Scenarios must be a list with length = nspecies.")
+  }
+  
   # Initialize storage lists
   datasets_list <- list()
   zeros <- list()
@@ -123,6 +133,8 @@ simulate_validatedData <- function(n_datasets,
   masked_dataset_list <- list()
   
   if(validation_design == "BySpecies"){
+    
+    scenarios <- expand.grid(scenarios)
     
     # loop over scenarios and datasets, saving each masked dataset
     # Note that for this design, `scenarios` is a dataframe object
