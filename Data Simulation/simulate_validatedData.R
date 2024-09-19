@@ -134,7 +134,8 @@ simulate_validatedData <- function(n_datasets,
   
   if(validation_design == "BySpecies"){
     
-    scenarios <- expand.grid(scenarios)
+    scenarios <- expand.grid(scenarios) %>% 
+      rownames_to_column(var = "Scenario_Number")
     
     # loop over scenarios and datasets, saving each masked dataset
     # Note that for this design, `scenarios` is a dataframe object
@@ -181,9 +182,25 @@ simulate_validatedData <- function(n_datasets,
     }
     
   }
-    
-  return(list(full_datasets = datasets_list, 
-              zeros = zeros, 
-              masked_dfs = masked_dataset_list))
+  
+  # If the validation design is by species, also return the scenarios dataframe
+  # created by the expand.grid call above. This is potentially useful for users 
+  # to see exactly which scenarios are being investigated
+  if(validation_design == "BySpecies") {
+    output <- list(
+      full_datasets = datasets_list, 
+      zeros = zeros, 
+      masked_dfs = masked_dataset_list, 
+      scenarios_df = scenarios
+    )
+  } else {
+    output <- list(
+      full_datasets = datasets_list, 
+      zeros = zeros, 
+      masked_dfs = masked_dataset_list
+    )
+  }
+  
+  return(output)
   
 }
