@@ -8,6 +8,8 @@ library(here)
 library(kableExtra)
 theme_set(theme_bw())
 
+# getting a message to "Please start a new R session in the new project directory."
+# after running the next line 
 here::set_here(path = ".")
 ## ----eval=FALSE, echo=TRUE-----------------------------------------------------------
 ## install.packages("your_package_name_here")
@@ -21,10 +23,19 @@ here::set_here(path = ".")
 ## library(parallel)
 ## library(here)
 
-
+# source not working...
+# Error in file(filename, "r", encoding = encoding) : 
+#   cannot open the connection
+# In addition: Warning message:
+#   In file(filename, "r", encoding = encoding) :
+#   cannot open file '../Data Simulation/count_detection_sim.R': No such file or directory
+# seems there are cousre calls in the file that is getting sourced...
+# best coding practice is to source all scripts in the testing file, so make that change... 
 ## ------------------------------------------------------------------------------------
 source("Data Simulation/simulate_validatedData.R")
-
+source("Data Simulation/count_detection_sim.R")
+source("Data Simulation/mask_by_spp.R")
+source("Data Simulation/mask_FE.R")
 
 ## ------------------------------------------------------------------------------------
 psi <- c(0.3, 0.6, 0.9)
@@ -65,6 +76,10 @@ rowSums(test_theta2)
 val_scenarios <- list(spp1 = c(.75, .5), spp2 = c(.25, .5), spp3 = c(.25, .75))
 
 
+## SOMETHING WRONG HERE...GETTING ERROR AND CANNOT SIMULATE DATA. PERHAPS test is messed up?
+# Error in simulate_validatedData(n_datasets = 5, validation_design = "BySpecies",  : 
+#                                   The rows of theta do not sum to 1.
+# CANNOT TEST Lines 98-133 due to this error, resuming testing below...
 ## ----message=FALSE-------------------------------------------------------------------
 fake_data <- simulate_validatedData(
   n_datasets = 5, 
@@ -80,6 +95,7 @@ fake_data <- simulate_validatedData(
   save_masked_datasets = FALSE,
   directory = paste0(here::here("Testing"))
 )
+
 
 ## ------------------------------------------------------------------------------------
 # investigate the validation scenarios created by enumerating the species validation levels
@@ -114,11 +130,16 @@ head(masked_dfs[[7]][[3]])
 
 
 ## -------------------------------------------------------------------------------------
+
+# SAME ISSUE AS ABOVE...can fix by loading all functions from one place
 source("Model Fitting & Simulation/run_sims.R")
+source("Model Fitting & Simulation/MCMC_sum.R")
+source("Model Fitting & Simulation/runMCMC_fit.R")
 # Run time will vary: with 5 datasets, 30 sites, 5 visits, 3 species and the assigned 
 # psi and lambda values, this takes ~ 2 minutes per scenario. With the 8 scenarios above,
 # this amounts to ~ 16-18 minutes when fitting in parallel. 
 
+# STOPPING HERE FOR NOW, CAN'T TEST B/C CANT GENERATE FAKE_DATA
 
 sims_output <- run_sims(
          data_list = fake_data$masked_dfs,

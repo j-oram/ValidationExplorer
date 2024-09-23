@@ -61,9 +61,10 @@
 # scenario combination is saved individually in `directory` as dataset_n_masked_under_scenario_s.rds, 
 # where n is the dataset number and s is the scenario number. 
 
-source("../Data Simulation/count_detection_sim.R")
-source("../Data Simulation/mask_by_spp.R")
-source("../Data Simulation/mask_FE.R")
+# KMB commenting these out to avoid issue with relative directories
+# source("../Data Simulation/count_detection_sim.R")
+# source("../Data Simulation/mask_by_spp.R")
+# source("../Data Simulation/mask_FE.R")
 
 simulate_validatedData <- function(n_datasets,
                                    validation_design = c("BySpecies", "FixedPercent"),
