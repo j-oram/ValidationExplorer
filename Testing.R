@@ -23,19 +23,21 @@ here::set_here(path = ".")
 ## library(parallel)
 ## library(here)
 
-# source not working...
-# Error in file(filename, "r", encoding = encoding) : 
-#   cannot open the connection
-# In addition: Warning message:
-#   In file(filename, "r", encoding = encoding) :
-#   cannot open file '../Data Simulation/count_detection_sim.R': No such file or directory
-# seems there are cousre calls in the file that is getting sourced...
-# best coding practice is to source all scripts in the testing file, so make that change... 
 ## ------------------------------------------------------------------------------------
+# For simulation 
 source("Data Simulation/simulate_validatedData.R")
 source("Data Simulation/count_detection_sim.R")
 source("Data Simulation/mask_by_spp.R")
 source("Data Simulation/mask_FE.R")
+source("Data Simulation/summarize_n_validated.R")
+
+# For model fitting/MCMC
+source("Model Fitting & Simulation/run_sims.R")
+source("Model Fitting & Simulation/MCMC_sum.R")
+source("Model Fitting & Simulation/runMCMC_fit.R")
+
+# Visualization
+source("Summary Figures/visualize_sims.R")
 
 ## ------------------------------------------------------------------------------------
 psi <- c(0.3, 0.6, 0.9)
@@ -56,6 +58,8 @@ test_theta1
 
 
 ## ------------------------------------------------------------------------------------
+# Generating a confusion matrix in this way appears to be the culprit of the testing 
+# problems; this doesn't necessarily give exactly 1, but values that are extremely close. 
 test_theta2 <- t(apply(18*diag(nspecies) + 2, 1, function(x) nimble::rdirch(alpha = x)))
 test_theta2
 
@@ -79,7 +83,16 @@ val_scenarios <- list(spp1 = c(.75, .5), spp2 = c(.25, .5), spp3 = c(.25, .75))
 ## SOMETHING WRONG HERE...GETTING ERROR AND CANNOT SIMULATE DATA. PERHAPS test is messed up?
 # Error in simulate_validatedData(n_datasets = 5, validation_design = "BySpecies",  : 
 #                                   The rows of theta do not sum to 1.
-# CANNOT TEST Lines 98-133 due to this error, resuming testing below...
+
+# This is possibly an artifact of how test_theta2 was simulated.  
+# Check this, which is the internal test code: 
+
+# print the rowSums of test theta matrix: 
+rowSums(test_theta2)
+
+# this is the test returning the error: 
+any(rowSums(test_theta2) != 1) # want this to return FALSE, because then it won't return an error
+
 ## ----message=FALSE-------------------------------------------------------------------
 fake_data <- simulate_validatedData(
   n_datasets = 5, 
@@ -90,7 +103,7 @@ fake_data <- simulate_validatedData(
   nspecies = nspecies,
   psi = psi, 
   lambda = lambda,
-  theta = test_theta2, 
+  theta = test_theta1, 
   save_datasets = FALSE,
   save_masked_datasets = FALSE,
   directory = paste0(here::here("Testing"))
@@ -102,7 +115,6 @@ fake_data <- simulate_validatedData(
 fake_data$scenarios_df
 
 # investigate the number of recordings validated under each scenario
-source("Data Simulation/summarize_n_validated.R")
 validation_summary <- summarize_n_validated(
   data_list = fake_data$masked_dfs, 
   scenario_names = as.character(1:nrow(fake_data$scenarios_df)), 
@@ -130,16 +142,9 @@ head(masked_dfs[[7]][[3]])
 
 
 ## -------------------------------------------------------------------------------------
-
-# SAME ISSUE AS ABOVE...can fix by loading all functions from one place
-source("Model Fitting & Simulation/run_sims.R")
-source("Model Fitting & Simulation/MCMC_sum.R")
-source("Model Fitting & Simulation/runMCMC_fit.R")
 # Run time will vary: with 5 datasets, 30 sites, 5 visits, 3 species and the assigned 
 # psi and lambda values, this takes ~ 2 minutes per scenario. With the 8 scenarios above,
 # this amounts to ~ 16-18 minutes when fitting in parallel. 
-
-# STOPPING HERE FOR NOW, CAN'T TEST B/C CANT GENERATE FAKE_DATA
 
 sims_output <- run_sims(
          data_list = fake_data$masked_dfs,
@@ -179,7 +184,6 @@ sims_output <- run_sims(
 
 
 ## ------------------------------------------------------------------------------------
-source("Summary Figures/visualize_sims.R")
 visualize_parameter_group(sim_summary = sims_output, 
                           pars = "lambda", 
                           theta_scenario = 1, 

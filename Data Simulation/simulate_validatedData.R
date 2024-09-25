@@ -80,7 +80,7 @@ simulate_validatedData <- function(n_datasets,
                                    directory = here::here()){
     
   
-  if(any(rowSums(theta) != 1)) {
+  if(any(round(rowSums(theta), 5) != 1)) {
     stop("The rows of theta do not sum to 1.")
   }
   
