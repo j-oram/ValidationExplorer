@@ -29,10 +29,10 @@ To familiarize yourself with the contents of the repo, see the description of co
 
 ## Contents 
 
-- I THOUGHT WE DISCUSSED PACKAGING THIS UP AS AN R PACKAGE. ARE YOU PLANNING TO DO THAT? IF SETTING THIS UP AS AN R PACKAGE, REFER TO "R PACKAGES"" BOOK TO RESTRUCTURE CODE AND DESCRIBE STRUCTURE ACCORDINGLY. YOU'LL NEED TO ADD DOCUMENTATION TO ALL FUNCTIONS IF MAKING AN R PACKAGE, SO SOME OF THE TEXT BELOW MAY BE ABLE TO GO IN THE DOCUMENTATION FOR THE FUNCTIONS. WE CAN DISCUSS THIS ON THURSDAY...SEE ALSO COMMENTS ON CURRENT STRUCTURE.
+- I THOUGHT WE DISCUSSED PACKAGING THIS UP AS AN R PACKAGE. ARE YOU PLANNING TO DO THAT? IF SETTING THIS UP AS AN R PACKAGE, REFER TO "R PACKAGES"" BOOK [https://r-pkgs.org/](https://r-pkgs.org/) TO RESTRUCTURE CODE AND DESCRIBE STRUCTURE ACCORDINGLY. YOU'LL NEED TO ADD DOCUMENTATION TO ALL FUNCTIONS IF MAKING AN R PACKAGE, SO SOME OF THE TEXT BELOW MAY BE ABLE TO GO IN THE DOCUMENTATION FOR THE FUNCTIONS. WE CAN DISCUSS THIS ON THURSDAY...SEE ALSO COMMENTS ON CURRENT STRUCTURE.
 
 
-The files in this repo are organized into three [5?] folders: __Data simulation__, __model fitting and simulation__, and __summary figures__, TESTING?, VIGNETTE?. To replicate our simulation study [WHICH SIM STUDY IS THIS REFERRING TO? AOAS PAPER OR THE IN-PROGRESS MEE PAPER? IF THIS IS THE REPO FOR THE MEE PAPER THIS VIGNETTE SHOULD FOCUS ON THE ASSOCAIATED SIM STUDY], begin with files in the Data Simulation folder. To "test drive" the simulation study with a smaller number of species and datasets, use the testing folder, described below. 
+The files in this repo are organized into three [5?] folders: __Data simulation__, __model fitting and simulation__, and __summary figures__, TESTING?, VIGNETTE --- see some notes on these below?. To replicate our simulation study [WHICH SIM STUDY IS THIS REFERRING TO? AOAS PAPER OR THE IN-PROGRESS MEE PAPER? IF THIS IS THE REPO FOR THE MEE PAPER THIS VIGNETTE SHOULD FOCUS ON THE ASSOCAIATED SIM STUDY], begin with files in the Data Simulation folder. To "test drive" the simulation study with a smaller number of species and datasets, use the testing folder, described below. 
 
 - Data Simulation: [IS THERE ONE OF THESE FUNCTIONS THAT JUST DOES EVERYTHING? PERHAPS PRESENT IN ORDER OF USE AND NEST DEPENDENT FUNCTIONS UNDER PARENT FUNCTIONS WITH SUB-BULLETS?  (E.G., SIMULATION_SCENARIOS.R FIRST, THEN SIMULATE_BYSPPVALIDATION.R WITH DEPENDENDT FUNCTIONS NESTED BENEATH IT)]
   - `simulate_BySpeciesValidation.R`: This script defines a user-friendly wrapper function that can be used to simulate data assuming various stratified-by-species validation scenarios. Use this function to conduct your own simulations. For more information about the inputs/outputs of the function and an example of its usage, see the pdf vignette in this repo.
@@ -52,5 +52,7 @@ The files in this repo are organized into three [5?] folders: __Data simulation_
   
 [TESTING DESCRIPTION IS A BIT CONFUSING, LET'S DICUSS WHAT NEEDS TO GO HERE...]
 
-- Testing: This is an empty directory with the requisite file structure for testing. The testing folder contains blank text files called placeHold.txt to hold the file structure. These can be ignored.  After running `runall.R` this directory will contain the full datasets, masked datasets, and site-visit-true-autoID combinations with counts of zero for each simulated dataset. 
+- Testing: This is an empty directory with the requisite file structure for testing [WHAT DOES THIS MEAN?]. The testing folder contains blank text files called placeHold.txt to hold the file structure. These can be ignored.  After running `runall.R` this directory will contain the full datasets, masked datasets, and site-visit-true-autoID combinations with counts of zero for each simulated dataset. 
   
+- VIGNETTE: ONCE FINISHED SHOULD JUST BE THE PDF AS IT IS A STATIC DOC. SEE ALSO, R PACKAGES FOR MORE GUIDELINES/HOW TO STRUCTURE THIS WITHIN AN R PKG. 
+
