@@ -135,8 +135,7 @@ simulate_validatedData <- function(n_datasets,
   
   if(validation_design == "BySpecies"){
     
-    scenarios <- expand.grid(scenarios) %>% 
-      rownames_to_column(var = "Scenario_Number")
+    scenarios <- expand.grid(scenarios)
     
     # loop over scenarios and datasets, saving each masked dataset
     # Note that for this design, `scenarios` is a dataframe object
@@ -156,6 +155,11 @@ simulate_validatedData <- function(n_datasets,
         
       }
     }
+    
+    # add a column for the scenario number to make it easy to see which 
+    # LOVE for each species goes with which number on x-axis of plots
+    scenarios <- scenarios %>% 
+      rownames_to_column(var = "Scenario_Number")
     
   } else {
     
