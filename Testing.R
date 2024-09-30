@@ -11,17 +11,10 @@ theme_set(theme_bw())
 # getting a message to "Please start a new R session in the new project directory."
 # after running the next line 
 here::set_here(path = ".")
+
 ## ----eval=FALSE, echo=TRUE-----------------------------------------------------------
 ## install.packages("your_package_name_here")
 
-
-## ----eval=FALSE, echo=TRUE, message=FALSE--------------------------------------------
-## library(tidyverse)
-## library(nimble)
-## library(coda)
-## library(rstan)
-## library(parallel)
-## library(here)
 
 ## ------------------------------------------------------------------------------------
 # For simulation 
@@ -79,20 +72,6 @@ rowSums(test_theta2)
 
 val_scenarios <- list(spp1 = c(.75, .5), spp2 = c(.25, .5), spp3 = c(.25, .75))
 
-
-## SOMETHING WRONG HERE...GETTING ERROR AND CANNOT SIMULATE DATA. PERHAPS test is messed up?
-# Error in simulate_validatedData(n_datasets = 5, validation_design = "BySpecies",  : 
-#                                   The rows of theta do not sum to 1.
-
-# This is possibly an artifact of how test_theta2 was simulated.  
-# Check this, which is the internal test code: 
-
-# print the rowSums of test theta matrix: 
-rowSums(test_theta2)
-
-# this is the test returning the error: 
-any(rowSums(test_theta2) != 1) # want this to return FALSE, because then it won't return an error
-
 ## ----message=FALSE-------------------------------------------------------------------
 fake_data <- simulate_validatedData(
   n_datasets = 5, 
@@ -126,6 +105,8 @@ validation_summary
 ## ------------------------------------------------------------------------------------
 full_dfs <- fake_data$full_datasets
 head(full_dfs[[1]])
+# WHY ARE THE ROWS REPEATED?  E.G., ROW 1 AND ROW 2 ARE THE EXACT SAME... SO ARE 
+# ROWS 3-6...
 
 
 ## ------------------------------------------------------------------------------------
@@ -137,10 +118,16 @@ head(site_visits_without_calls[[1]])
 masked_dfs <- fake_data$masked_dfs
 
 # View dataset 3 with scenario 7 validation effort.
+# HOW DOES THIS CONNECT TO FULL_DFS? LOOKS LIKE IT'S THE DISAGGREGATED 
+# VERSION, AND MAYBE THE FIRST 2 ROWS OF MASKED DFS REPRESENT 2 OF THE 5 CALLS THAT 
+# WERE CLASSIFIED FROM SPP 3 TO SPP 3 AT SITE 1 VISIT 1, BUT THEN WHY ARE THERE ONLY 3 ROWS 
+# AND NOT 5 IN TOTAL FROM THIS SITE-VISIT?
+# HARD TO REALITY CHECK THIS CODE WITHOUT KNOWING HOW IT CONNECTS TO FULL_DFS
 head(masked_dfs[[7]][[3]])
 
 
 
+# RECOMMEND A SMALLER TESTING EXAMPLE THAT TAKES <5 MINS
 ## -------------------------------------------------------------------------------------
 # Run time will vary: with 5 datasets, 30 sites, 5 visits, 3 species and the assigned 
 # psi and lambda values, this takes ~ 2 minutes per scenario. With the 8 scenarios above,
