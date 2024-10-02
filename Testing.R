@@ -11,17 +11,10 @@ theme_set(theme_bw())
 # getting a message to "Please start a new R session in the new project directory."
 # after running the next line 
 here::set_here(path = ".")
+
 ## ----eval=FALSE, echo=TRUE-----------------------------------------------------------
 ## install.packages("your_package_name_here")
 
-
-## ----eval=FALSE, echo=TRUE, message=FALSE--------------------------------------------
-## library(tidyverse)
-## library(nimble)
-## library(coda)
-## library(rstan)
-## library(parallel)
-## library(here)
 
 ## ------------------------------------------------------------------------------------
 # For simulation 
@@ -79,20 +72,6 @@ rowSums(test_theta2)
 
 val_scenarios <- list(spp1 = c(.75, .5), spp2 = c(.25, .5), spp3 = c(.25, .75))
 
-
-## SOMETHING WRONG HERE...GETTING ERROR AND CANNOT SIMULATE DATA. PERHAPS test is messed up?
-# Error in simulate_validatedData(n_datasets = 5, validation_design = "BySpecies",  : 
-#                                   The rows of theta do not sum to 1.
-
-# This is possibly an artifact of how test_theta2 was simulated.  
-# Check this, which is the internal test code: 
-
-# print the rowSums of test theta matrix: 
-rowSums(test_theta2)
-
-# this is the test returning the error: 
-any(rowSums(test_theta2) != 1) # want this to return FALSE, because then it won't return an error
-
 ## ----message=FALSE-------------------------------------------------------------------
 fake_data <- simulate_validatedData(
   n_datasets = 5, 
@@ -126,6 +105,8 @@ validation_summary
 ## ------------------------------------------------------------------------------------
 full_dfs <- fake_data$full_datasets
 head(full_dfs[[1]])
+# WHY ARE THE ROWS REPEATED?  E.G., ROW 1 AND ROW 2 ARE THE EXACT SAME... SO ARE 
+# ROWS 3-6...
 
 
 ## ------------------------------------------------------------------------------------
@@ -137,10 +118,18 @@ head(site_visits_without_calls[[1]])
 masked_dfs <- fake_data$masked_dfs
 
 # View dataset 3 with scenario 7 validation effort.
+# HOW DOES THIS CONNECT TO FULL_DFS? LOOKS LIKE IT'S THE DISAGGREGATED 
+# VERSION, AND MAYBE THE FIRST 2 ROWS OF MASKED DFS REPRESENT 2 OF THE 5 CALLS THAT 
+# WERE CLASSIFIED FROM SPP 3 TO SPP 3 AT SITE 1 VISIT 1, BUT THEN WHY ARE THERE ONLY 3 ROWS 
+# AND NOT 5 IN TOTAL FROM THIS SITE-VISIT?
+# HARD TO REALITY CHECK THIS CODE WITHOUT KNOWING HOW IT CONNECTS TO FULL_DFS
+
 head(masked_dfs[[7]][[3]])
 
 
 
+# RECOMMEND A SMALLER TESTING EXAMPLE THAT TAKES <5 MINS, MAYBE JUST 2 OR 3 SCENARIOS?
+# # started at 11:38:42.825776 finished at 2024-09-30 12:06:51 MDT
 ## -------------------------------------------------------------------------------------
 # Run time will vary: with 5 datasets, 30 sites, 5 visits, 3 species and the assigned 
 # psi and lambda values, this takes ~ 2 minutes per scenario. With the 8 scenarios above,
@@ -202,6 +191,7 @@ visualize_single_parameter(sims_output, par = "theta[2, 1]",
 # if you think it would be better to get rid of these functions and stick with what we 
 # have, let me know! My reason for thinking of these is that this is likely the kind of
 # really simple check that practitioners will be looking for.)
+
 plot_coverage_vs_calls(
   sims_output, 
   validation_summary,
@@ -220,6 +210,7 @@ plot_bias_vs_calls(
   convergence_threshold = 1.1
 )
 
+# I THINK THESE ARE USEFUL, CAN YOU ADD ONE THAT PUTS INTERVAL WIDTH ON THE Y-AXIS?
 
 ## ----message=FALSE-------------------------------------------------------------------
 psi <- c(0.633, 0.612, 0.849, 0.898)
@@ -260,6 +251,23 @@ FE_data <- simulate_validatedData(
 # Runtime: with the specified number of sites, visits, species, validation scenarios
 # and parameter settings, this takes ~ 9 minutes per scenario, so around 36 minutes for
 # this small test case. Plan accordingly! 
+# RUNNING INTO ANOTHER ERROR HERE...
+# Beginning scenario 1.
+# 2024-09-30 12:21:22.319989
+# |                                                  |   0%`summarise()` has grouped output by 'site'. You can override using the `.groups` argument.
+# |==========                                        |  20%`summarise()` has grouped output by 'site'. You can override using the `.groups` argument.
+# |====================                              |  40%`summarise()` has grouped output by 'site'. You can override using the `.groups` argument.
+# |==============================                    |  60%`summarise()` has grouped output by 'site'. You can override using the `.groups` argument.
+# |========================================          |  80%`summarise()` has grouped output by 'site'. You can override using the `.groups` argument.
+# |==================================================| 100%
+# Error in gzfile(file, mode) : cannot open the connection
+# In addition: Warning message:
+#   In gzfile(file, mode) :
+#   cannot open compressed file '/Users/c84k467/Library/CloudStorage/OneDrive-MontanaStateUniversity/
+#     BoxMigratedData/student-advising/oram-dissertation_work/ValidationExplorer/Testing/
+      # FixedEffortExample/ThetaFE/summary_df_for_scenario_1.rds', 
+# probable reason 'No such file or directory'
+start <- Sys.time()
 FE_model_fits <- run_sims(
   data_list = FE_data$masked_dfs,
   zeros_list = FE_data$zeros,
@@ -269,6 +277,8 @@ FE_model_fits <- run_sims(
   save_individual_summaries_list = FALSE,
   directory = here("Testing", "FixedEffortExample")
 )
+
+Sys.time() - start
 
 
 ## ----echo=FALSE----------------------------------------------------------------------
