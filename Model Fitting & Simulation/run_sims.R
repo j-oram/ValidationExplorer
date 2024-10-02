@@ -194,8 +194,15 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
       }
       
       if (save_fits == TRUE){
+        # if directory/ThetaScenarioID/fits does not exist, create it
+        if(!dir.exists(file.path(directory, paste0("Theta", theta_scenario_id), "fits"))) {
+          dir.create(file.path(directory, paste0("Theta", theta_scenario_id), "fits"), recursive = TRUE)
+        }
         
-        saveRDS(fit, paste0(directory, "/Theta", theta_scenario_id,"/fits/fit_", scenario, "_", dataset, ".rds"))
+        saveRDS(
+          fit, 
+          file=file.path(directory, paste0("Theta", theta_scenario_id),"fits", paste0("fit_", scenario, "_", dataset, ".rds"))
+        )
         
       }
       
@@ -214,8 +221,14 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
       individual_summaries_list[[dataset]] <- fit_summary
       
       if (save_individual_summaries_list == TRUE){
-        
-        saveRDS(individual_summaries_list, paste0(directory, "/Theta", theta_scenario_id,"/individual_summaries/list_", scenario, ".rds"))
+        # if directory/ThetaScenarioID/individual_summaries does not exist, create it
+        if(!dir.exists(file.path(directory, paste0("Theta", theta_scenario_id), "individual_summaries"))) {
+          dir.create(file.path(directory, paste0("Theta", theta_scenario_id), "individual_summaries"), recursive = TRUE)
+        }
+        saveRDS(
+          individual_summaries_list, 
+          file=file.path(directory, paste0("Theta", theta_scenario_id),"individual_summaries", paste0("list_", scenario, ".rds"))
+        )
         
       }
       
@@ -229,7 +242,15 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
     individual_summary_df$scenario <- scenario
     individual_summary_df$theta_scenario <- theta_scenario_id
     
-    saveRDS(individual_summary_df, paste0(directory, "/Theta", theta_scenario_id,"/summary_df_for_scenario_", scenario, ".rds"))
+    # make sure that the ThetaSCENARIOID folder is available for saving
+    if(!dir.exists(file.path(directory, paste0("Theta", theta_scenario_id)))) {
+      dir.create(file.path(directory, paste0("Theta", theta_scenario_id)), recursive = TRUE)
+    }
+    
+    saveRDS(
+      individual_summary_df, 
+      file=file.path(directory, paste0("Theta", theta_scenario_id), paste0("summary_df_for_scenario_", scenario, ".rds"))
+    )
     
     big_list[[scenario]] <- individual_summary_df
   }

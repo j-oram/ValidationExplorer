@@ -121,9 +121,9 @@ simulate_validatedData <- function(n_datasets,
       # If user wants individual rds files for each dataframe, save them and the zeros
       # in the specified directory
       if(save_datasets == TRUE){
-        saveRDS(datasets_list[[m]], file = paste0(directory, "/dataset_", m, ".rds"))
+        saveRDS(datasets_list[[m]], file = file.path(directory, paste0("dataset_", m, ".rds")))
         saveRDS(zeros[[m]], 
-                file = paste0(directory, "/zeros_in_dataset_", m, ".rds"))
+                file = file.path(directory, paste0("zeros_in_dataset_", m, ".rds")))
       }  
       
     }
@@ -148,7 +148,7 @@ simulate_validatedData <- function(n_datasets,
         
         if(save_masked_datasets == TRUE){
           saveRDS(masked_df, 
-                  file = paste0(directory, "/dataset_", d, "_masked_under_BSV_scenario_", s, ".rds"))
+                  file = file.path(directory, paste0("dataset_", d, "_masked_under_BSV_scenario_", s, ".rds")))
         }
         
         masked_dataset_list[[s]][[d]] <- masked_df
@@ -177,7 +177,7 @@ simulate_validatedData <- function(n_datasets,
         if(save_masked_datasets == TRUE) {
           saveRDS(
             masked_df, 
-            file = paste0(directory, "/dataset_", d, "_masked_under_FE_scenario_", s, ".rds")
+            file = file.path(directory, paste0("dataset_", d, "_masked_under_FE_scenario_", s, ".rds"))
           )
         }
         
@@ -188,7 +188,7 @@ simulate_validatedData <- function(n_datasets,
     
   }
   
-  # If the validation design is by species, also return the scenarios dataframe
+  # If the validation design is by-species, also return the scenarios dataframe
   # created by the expand.grid call above. This is potentially useful for users 
   # to see exactly which scenarios are being investigated
   if(validation_design == "BySpecies") {
