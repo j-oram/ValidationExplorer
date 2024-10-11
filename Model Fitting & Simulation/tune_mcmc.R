@@ -13,8 +13,10 @@
 
          
 # A function that evaluates the $rhat after every thousand iterations
-tune_mcmc <- function(dataset, zeros, ) {
-    
+tune_mcmc <- function(dataset, zeros) {
+  
+  max_iters <- 10000
+  
   ## :::::::::::::::: fit MCMC with max_iters :::::::::::::::::: ##
   observed_df <- dataset
   all_sites_and_visits <- bind_rows(observed_df, zeros) %>% 
@@ -123,8 +125,8 @@ tune_mcmc <- function(dataset, zeros, ) {
       as.matrix()
   )
     
+  print("Fitting MCMC in parallel ... ")
     library(parallel)
-    nburn = max_iters/2
     this_cluster <- makeCluster(3)
     start <- Sys.time()
     fit <- parLapply(
@@ -134,8 +136,8 @@ tune_mcmc <- function(dataset, zeros, ) {
       code = code,
       data = nimble_data, 
       constants = constants, 
-      niter = max_iters,
-      nburn = 0, 
+      niter = 1500,
+      nburn = 500, 
       thin = 1
     )
     end <- Sys.time()
@@ -146,61 +148,35 @@ tune_mcmc <- function(dataset, zeros, ) {
     warmups <- c(500, 1000, 2000, 5000)
     iters_to_check <- 1:5*1000
     
-    i <- 1
-    j <- 1
-    
-    while(i<=length(warmups) & j<=length(iters_to_check)){
+    M <- apply(cbind(warmups), 1, function(x) { # for each warmup value,
       
-      tmp1 <- lapply(fit, function(x) x[warmups[i]:warmups[i]+iters_to_check[j], ])
-      Rhat <- vector(length = ncol(tmp1[[1]]))
+      V <- apply(cbind(iters_to_check), 1, function(y) { # for each iteration, 
+        tmp1 <- lapply(fit, function(z) z[x:(x+y), ]) # look at each element in the fit (a list of 3), and subset it from the warmup to the warmup+iters
+        Rhat <- vector(length = ncol(tmp1[[1]])) # create a vector that is the same length as the number of columns (variables) in the first element in the list of subsets. 
+        for(k in 1:ncol(tmp1[[1]])) { # fill in the entries of the vector one by one with the Rhat values for each variable 
+          tmp2 <- sapply(tmp1, function(a) a[,k])
+          Rhat[k] <- Rhat(tmp2)
+        }
+        
+        return(ifelse(all(Rhat <= 1.1), 1, 0)) # if all parameters have Rhat  < 1.1 for this number of iterations given the warmup, return 1
+      }) # output is a vector of length 5; for this warmup, how many additional iterations must be completed to 
       
-      for(k in 1:ncol(tmp1[[1]])){
-        tmp2 <- sapply(tmp1, function(x) x[,k])
-        Rhat[k] <- Rhat(tmp2)
-      }
-      
-      if(all(Rhat <= 1.1)) break 
-      else j <- j+1
-      
-    }
+      return(V)
+    })
     
+    colnames(M) <- paste0("warmup = ", as.character(warmups))
+    rownames(M) <- paste0("iters = ", as.character(iters_to_check))
     
+    iter <- min(which(M == 1, arr.ind = TRUE)[, "row"])
+    warmup_out <- warmups[min(which(M[iter, ] == 1,))]
+    iter_out <- iters_to_check[iter]
     
-    
-    
-    
-    #max_check <- floor((max_iters - nburn)/1000)
-    checkpoint <- 1
-    iter <- NULL
-    all_converged <- NULL
-    
-    while(checkpoint <= max_check) {
-      max_rows <- checkpoint * 1000
-      tmp1 <- lapply(fit, function(x) x[1:max_rows, ])
-      Rhat <- vector(length = ncol(tmp1[[1]]))
-      for(i in 1:ncol(tmp1[[1]])){
-        tmp2 <- sapply(tmp1, function(x) x[,i])
-        Rhat[i] <- Rhat(tmp2)
-      }
-      
-      all_converged <- c(all_converged, ifelse(all(Rhat < 1.1), 1, 0))
-      iter <- c(iter, max_rows)
-      checkpoint <- checkpoint + 1
-    }
-      
-      
-    
-    converged_tbl = tibble(
-      iter = iter, 
-      all_converged = all_converged
-    )
-    
-    converged_tbl
-  
+    if(all(M == 0)) stop(message("Convergence was not reached in under 10,000 iterations. You must run chains for longer!"))
     
     return(list(max_iter_time = end-start, 
-                converged_tbl = converged_tbl, 
-                warmup = nburn))
+                min_warmup = warmup_out, 
+                min_iter = iter_out, 
+                convergence_matrix = M))
     
     
     
