@@ -136,8 +136,8 @@ tune_mcmc <- function(dataset, zeros) {
       code = code,
       data = nimble_data, 
       constants = constants, 
-      niter = 1500,
-      nburn = 500, 
+      niter = max_iters,
+      nburn = 0, 
       thin = 1
     )
     end <- Sys.time()
@@ -150,16 +150,16 @@ tune_mcmc <- function(dataset, zeros) {
     
     M <- apply(cbind(warmups), 1, function(x) { # for each warmup value,
       
-      V <- apply(cbind(iters_to_check), 1, function(y) { # for each iteration, 
-        tmp1 <- lapply(fit, function(z) z[x:(x+y), ]) # look at each element in the fit (a list of 3), and subset it from the warmup to the warmup+iters
-        Rhat <- vector(length = ncol(tmp1[[1]])) # create a vector that is the same length as the number of columns (variables) in the first element in the list of subsets. 
-        for(k in 1:ncol(tmp1[[1]])) { # fill in the entries of the vector one by one with the Rhat values for each variable 
+      V <- apply(cbind(iters_to_check), 1, function(y) { # for each number of iterations, 
+        tmp1 <- lapply(fit, function(z) z[x:(x+y), ]) # look at each element in the fit (a list of 3 chains), and subset it from the warmup to the warmup+iters.
+        Rhat <- vector(length = ncol(tmp1[[1]])) # Then, create a vector that is the same length as the number of columns (variables) in the first element in the list of subsets. 
+        for(k in 1:ncol(tmp1[[1]])) { # Then, fill in the entries of the vector one by one with the Rhat values for each variable.
           tmp2 <- sapply(tmp1, function(a) a[,k])
           Rhat[k] <- Rhat(tmp2)
         }
         
-        return(ifelse(all(Rhat <= 1.1), 1, 0)) # if all parameters have Rhat  < 1.1 for this number of iterations given the warmup, return 1
-      }) # output is a vector of length 5; for this warmup, how many additional iterations must be completed to 
+        return(ifelse(all(Rhat <= 1.1), 1, 0)) # If all parameters have Rhat  < 1.1 for this number of iterations given the warmup, return 1. Otherwise, return a 0.
+      }) # The resulting output is a vector of length 5; for this warmup, how many additional iterations must be completed to get convergence.
       
       return(V)
     })
@@ -175,7 +175,7 @@ tune_mcmc <- function(dataset, zeros) {
     
     return(list(max_iter_time = end-start, 
                 min_warmup = warmup_out, 
-                min_iter = iter_out, 
+                min_iter = iter_out + warmup_out, 
                 convergence_matrix = M))
     
     

@@ -8,6 +8,9 @@ library(here)
 library(kableExtra)
 theme_set(theme_bw())
 
+# Quiet the chatter
+option(dplyr.summarize.inform = FALSE)
+
 ## ----eval=FALSE, echo=TRUE-----------------------------------------------------------
 ## install.packages("your_package_name_here")
 
@@ -24,6 +27,7 @@ source("Data Simulation/summarize_n_validated.R")
 source("Model Fitting & Simulation/run_sims.R")
 source("Model Fitting & Simulation/MCMC_sum.R")
 source("Model Fitting & Simulation/runMCMC_fit.R")
+source("Model Fitting & Simulation/tune_mcmc.R")
 
 # Visualization
 source("Summary Figures/visualize_sims.R")
@@ -126,7 +130,7 @@ masked_dfs <- fake_data$masked_dfs
 # AND NOT 5 IN TOTAL FROM THIS SITE-VISIT?
 # HARD TO REALITY CHECK THIS CODE WITHOUT KNOWING HOW IT CONNECTS TO FULL_DFS
 
-head(masked_dfs[[2]][[1]])
+head(masked_dfs[[1]][[1]])
 
 # Jacob's answer: This is a copy of full_dfs[[1]] subject to the masking of true species labels 
 # according to scenario 2. I realized that there was a mismatch between the full (unmasked) df 
@@ -135,6 +139,21 @@ head(masked_dfs[[2]][[1]])
 # RECOMMEND A SMALLER TESTING EXAMPLE THAT TAKES <5 MINS, MAYBE JUST 2 OR 3 SCENARIOS?
 # # started at 11:38:42.825776 finished at 2024-09-30 12:06:51 MDT
 # Noted -- I changed it to two species, two scenarios, 5 datasets under each
+
+## Testing for the MCMC_tuning function: use the "worst case" scenario, which is scenario 1 
+## for these scenarios because it has the lowest average number of calls validated per 
+## dataset
+
+tuning_list <- tune_mcmc(dataset = masked_dfs[[1]][[5]], zeros = fake_data$zeros[[5]])
+
+min_iters <- tuning_list$min_iter
+warmup <- tuning_list$min_warmup
+expected_time <- tuning_list$max_iter_time
+
+# This output shows a matrix. A value of 1 in a cell indicates that the combination 
+# of warmup + iters yielded Rhat < 1.1 for all model parameters. 
+tuning_list$convergence_matrix
+
 ## -------------------------------------------------------------------------------------
 # Run time will vary: with 5 datasets, 30 sites, 5 visits, 2 species and the assigned 
 # psi and lambda values, this takes ~ 1:30 per scenario. With the 2 scenarios above,
@@ -146,7 +165,9 @@ sims_output <- run_sims(
          DGVs = list(lambda = lambda, psi = psi, theta = test_theta2),
          theta_scenario_id = 1, 
          parallel = TRUE,
-         niter = 2000, thin = 1,
+         niter = min_iters, 
+         nburn = warmup,
+         thin = 1,
          save_fits = FALSE,
          save_individual_summaries_list = FALSE,
          directory = here("Testing")
@@ -181,16 +202,16 @@ sims_output <- run_sims(
 visualize_parameter_group(sim_summary = sims_output, 
                           pars = "lambda", 
                           theta_scenario = 1, 
-                          scenarios = 1:4, 
+                          scenarios = 1:2, 
                           convergence_threshold = 1.1)
 
 
 ## ------------------------------------------------------------------------------------
 # note the space between the indices for theta[2, 1]
-visualize_single_parameter(sims_output, par = "theta[2, 1]", 
+visualize_single_parameter(sims_output, par = "lambda[2]", 
                            theta_scenario = 1, 
-                           scenarios = 1:3, 
-                           convergence_threshold = 1.2)
+                           scenarios = 1:2, 
+                           convergence_threshold = 1.03)
 
 # New plotting functions, feedback welcome! (Also, not I'm not wed to either of these; 
 # if you think it would be better to get rid of these functions and stick with what we 
@@ -201,7 +222,7 @@ plot_coverage_vs_calls(
   sims_output, 
   validation_summary,
   regex_pars = "lambda",
-  scenarios = 1:8, 
+  scenarios = 1:2, 
   theta_scenario = 1,
   convergence_threshold = 1.1
 )
@@ -217,7 +238,16 @@ plot_bias_vs_calls(
 
 # I THINK THESE ARE USEFUL, CAN YOU ADD ONE THAT PUTS INTERVAL WIDTH ON THE Y-AXIS?
 
-# Added to my to-do list! 
+# Done. See below: 
+
+plot_width_vs_calls(
+  sims_output, 
+  validation_summary, 
+  pars = c("lambda[1]", "psi[1]"), 
+  scenarios = 1:2,
+  theta_scenario = 1,
+  convergence_threshold = 1.05
+)
 
 ## ----message=FALSE-------------------------------------------------------------------
 psi <- c(0.633, 0.612, 0.849)
