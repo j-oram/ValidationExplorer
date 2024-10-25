@@ -9,48 +9,68 @@ library(kableExtra)
 theme_set(theme_bw())
 
 # Quiet the chatter
+# ERROR HERE, DO YOU NEED TO LIBRARY KNITR OR RMARKDOWN TO USE 
+# THIS "OPTION" FUNCTION? IT SAYS 
+# Error in option(dplyr.summarize.inform = FALSE) : could not find function "option"
 option(dplyr.summarize.inform = FALSE)
 
 ## ----eval=FALSE, echo=TRUE-----------------------------------------------------------
 ## install.packages("your_package_name_here")
 
 
+# ERRORS HERE TOO, LIKELY NEED TO CHANGE PATH from "Data Simulation/" 
+# TO R UNTIL YOU HAVE PACKAGE LOADED...BEST TO CHANGE TO devtools::load_all(".")
+# WHILE PACKAGE IS IN DEVELOPMENT... 
 ## ------------------------------------------------------------------------------------
 # For simulation 
-source("Data Simulation/simulate_validatedData.R")
-source("Data Simulation/count_detection_sim.R")
-source("Data Simulation/mask_by_spp.R")
-source("Data Simulation/mask_FE.R")
-source("Data Simulation/summarize_n_validated.R")
+source("R/simulate_validatedData.R")
 
-# For model fitting/MCMC
-source("Model Fitting & Simulation/run_sims.R")
-source("Model Fitting & Simulation/MCMC_sum.R")
-source("Model Fitting & Simulation/runMCMC_fit.R")
-source("Model Fitting & Simulation/tune_mcmc.R")
+# THIS .R FILE NO LONGER EXISTS..ASSUMING IT'S SIMDAT...
+#source("R/count_detection_sim.R")
+source("R/sim_dat.R")
+source("R/mask_by_spp.R")
+source("R/mask_FE.R")
+source("R/summarize_n_validated.R")
 
-# Visualization
-source("Summary Figures/visualize_sims.R")
+# For model fitting/MCMC SAME ISSUE HERE, CHANGING TO "R", BUT BETTER 
+# TO JUST LOAD PACKAGE... 
+source("R/run_sims.R")
+source("R/MCMC_sum.R")
+source("R/runMCMC_fit.R")
+source("R/tune_mcmc.R")
+
+# Visualization ERROR HERE TOO... 
+# source("R/visualize_sims.R") CHANGED TO...AGAIN, LOAD THE PACKAGE INSTEAD OF SOURCING
+source("R/visualize_parameter_group.R")
+source("R/visualize_single_parameter.R")
 
 ## ------------------------------------------------------------------------------------
 psi <- c(0.3, 0.6)
 lambda <- c(11, 2)
+
+
+
 
 # Define sites and visits 
 nspecies <- length(psi)
 nsites <- 30
 nvisits <- 5
 
-
+# CODE NOT IN TIDY FORMAT, USE NEW LINE AFTER A COMMA SO STUFF DOESN'T 
+# RUN OFF PAGE. CHANGED THIS FOR THE NEXT COUPLE OF LINES 
 ## ------------------------------------------------------------------------------------
-test_theta1 <- matrix(c(0.9, 0.1, 0.15, 0.85), byrow = TRUE, nrow = 2)
+test_theta1 <- matrix(c(0.9, 0.1, 0.15, 0.85), 
+                      byrow = TRUE, nrow = 2)
 test_theta1
 
 
 ## ------------------------------------------------------------------------------------
 # Generating a confusion matrix in this way appears to be the culprit of the testing 
 # problems; this doesn't necessarily give exactly 1, but values that are extremely close. 
-test_theta2 <- t(apply(18*diag(nspecies) + 2, 1, function(x) nimble::rdirch(alpha = x)))
+
+test_theta2 <- t(apply(18*diag(nspecies) + 2, 1, 
+                       function(x) nimble::rdirch(alpha = x))
+                 )
 test_theta2
 
 
@@ -85,6 +105,9 @@ fake_data <- simulate_validatedData(
   directory = paste0(here::here("Testing"))
 )
 
+# ERROR HERE PROHIBITING ME FROM MOVING FORWARD...
+# Error in mask_spp2(datasets_list[[d]], scenarios[s, ]) : 
+#   could not find function "mask_spp2"
 
 ## ------------------------------------------------------------------------------------
 # investigate the validation scenarios created by enumerating the species validation levels
