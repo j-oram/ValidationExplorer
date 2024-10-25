@@ -25,9 +25,9 @@ sim_dat(
 
 \item{psi}{a vector of length nspecies that contains the occurrence probabilities for each species in the assemblage. These values must be in \link{0,1}. Default is to draw a random vector from a U(.4, .9) distribution.}
 
-\item{theta}{n nspecies x nspecies matrix containing the (mis)classification probabilities for each species. All entries must be in (0,1], with the rows of the matrix summing to 1. The default draws rows from a dirichlet distribution with concentrations determined by location in the matrix (diagonal values have higher concentrations).}
+\item{lambda}{vector of length nspecies that contains the relative activity parameters for each species. Note these values need to be positive. By default, lambda values are the absolute value of normal(0, 100) random variables.}
 
-\item{lambdaa}{vector of length nspecies that contains the relative activity parameters for each species. Note these values need to be positive. By default, lambda values are the absolute value of normal(0, 100) random variables.}
+\item{theta}{n nspecies x nspecies matrix containing the (mis)classification probabilities for each species. All entries must be in (0,1], with the rows of the matrix summing to 1. The default draws rows from a dirichlet distribution with concentrations determined by location in the matrix (diagonal values have higher concentrations).}
 }
 \value{
 A list containing \code{full_df}, a complete dataframe simulated under the user's specified parameter settings. et_sim_datasets.R. The second list element is \code{params}, the parameters used to simulate data in list form.

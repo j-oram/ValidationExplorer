@@ -1,3 +1,4 @@
+#' @importFrom utils setTxtProgressBar txtProgressBar
 run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
                      parallel = TRUE,
                      niter = 2000, nburn = floor(niter/2), thin = 1,

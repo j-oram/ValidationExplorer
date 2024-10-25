@@ -47,7 +47,7 @@ mask_by_spp <- function(data, props_to_val){
       by = "call" # this is necessary to ensure the number of rows after masking is the same as OG df
     ),
     dplyr::inner_join( # returns rows of data[,-true_spp] that have a match in masked_df
-      data %>% select(-true_spp),
+      data %>% dplyr::select(-true_spp),
       masked_df
     )
   ) %>%

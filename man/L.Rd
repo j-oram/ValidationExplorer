@@ -19,7 +19,7 @@ A function borrowed from Ben XX on stack exchange.
 }
 \examples{
 library(dplyr)
-library(ggplot)
+library(ggplot2)
 
 tib <- tibble(
   pars = paste0("lambda[", rep(1:2, each = 5), "]"),

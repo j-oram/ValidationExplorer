@@ -1,3 +1,4 @@
+#' @importFrom stats quantile
 plot_width_vs_calls <- function(sim_summary,
                                 calls_summary, # output from summarize_n_validated
                                 pars = NULL,
