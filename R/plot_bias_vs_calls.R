@@ -1,3 +1,23 @@
+#' plot_bias_vs_calls.R
+#'
+#' @param sim_summary Simulation summaries in the format output from `run_sims`. This means a dataframe object with columns for `parameter`, (posterior) `Mean`, `truth`, `theta_scenario`, (validation) `scenario`, and `dataset` are all available.
+#' @param calls_summary A summary of the validated data as output from `summarize_n_validated`. Must contain the columns `theta_scenario` and `scenario`
+#' @param pars A character vector containing the parameters to be visualized. Use one of the following: "psi", "lambda", or "theta".
+#' @param regex_pars A string containing the name of a parameter group (e.g., "lambda") to be visualized.
+#' @param theta_scenario The classifier ID to be visualized.
+#' @param scenarios The ID's corresponding to the validation scenarios to be visualized. Typically a numeric vector (e.g. 1:5)
+#' @param convergence_threshold The threshold  value for the Gelman-Rubin statistic. Below this value, a model is considered 'converged' for the purpose of including it in visualizations.
+#'
+#' @return A ggplot object  of average estimation error vs the number of validated calls under each scenario.
+#' @export
+#'
+#' @examples
+#'
+#' s1 <- readRDS("Testing/FixedEffortExample/ThetaFE/summary_df_for_scenario_1.rds")
+#' s2 <- readRDS("Testing/FixedEffortExample/ThetaFE/summary_df_for_scenario_2.rds")
+#'
+#' s <- bind_rows(s1, s2)
+#' plot_bias_vs_calls(s, calls_summary)
 plot_bias_vs_calls <- function(sim_summary,
                                calls_summary, # output from summarize_n_validated
                                pars = NULL,

@@ -1,3 +1,24 @@
+#' mask_FE
+#'
+#' @param df A dataframe object
+#' @param effort_prop The proportion of observations from the first visit to be validated.
+#' @param seed An optional see to make masking/validation simulation reproducible
+#'
+#' @return A dataframe object with `effort_prop` of the observations validated from the first visit to each site.
+#' @export
+#'
+#' @examples
+#' library(dplyr)
+#'
+#' dat <- sim_dat()$full_df
+#'
+#' head(dat)
+#'
+#' dat <- dat %>% tidyr::uncount(weights = count, .remove = FALSE)
+#' FE_validated_data <- mask_FE(dat, effort_prop = .2, seed = 17)
+#'
+#' head(dat)
+#' head(FE_validated_data)
 mask_FE <- function(df, effort_prop, seed = NULL) {
 
   # set the seed if specified by the user

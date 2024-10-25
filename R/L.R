@@ -1,4 +1,4 @@
-#' A function borrowed from Ben XX on stack exchange.
+#' L: A labeller function borrowed from Ben XX on stack exchange.
 #'
 #' @param labels The labels to be parsed.
 #' @param multi_line Whether the to print facet labels on
@@ -8,7 +8,7 @@
 #'
 #' @examples
 #' library(dplyr)
-#' library(ggplot)
+#' library(ggplot2)
 #'
 #' tib <- tibble(
 #'   pars = paste0("lambda[", rep(1:2, each = 5), "]"),
