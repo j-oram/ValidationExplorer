@@ -17,7 +17,7 @@
 #'
 #' tib %>%
 #'   ggplot(aes(x = vals)) +
-#'   geom_hist() +
+#'   geom_histogram() +
 #'   facet_wrap(~pars, labeller = L)
 #'
 L <- function(labels,multi_line=TRUE) {
