@@ -1,0 +1,11 @@
+Package: ValidationExplorer
+Title: Streamlined simulation studies for bat acoustic data with the count-detection model
+Version: 0.0.0.9000
+Authors@R: 
+    person("Jacob", "Oram", , "jacoboram@montana.edu", role = c("aut", "cre"),
+           comment = c(ORCID = "0009-0001-8405-529X"))
+Description: Modeling misclassification in multinomial data requires external information to identify all model parameters. In the context of bat acoustic data, this additional information is often supplied by expert validation of a subset of sample call files, which can sometimes be prohibitively expensive. ValidationExplorer provides user-friendly wrapper functions to ease the programming burden for bat biologists hoping to use simulation to explore the implications of various sampling designs used to select which recordings to validate. We hope that our package will allow users to find an efficient validation design prior to field sampling.  
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
