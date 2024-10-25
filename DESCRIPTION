@@ -19,4 +19,6 @@ Imports:
     purrr,
     rstan,
     stringr,
-    tidyr
+    tibble,
+    tidyr,
+    viridis

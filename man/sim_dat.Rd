@@ -9,9 +9,9 @@ sim_dat(
   nspecies = 8,
   nvisits = 4,
   seed = NULL,
-  psi = runif(nspecies, 0.4, 0.9),
-  lambda = abs(rnorm(nspecies, 0, 100)),
-  theta = t(apply(18 * diag(nspecies) + 2, 1, function(x) rdirch(1, x)))
+  psi = stats::runif(nspecies, 0.4, 0.9),
+  lambda = abs(stats::rnorm(nspecies, 0, 100)),
+  theta = t(apply(18 * diag(nspecies) + 2, 1, function(x) nimble::rdirch(1, x)))
 )
 }
 \arguments{
