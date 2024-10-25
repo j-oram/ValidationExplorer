@@ -7,40 +7,40 @@ plot_coverage_vs_calls <- function(sim_summary,
                                    convergence_threshold = 1.1) {
 
   plt_df <- sim_summary %>%
-    mutate(
+    dplyr::mutate(
       below_threshold = ifelse(round(Rhat, 4) <= convergence_threshold, 1, 0)
     ) %>%
-    group_by(theta_scenario, scenario, dataset) %>%
-    mutate(
+    dplyr::group_by(theta_scenario, scenario, dataset) %>%
+    dplyr::mutate(
       all_converge = ifelse(any(below_threshold == 0), 0, 1)
     ) %>%
-    ungroup %>%
-    filter(all_converge == 1) %>%
-    group_by(theta_scenario, scenario, parameter) %>%
-    mutate(
+    dplyr::ungroup %>%
+    dplyr::filter(all_converge == 1) %>%
+    dplyr::group_by(theta_scenario, scenario, parameter) %>%
+    dplyr::mutate(
       coverage = mean(capture),
     ) %>%
-    select(theta_scenario, scenario, parameter, coverage) %>%
-    ungroup() %>%
-    mutate(theta_scenario = as.character(theta_scenario),
+    dplyr::select(theta_scenario, scenario, parameter, coverage) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(theta_scenario = as.character(theta_scenario),
            scenario = as.character(scenario)) %>%
-    left_join(., calls_summary, by = c("scenario", "theta_scenario"))
+    dplyr::left_join(., calls_summary, by = c("scenario", "theta_scenario"))
 
   if(!is.null(pars)) {
-    plt_df <- plt_df %>% filter(parameter %in% pars)
+    plt_df <- plt_df %>% dplyr::filter(parameter %in% pars)
   } else if(!is.null(regex_pars)) {
-    plt_df <- plt_df %>% filter(str_detect(parameter, regex_pars))
+    plt_df <- plt_df %>% dplyr::filter(str_detect(parameter, regex_pars))
   }
 
 
   plt <- plt_df %>%
-    ggplot(
-      aes(x = n_validated, y = coverage, group = parameter, color = parameter)
+    ggplot2::ggplot(
+      ggplot2::aes(x = n_validated, y = coverage, group = parameter, color = parameter)
     ) +
-    geom_point() +
-    geom_line() +
-    ylim(0,1) +
-    labs(
+    ggplot2::geom_point() +
+    ggplot2::geom_line() +
+    ggplot2::ylim(0,1) +
+    ggplot2::labs(
       x = "Number of validated calls",
       y = "Coverage",
       color = "Parameter"

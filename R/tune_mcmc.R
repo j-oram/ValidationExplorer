@@ -4,19 +4,19 @@ tune_mcmc <- function(dataset, zeros) {
 
   ## :::::::::::::::: fit MCMC with max_iters :::::::::::::::::: ##
   observed_df <- dataset
-  all_sites_and_visits <- bind_rows(observed_df, zeros) %>%
-    arrange(site, visit, true_spp, id_spp)
+  all_sites_and_visits <- dplyr::bind_rows(observed_df, zeros) %>%
+    dplyr::arrange(site, visit, true_spp, id_spp)
 
   ## NIMBLE --------- ##
 
-  code <- nimbleCode({
+  code <- nimble::nimbleCode({
 
     # priors
     for(species in 1:nspecies){
 
-      psi[species] ~ dbeta(1,1)
-      lambda[species] ~ T(dnorm(0, sd = 10), 0, Inf)
-      theta[species, 1:nspecies] ~ ddirch(alpha = alpha0[species, 1:nspecies])
+      psi[species] ~ nimble::dbeta(1,1)
+      lambda[species] ~ nimble::T(nimble::dnorm(0, sd = 10), 0, Inf)
+      theta[species, 1:nspecies] ~ nimble::ddirch(alpha = alpha0[species, 1:nspecies])
 
     }
 
@@ -26,7 +26,7 @@ tune_mcmc <- function(dataset, zeros) {
     for(i in 1:nsites){
       for(species in 1:nspecies){
 
-        z[i, species] ~ dbern(psi[species])
+        z[i, species] ~ nimble::dbern(psi[species])
 
       }
     }
@@ -35,7 +35,7 @@ tune_mcmc <- function(dataset, zeros) {
     for(i in 1:nsites){
       for(j in 1:nvisits){
 
-        Y.[i,j] ~ dpois(sum(z[i,1:nspecies] * lambda[1:nspecies]))
+        Y.[i,j] ~ nimble::dpois(sum(z[i,1:nspecies] * lambda[1:nspecies]))
 
       }
     }
@@ -48,8 +48,8 @@ tune_mcmc <- function(dataset, zeros) {
       pi[row, 1:nspecies] <- z[site1[row], 1:nspecies] * lambda[1:nspecies] /
         sum(z[site1[row], 1:nspecies] * lambda[1:nspecies])
 
-      k[row] ~ dcat(pi[row, 1:nspecies])
-      y[row] ~ dcat(theta[k[row], 1:nspecies])
+      k[row] ~ nimble::dcat(pi[row, 1:nspecies])
+      y[row] ~ nimble::dcat(theta[k[row], 1:nspecies])
 
     }
 
@@ -76,9 +76,9 @@ tune_mcmc <- function(dataset, zeros) {
   constants <- list(
     site1 = uamb$site, # Only sites where at least one call was made
     site2 = amb$site,
-    nspecies = n_distinct(observed_df$id_spp),
-    nvisits = n_distinct(observed_df$visit),
-    nsites = n_distinct(all_sites_and_visits$site), # we want to have a value for all possible site, even if that val is 0
+    nspecies = dplyr::n_distinct(observed_df$id_spp),
+    nvisits = dplyr::n_distinct(observed_df$visit),
+    nsites = dplyr::n_distinct(all_sites_and_visits$site), # we want to have a value for all possible site, even if that val is 0
     n_confirmed_calls = nrow(uamb),
     n_ambiguous_calls = nrow(amb)
   )
@@ -92,29 +92,28 @@ tune_mcmc <- function(dataset, zeros) {
     k = uamb$true_spp,
     y2 = amb$id_spp,
     alpha0 = matrix(1/(constants$nspecies),
-                    nrow = n_distinct(all_sites_and_visits$id_spp),
-                    ncol = n_distinct(all_sites_and_visits$id_spp)),
+                    nrow = dplyr::n_distinct(all_sites_and_visits$id_spp),
+                    ncol = dplyr::n_distinct(all_sites_and_visits$id_spp)),
 
     # Define Y. based on all site-visits, even if it had no calls
     Y. = all_sites_and_visits %>%
-      group_by(site, visit) %>%
-      summarize(total = unique(Y.)) %>%
-      pivot_wider(
+      dplyr::group_by(site, visit) %>%
+      dplyr::summarize(total = unique(Y.)) %>%
+      tidyr::pivot_wider(
         names_from = visit,
         names_prefix = "visit",
         values_from = total,
         values_fill = 0 # if NA, turn into a 0, since the NA is due to no calls being detected at that site-visit
       ) %>%
-      ungroup() %>%
-      select(-site) %>%
+      dplyr::ungroup() %>%
+      dplyr::select(-site) %>%
       as.matrix()
   )
 
-  print("Fitting MCMC in parallel ... ")
-    library(parallel)
-    this_cluster <- makeCluster(3)
+  print("Fitting MCMC in parallel ... \n this may take a few minutes")
+    this_cluster <- parallel::makeCluster(3)
     start <- Sys.time()
-    fit <- parLapply(
+    fit <- parallel::parLapply(
       cl = this_cluster,
       X = 1:3,
       fun = runMCMC_fit,
@@ -126,7 +125,7 @@ tune_mcmc <- function(dataset, zeros) {
       thin = 1
     )
     end <- Sys.time()
-    stopCluster(this_cluster)
+    parallel::stopCluster(this_cluster)
 
     ## :::::: Check whether all R-hat values are less than 1.1 ::::: ##
 
@@ -140,7 +139,7 @@ tune_mcmc <- function(dataset, zeros) {
         Rhat <- vector(length = ncol(tmp1[[1]])) # Then, create a vector that is the same length as the number of columns (variables) in the first element in the list of subsets.
         for(k in 1:ncol(tmp1[[1]])) { # Then, fill in the entries of the vector one by one with the Rhat values for each variable.
           tmp2 <- sapply(tmp1, function(a) a[,k])
-          Rhat[k] <- Rhat(tmp2)
+          Rhat[k] <- rstan::Rhat(tmp2)
         }
 
         return(ifelse(all(Rhat <= 1.1), 1, 0)) # If all parameters have Rhat  < 1.1 for this number of iterations given the warmup, return 1. Otherwise, return a 0.

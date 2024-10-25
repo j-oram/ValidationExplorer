@@ -26,18 +26,19 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
     for(dataset in 1:ndatasets){
       observed_df <- data_list[[scenario]][[dataset]] # was df7
       zeros <- zeros_list[[dataset]]
-      all_sites_and_visits <- bind_rows(observed_df, zeros) %>% arrange(site, visit, true_spp, id_spp) # was df8
+      all_sites_and_visits <- dplyr::bind_rows(observed_df, zeros) %>%
+        dplyr::arrange(site, visit, true_spp, id_spp) # was df8
 
       ## NIMBLE ---------
 
-        code <- nimbleCode({
+        code <- nimble::nimbleCode({
 
           # priors
           for(species in 1:nspecies){
 
-            psi[species] ~ dbeta(1,1)
-            lambda[species] ~ T(dnorm(0, sd = 10), 0, Inf)
-            theta[species, 1:nspecies] ~ ddirch(alpha = alpha0[species, 1:nspecies])
+            psi[species] ~ nimble::dbeta(1,1)
+            lambda[species] ~ nimble::T(nimble::dnorm(0, sd = 10), 0, Inf)
+            theta[species, 1:nspecies] ~ nimble::ddirch(alpha = alpha0[species, 1:nspecies])
 
           }
 
@@ -47,7 +48,7 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
           for(i in 1:nsites){
             for(species in 1:nspecies){
 
-              z[i, species] ~ dbern(psi[species])
+              z[i, species] ~ nimble::dbern(psi[species])
 
             }
           }
@@ -56,7 +57,7 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
           for(i in 1:nsites){
             for(j in 1:nvisits){
 
-              Y.[i,j] ~ dpois(sum(z[i,1:nspecies] * lambda[1:nspecies]))
+              Y.[i,j] ~ nimble::dpois(sum(z[i,1:nspecies] * lambda[1:nspecies]))
 
             }
           }
@@ -69,8 +70,8 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
             pi[row, 1:nspecies] <- z[site1[row], 1:nspecies] * lambda[1:nspecies] /
               sum(z[site1[row], 1:nspecies] * lambda[1:nspecies])
 
-            k[row] ~ dcat(pi[row, 1:nspecies])
-            y[row] ~ dcat(theta[k[row], 1:nspecies])
+            k[row] ~ nimble::dcat(pi[row, 1:nspecies])
+            y[row] ~ nimble::dcat(theta[k[row], 1:nspecies])
 
           }
 
@@ -80,7 +81,7 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
 
             pi2[row, 1:nspecies] <- z[site2[row], 1:nspecies] * lambda[1:nspecies] /
               sum(z[site2[row], 1:nspecies] * lambda[1:nspecies])
-            y2[row] ~ dmarginal_autoID(theta_mat = theta[1:nspecies, 1:nspecies],
+            y2[row] ~ dmarginal_autoID(theta_mat = theta[1:nspecies, 1:nspecies], # may need to switch this to dmultinom (slower, but works better from a dependencies perspective?)
                                        pi = pi2[row, 1:nspecies])
 
           }
@@ -97,9 +98,9 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
         constants <- list(
           site1 = uamb$site, # Only sites where at least one call was made
           site2 = amb$site,
-          nspecies = n_distinct(observed_df$id_spp),
-          nvisits = n_distinct(observed_df$visit),
-          nsites = n_distinct(all_sites_and_visits$site), # we want to have a value for all possible site, even if that val is 0
+          nspecies = dplyr::n_distinct(observed_df$id_spp),
+          nvisits = dplyr::n_distinct(observed_df$visit),
+          nsites = dplyr::n_distinct(all_sites_and_visits$site), # we want to have a value for all possible site, even if that val is 0
           n_confirmed_calls = nrow(uamb),
           n_ambiguous_calls = nrow(amb)
         )
@@ -113,28 +114,28 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
           k = uamb$true_spp,
           y2 = amb$id_spp,
           alpha0 = matrix(1/(constants$nspecies),
-                          nrow = n_distinct(all_sites_and_visits$id_spp),
-                          ncol = n_distinct(all_sites_and_visits$id_spp)),
+                          nrow = dplyr::n_distinct(all_sites_and_visits$id_spp),
+                          ncol = dplyr::n_distinct(all_sites_and_visits$id_spp)),
 
           # Define Y. based on all site-visits, even if it had no calls
           Y. = all_sites_and_visits %>%
-            group_by(site, visit) %>%
-            summarize(total = unique(Y.)) %>%
-            pivot_wider(
+            dplyr::group_by(site, visit) %>%
+            dplyr::summarize(total = unique(Y.)) %>%
+            tidyr::pivot_wider(
               names_from = visit,
               names_prefix = "visit",
               values_from = total,
               values_fill = 0 # if NA, turn into a 0, since the NA is due to no calls being detected at that site-visit
             ) %>%
-            ungroup() %>%
-            select(-site) %>%
+            dplyr::ungroup() %>%
+            dplyr::select(-site) %>%
             as.matrix()
         )
 
 
       if(parallel){
 
-        this_cluster <- makeCluster(3)
+        this_cluster <- parallel::makeCluster(3)
         fit <- parallel::parLapply(cl = this_cluster,
                          X = 1:3,
                          fun = runMCMC_fit,
@@ -145,7 +146,7 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
                          nburn = nburn,
                          thin = thin
         )
-        stopCluster(this_cluster)
+        parallel::stopCluster(this_cluster)
 
       } else {
 
@@ -180,7 +181,7 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
       fit_summary <- mcmc_sum(
         fit, truth = c(DGVs$lambda, DGVs$psi, DGVs$theta)
       ) %>%
-        mutate(
+        dplyr::mutate(
           theta_scenario = theta_scenario_id,
           scenario = scenario_tmp,
           dataset = dataset_tmp
@@ -205,7 +206,7 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
     close(pb)
 
     # summary df for the entire scenario after all datasets have been fit and summarized
-    individual_summary_df <- do.call("bind_rows", individual_summaries_list)
+    individual_summary_df <- do.call("dplyr::bind_rows", individual_summaries_list)
     individual_summary_df$scenario <- scenario
     individual_summary_df$theta_scenario <- theta_scenario_id
 
@@ -222,6 +223,6 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
     big_list[[scenario]] <- individual_summary_df
   }
 
-  out <- do.call("bind_rows", big_list) # bind summary dfs for all scenarios into big df (all scenarios, all datasets)
+  out <- do.call("dplyr::bind_rows", big_list) # bind summary dfs for all scenarios into big df (all scenarios, all datasets)
   return(out)
 }

@@ -39,16 +39,16 @@ simulate_validatedData <- function(n_datasets,
 
       # Y. = total calls at each site-visit (L. in the notation of Spiers et el., 2022).
       agg_CD_with_total <- aggregate_CD %>%
-        group_by(site, visit) %>%
-        mutate(Y. = sum(count))
+        dplyr::group_by(site, visit) %>%
+        dplyr::mutate(Y. = sum(count))
 
       # Disaggregated count detection data gets stored in mth entry of the
       # datasets_list
       datasets_list[[m]] <- agg_CD_with_total %>%
-        uncount(., weights = count, .remove = FALSE)
+        tidyr::uncount(., weights = count, .remove = FALSE)
 
       # Store the zeros in a list for houskeeping
-      zeros[[m]] <- agg_CD_with_total %>% filter(count == 0)
+      zeros[[m]] <- agg_CD_with_total %>% dplyr::filter(count == 0)
 
       # If user wants individual rds files for each dataframe, save them and the zeros
       # in the specified directory
@@ -91,7 +91,7 @@ simulate_validatedData <- function(n_datasets,
     # add a column for the scenario number to make it easy to see which
     # LOVE for each species goes with which number on x-axis of plots
     scenarios <- scenarios %>%
-      rownames_to_column(var = "Scenario_Number")
+      tibble::rownames_to_column(var = "Scenario_Number")
 
   } else {
 
@@ -104,7 +104,7 @@ simulate_validatedData <- function(n_datasets,
         masked_df <- mask_FE(
           df = datasets_list[[d]],
           effort_prop = scenarios[s]
-        ) %>% mutate(scenario = s)
+        ) %>% dplyr::mutate(scenario = s)
 
         if(save_masked_datasets == TRUE) {
           saveRDS(

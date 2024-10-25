@@ -10,6 +10,6 @@ summarize_n_validated <- function(data_list, scenario_names, theta_scenario) {
     unlist() %>%
     return() # return the list of averages (one for each scenario)
 
-  return(tibble(theta_scenario = theta_scenario, scenario = scenario_names, n_validated = n_validated))
+  return(dplyr::tibble(theta_scenario = theta_scenario, scenario = scenario_names, n_validated = n_validated))
 
 }

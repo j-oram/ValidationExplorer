@@ -5,7 +5,7 @@
 #' @param nvisits the number of visits (detector nights) assumed for each site. Default is 4.
 #' @param seed optional seed if you would like to reproduce the data simulation.
 #' @param psi  a vector of length nspecies that contains the occurrence probabilities for each species in the assemblage. These values must be in [0,1]. Default is to draw a random vector from a U(.4, .9) distribution.
-#' @param lambdaa vector of length nspecies that contains the relative activity parameters for each species. Note these values need to be positive. By default, lambda values are the absolute value of normal(0, 100) random variables.
+#' @param lambda vector of length nspecies that contains the relative activity parameters for each species. Note these values need to be positive. By default, lambda values are the absolute value of normal(0, 100) random variables.
 #' @param theta n nspecies x nspecies matrix containing the (mis)classification probabilities for each species. All entries must be in (0,1], with the rows of the matrix summing to 1. The default draws rows from a dirichlet distribution with concentrations determined by location in the matrix (diagonal values have higher concentrations).
 #'
 #' @return A list containing `full_df`, a complete dataframe simulated under the user's specified parameter settings. et_sim_datasets.R. The second list element is `params`, the parameters used to simulate data in list form.
@@ -24,9 +24,9 @@
 #' head (fake_data$full_df)
 sim_dat <- function(
   nsites = 100, nspecies = 8, nvisits = 4, seed = NULL,
-  psi = runif(nspecies, .4, .9),
-  lambda = abs(rnorm(nspecies, 0, 100)),
-  theta = t(apply(18*diag(nspecies)+2, 1, function(x) rdirch(1, x)))
+  psi = stats::runif(nspecies, .4, .9),
+  lambda = abs(stats::rnorm(nspecies, 0, 100)),
+  theta = t(apply(18*diag(nspecies)+2, 1, function(x) nimble::rdirch(1, x)))
 ){
 
   # optional seed
@@ -41,17 +41,17 @@ sim_dat <- function(
   )
 
   # add lambda, psi and theta values
-  df2 <- left_join(
+  df2 <- dplyr::left_join(
     df,
-    tibble(
+    dplyr::tibble(
       true_spp = 1:nspecies,
       lambda = lambda,
       psi = psi
     ), by = "true_spp"
   ) %>%
-    left_join(
+    dplyr::left_join(
       .,
-      tibble(
+      dplyr::tibble(
         true_spp = rep(1:nspecies, nspecies),
         id_spp = rep(1:nspecies, each = nspecies),
         theta = c(theta)
@@ -60,45 +60,46 @@ sim_dat <- function(
 
   # add latent z state and counts for each true-autoID pair at each site-night
   df3 <- df2 %>%
-    select(site, true_spp, psi) %>%
-    distinct() %>%
-    mutate(z = rbinom(n(), size = 1, prob = .data$psi)) %>%
-    left_join(
+    dplyr::select(site, true_spp, psi) %>%
+    dplyr::distinct() %>%
+    dplyr::mutate(z = rbinom(n(), size = 1, prob = .data$psi)) %>%
+    dplyr::left_join(
       df2,
       .,
       by = c("site", "true_spp", "psi")
     ) %>%
-    mutate(
+    dplyr::mutate(
     # cijkk' = count of detections truly belonging to spp k that are autoID'd as k'
       # on visit j to site i
-      count = rpois(n(), z * lambda * theta)
+      count = stats::rpois(dplyr::n(), z * lambda * theta)
     )
   full_df <- df3 # Output required for the data simulation contained in simulate_BySpeciesValidation.R
 
   # The remaining code is for selecting all calls within a site-night. (Alt. vetting design)
   # (See Stratton et al., (2022) for details
   # To begin, allocate some ambiguous calls:
+  # (I may delete since not relevant to the output used in the ValidationExplorer workflow)
   df4 <- df3 %>%
-    select(site, visit) %>%
-    distinct %>%
-    group_by(site) %>%
-    sample_frac(.5) %>%
-    mutate(true_spp = NA) %>%
-    ungroup()
+    dplyr::select(site, visit) %>%
+    dplyr::distinct %>%
+    dplyr::group_by(site) %>%
+    dplyr::sample_frac(.5) %>%
+    dplyr::mutate(true_spp = NA) %>%
+    dplyr::ungroup()
 
-  df5 <- bind_rows(                               # Replace the rows that are "masked" with the ones in df4.
-    anti_join(df3, df4, by = c("site", "visit")), # <- Site-visit combos of df3 that are not in df4 ("leftovers"- these become the unambiguous calls)
-    inner_join(                                   # <- Retains only rows with matches in (df3 and df4)  (i.e. ambiguous calls)
-      df3 %>% select(-true_spp),
+  df5 <- dplyr::bind_rows(                               # Replace the rows that are "masked" with the ones in df4.
+    dplyr::anti_join(df3, df4, by = c("site", "visit")), # <- Site-visit combos of df3 that are not in df4 ("leftovers"- these become the unambiguous calls)
+    dplyr::inner_join(                                   # <- Retains only rows with matches in (df3 and df4)  (i.e. ambiguous calls)
+      df3 %>% dplyr::select(-true_spp),
       df4,
       by = c("site", "visit")                     # Result is a copy of OG full_df, but with some of the
     )                                             # rows (those with sites and visit combos in df4) true spp masked
   ) %>%
-    arrange(site, visit) %>%
-    group_by(site, visit, true_spp, id_spp) %>%
+    dplyr::arrange(site, visit) %>%
+    dplyr::group_by(site, visit, true_spp, id_spp) %>%
     # count now = Cij.k' = number of calls on visit j to site i that are ID'd (either ambiguously (autoID'd), or unambiguously (manual vetting)) as species k'.
-    summarize(count = sum(count)) %>%
-    mutate(type = ifelse(is.na(true_spp), "ambiguous", "unambiguous"))
+    dplyr::summarize(count = sum(count)) %>%
+    dplyr::mutate(type = ifelse(is.na(true_spp), "ambiguous", "unambiguous"))
 
   out <- list(full_df = full_df, params = list(psi = psi, theta = theta, lambda = lambda))
   return(out)
