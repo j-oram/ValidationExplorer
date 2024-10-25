@@ -30,7 +30,7 @@ sim_dat(
 \item{lambdaa}{vector of length nspecies that contains the relative activity parameters for each species. Note these values need to be positive. By default, lambda values are the absolute value of normal(0, 100) random variables.}
 }
 \value{
-A list containing \code{df}, a dataframe that is masked according to the design described in Stratton et al., (2022). This is not necessary for any functions in this repo, but it could be useful for comparison by the curious user. The list also contains \code{full_df}, A complete dataframe with no masking. This output is necessary for running simulate_BySpeciesValidation.R and get_sim_datasets.R. The last element in the list is \code{params}, the parameters used to simulate data in list form.
+A list containing \code{full_df}, a complete dataframe simulated under the user's specified parameter settings. et_sim_datasets.R. The second list element is \code{params}, the parameters used to simulate data in list form.
 }
 \description{
 Title
@@ -45,6 +45,5 @@ fake_data <- sim_dat(
    lambda = c(8, 3)
 )
 
-head (fake_data$full_df[[3]])
-head(fake_data$df[[3]])
+head (fake_data$full_df)
 }

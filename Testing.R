@@ -9,40 +9,40 @@ library(kableExtra)
 theme_set(theme_bw())
 
 # Quiet the chatter
-# ERROR HERE, DO YOU NEED TO LIBRARY KNITR OR RMARKDOWN TO USE 
-# THIS "OPTION" FUNCTION? IT SAYS 
+# ERROR HERE, DO YOU NEED TO LIBRARY KNITR OR RMARKDOWN TO USE
+# THIS "OPTION" FUNCTION? IT SAYS
 # Error in option(dplyr.summarize.inform = FALSE) : could not find function "option"
-option(dplyr.summarize.inform = FALSE)
+options(dplyr.summarize.inform = FALSE)
 
 ## ----eval=FALSE, echo=TRUE-----------------------------------------------------------
 ## install.packages("your_package_name_here")
 
 
-# ERRORS HERE TOO, LIKELY NEED TO CHANGE PATH from "Data Simulation/" 
+# ERRORS HERE TOO, LIKELY NEED TO CHANGE PATH from "Data Simulation/"
 # TO R UNTIL YOU HAVE PACKAGE LOADED...BEST TO CHANGE TO devtools::load_all(".")
-# WHILE PACKAGE IS IN DEVELOPMENT... 
+# WHILE PACKAGE IS IN DEVELOPMENT...
 ## ------------------------------------------------------------------------------------
-# For simulation 
-source("R/simulate_validatedData.R")
+# For simulation
+#source("R/simulate_validatedData.R")
 
 # THIS .R FILE NO LONGER EXISTS..ASSUMING IT'S SIMDAT...
 #source("R/count_detection_sim.R")
-source("R/sim_dat.R")
-source("R/mask_by_spp.R")
-source("R/mask_FE.R")
-source("R/summarize_n_validated.R")
+#source("R/sim_dat.R")
+#source("R/mask_by_spp.R")
+#source("R/mask_FE.R")
+#source("R/summarize_n_validated.R")
 
-# For model fitting/MCMC SAME ISSUE HERE, CHANGING TO "R", BUT BETTER 
-# TO JUST LOAD PACKAGE... 
-source("R/run_sims.R")
-source("R/MCMC_sum.R")
-source("R/runMCMC_fit.R")
-source("R/tune_mcmc.R")
+# For model fitting/MCMC SAME ISSUE HERE, CHANGING TO "R", BUT BETTER
+# TO JUST LOAD PACKAGE...
+#source("R/run_sims.R")
+#source("R/MCMC_sum.R")
+#source("R/runMCMC_fit.R")
+#source("R/tune_mcmc.R")
 
-# Visualization ERROR HERE TOO... 
+# Visualization ERROR HERE TOO...
 # source("R/visualize_sims.R") CHANGED TO...AGAIN, LOAD THE PACKAGE INSTEAD OF SOURCING
-source("R/visualize_parameter_group.R")
-source("R/visualize_single_parameter.R")
+#source("R/visualize_parameter_group.R")
+#source("R/visualize_single_parameter.R")
 
 ## ------------------------------------------------------------------------------------
 psi <- c(0.3, 0.6)
@@ -51,24 +51,24 @@ lambda <- c(11, 2)
 
 
 
-# Define sites and visits 
+# Define sites and visits
 nspecies <- length(psi)
 nsites <- 30
 nvisits <- 5
 
-# CODE NOT IN TIDY FORMAT, USE NEW LINE AFTER A COMMA SO STUFF DOESN'T 
-# RUN OFF PAGE. CHANGED THIS FOR THE NEXT COUPLE OF LINES 
+# CODE NOT IN TIDY FORMAT, USE NEW LINE AFTER A COMMA SO STUFF DOESN'T
+# RUN OFF PAGE. CHANGED THIS FOR THE NEXT COUPLE OF LINES
 ## ------------------------------------------------------------------------------------
-test_theta1 <- matrix(c(0.9, 0.1, 0.15, 0.85), 
+test_theta1 <- matrix(c(0.9, 0.1, 0.15, 0.85),
                       byrow = TRUE, nrow = 2)
 test_theta1
 
 
 ## ------------------------------------------------------------------------------------
-# Generating a confusion matrix in this way appears to be the culprit of the testing 
-# problems; this doesn't necessarily give exactly 1, but values that are extremely close. 
+# Generating a confusion matrix in this way appears to be the culprit of the testing
+# problems; this doesn't necessarily give exactly 1, but values that are extremely close.
 
-test_theta2 <- t(apply(18*diag(nspecies) + 2, 1, 
+test_theta2 <- t(apply(18*diag(nspecies) + 2, 1,
                        function(x) nimble::rdirch(alpha = x))
                  )
 test_theta2
@@ -81,32 +81,32 @@ rowSums(test_theta2)
 
 
 ## ------------------------------------------------------------------------------------
-# old way: do expand.grid yourself: 
+# old way: do expand.grid yourself:
 #val_scenarios <- expand.grid(spp1 = c(.75, .5), spp2 = c(.25, .5), spp3 = c(.25, .75))
 
-# simulate_ValidatedData now includes a call to expand.grid call internally, so all that 
+# simulate_ValidatedData now includes a call to expand.grid call internally, so all that
 # needs to be supplied is a list (when `validation_design = "BySpecies"`)
 
 val_scenarios <- list(spp1 = c(.75, .5), spp2 = .5)
 
 ## ----message=FALSE-------------------------------------------------------------------
 fake_data <- simulate_validatedData(
-  n_datasets = 5, 
+  n_datasets = 5,
   validation_design = "BySpecies",
-  scenarios = val_scenarios, 
-  nsites = nsites, 
-  nvisits = nvisits, 
+  scenarios = val_scenarios,
+  nsites = nsites,
+  nvisits = nvisits,
   nspecies = nspecies,
-  psi = psi, 
+  psi = psi,
   lambda = lambda,
-  theta = test_theta1, 
+  theta = test_theta1,
   save_datasets = FALSE,
   save_masked_datasets = FALSE,
   directory = paste0(here::here("Testing"))
 )
 
 # ERROR HERE PROHIBITING ME FROM MOVING FORWARD...
-# Error in mask_spp2(datasets_list[[d]], scenarios[s, ]) : 
+# Error in mask_spp2(datasets_list[[d]], scenarios[s, ]) :
 #   could not find function "mask_spp2"
 
 ## ------------------------------------------------------------------------------------
@@ -115,8 +115,8 @@ fake_data$scenarios_df
 
 # investigate the number of recordings validated under each scenario
 validation_summary <- summarize_n_validated(
-  data_list = fake_data$masked_dfs, 
-  scenario_names = as.character(1:nrow(fake_data$scenarios_df)), 
+  data_list = fake_data$masked_dfs,
+  scenario_names = as.character(1:nrow(fake_data$scenarios_df)),
   theta_scenario = "1"
 )
 
@@ -125,46 +125,46 @@ validation_summary
 ## ------------------------------------------------------------------------------------
 full_dfs <- fake_data$full_datasets
 head(full_dfs[[1]])
-# WHY ARE THE ROWS REPEATED?  E.G., ROW 1 AND ROW 2 ARE THE EXACT SAME... SO ARE 
+# WHY ARE THE ROWS REPEATED?  E.G., ROW 1 AND ROW 2 ARE THE EXACT SAME... SO ARE
 # ROWS 3-6...
 
-# Jacob's answer: the rows are repeated because they were generated by the same species 
+# Jacob's answer: the rows are repeated because they were generated by the same species
 # and were assigned the same autoID. You'll notice the count column will say (for example,
-# in the situation you noted) that count = 2 for rows 1-2, but then count = 4 for rows 3-6. 
-# That helps with bookkeeping, because it tells the user that there were (for example) two 
-# calls from  species 1 that were autoID'd to 1 (rows 1 and 2), and there were four calls 
-# from species  1 that were autoID'd to 2 (rows 3-6). This is the confusing thing about 
-# having the data at the individual call level -- there will always be repeated rows unless 
-# each autoID/true species combination is observed exactly once on a visit to a site.  
+# in the situation you noted) that count = 2 for rows 1-2, but then count = 4 for rows 3-6.
+# That helps with bookkeeping, because it tells the user that there were (for example) two
+# calls from  species 1 that were autoID'd to 1 (rows 1 and 2), and there were four calls
+# from species  1 that were autoID'd to 2 (rows 3-6). This is the confusing thing about
+# having the data at the individual call level -- there will always be repeated rows unless
+# each autoID/true species combination is observed exactly once on a visit to a site.
 
 
 ## ------------------------------------------------------------------------------------
 site_visits_without_calls <- fake_data$zeros
-head(site_visits_without_calls[[1]])
+head(site_visits_without_calls[[1]]) # notice that counts = 0 for all rows
 
 
 ## ------------------------------------------------------------------------------------
 masked_dfs <- fake_data$masked_dfs
 
 # View dataset 3 with scenario 7 validation effort.
-# HOW DOES THIS CONNECT TO FULL_DFS? LOOKS LIKE IT'S THE DISAGGREGATED 
-# VERSION, AND MAYBE THE FIRST 2 ROWS OF MASKED DFS REPRESENT 2 OF THE 5 CALLS THAT 
-# WERE CLASSIFIED FROM SPP 3 TO SPP 3 AT SITE 1 VISIT 1, BUT THEN WHY ARE THERE ONLY 3 ROWS 
+# HOW DOES THIS CONNECT TO FULL_DFS? LOOKS LIKE IT'S THE DISAGGREGATED
+# VERSION, AND MAYBE THE FIRST 2 ROWS OF MASKED DFS REPRESENT 2 OF THE 5 CALLS THAT
+# WERE CLASSIFIED FROM SPP 3 TO SPP 3 AT SITE 1 VISIT 1, BUT THEN WHY ARE THERE ONLY 3 ROWS
 # AND NOT 5 IN TOTAL FROM THIS SITE-VISIT?
 # HARD TO REALITY CHECK THIS CODE WITHOUT KNOWING HOW IT CONNECTS TO FULL_DFS
 
 head(masked_dfs[[1]][[1]])
 
-# Jacob's answer: This is a copy of full_dfs[[1]] subject to the masking of true species labels 
-# according to scenario 2. I realized that there was a mismatch between the full (unmasked) df 
-# above and the masked dataset shown here. 
+# Jacob's answer: This is a copy of full_dfs[[1]] subject to the masking of true species labels
+# according to scenario 2. I realized that there was a mismatch between the full (unmasked) df
+# above and the masked dataset shown here.
 
 # RECOMMEND A SMALLER TESTING EXAMPLE THAT TAKES <5 MINS, MAYBE JUST 2 OR 3 SCENARIOS?
 # # started at 11:38:42.825776 finished at 2024-09-30 12:06:51 MDT
 # Noted -- I changed it to two species, two scenarios, 5 datasets under each
 
-## Testing for the MCMC_tuning function: use the "worst case" scenario, which is scenario 1 
-## for these scenarios because it has the lowest average number of calls validated per 
+## Testing for the MCMC_tuning function: use the "worst case" scenario, which is scenario 1
+## for these scenarios because it has the lowest average number of calls validated per
 ## dataset
 
 tuning_list <- tune_mcmc(dataset = masked_dfs[[1]][[5]], zeros = fake_data$zeros[[5]])
@@ -173,22 +173,22 @@ min_iters <- tuning_list$min_iter
 warmup <- tuning_list$min_warmup
 expected_time <- tuning_list$max_iter_time
 
-# This output shows a matrix. A value of 1 in a cell indicates that the combination 
-# of warmup + iters yielded Rhat < 1.1 for all model parameters. 
+# This output shows a matrix. A value of 1 in a cell indicates that the combination
+# of warmup + iters yielded Rhat < 1.1 for all model parameters.
 tuning_list$convergence_matrix
 
 ## -------------------------------------------------------------------------------------
-# Run time will vary: with 5 datasets, 30 sites, 5 visits, 2 species and the assigned 
+# Run time will vary: with 5 datasets, 30 sites, 5 visits, 2 species and the assigned
 # psi and lambda values, this takes ~ 1:30 per scenario. With the 2 scenarios above,
-# this amounts to ~ 3 minutes when fitting in parallel. 
+# this amounts to ~ 3 minutes when fitting in parallel.
 
 sims_output <- run_sims(
          data_list = fake_data$masked_dfs,
          zeros_list = fake_data$zeros,
          DGVs = list(lambda = lambda, psi = psi, theta = test_theta2),
-         theta_scenario_id = 1, 
+         theta_scenario_id = 1,
          parallel = TRUE,
-         niter = min_iters, 
+         niter = min_iters,
          nburn = warmup,
          thin = 1,
          save_fits = FALSE,
@@ -217,56 +217,56 @@ sims_output <- run_sims(
 # for(i in 1:4){
 #   biglist[[i]] <- readRDS(paste0(here("Testing", "Theta1"), "/summary_df_for_scenario_",i,".rds"))
 # }
-# 
+#
 # sims_output <- do.call("bind_rows", biglist)
 
 
 ## ------------------------------------------------------------------------------------
-visualize_parameter_group(sim_summary = sims_output, 
-                          pars = "lambda", 
-                          theta_scenario = 1, 
-                          scenarios = 1:2, 
+visualize_parameter_group(sim_summary = sims_output,
+                          pars = "lambda",
+                          theta_scenario = 1,
+                          scenarios = 1:2,
                           convergence_threshold = 1.1)
 
 
 ## ------------------------------------------------------------------------------------
 # note the space between the indices for theta[2, 1]
-visualize_single_parameter(sims_output, par = "lambda[2]", 
-                           theta_scenario = 1, 
-                           scenarios = 1:2, 
+visualize_single_parameter(sims_output, par = "lambda[2]",
+                           theta_scenario = 1,
+                           scenarios = 1:2,
                            convergence_threshold = 1.03)
 
-# New plotting functions, feedback welcome! (Also, not I'm not wed to either of these; 
-# if you think it would be better to get rid of these functions and stick with what we 
+# New plotting functions, feedback welcome! (Also, not I'm not wed to either of these;
+# if you think it would be better to get rid of these functions and stick with what we
 # have, let me know! My reason for thinking of these is that this is likely the kind of
 # really simple check that practitioners will be looking for.)
 
 plot_coverage_vs_calls(
-  sims_output, 
+  sims_output,
   validation_summary,
   regex_pars = "lambda",
-  scenarios = 1:2, 
+  scenarios = 1:2,
   theta_scenario = 1,
   convergence_threshold = 1.1
 )
 
 plot_bias_vs_calls(
-  sims_output, 
-  validation_summary, 
+  sims_output,
+  validation_summary,
   pars = c("psi[1]", "psi[2]", "psi[3]"),
-  scenarios = 1:8, 
+  scenarios = 1:8,
   theta_scenario = 1,
   convergence_threshold = 1.1
 )
 
 # I THINK THESE ARE USEFUL, CAN YOU ADD ONE THAT PUTS INTERVAL WIDTH ON THE Y-AXIS?
 
-# Done. See below: 
+# Done. See below:
 
 plot_width_vs_calls(
-  sims_output, 
-  validation_summary, 
-  pars = c("lambda[1]", "psi[1]"), 
+  sims_output,
+  validation_summary,
+  pars = c("lambda[1]", "psi[1]"),
   scenarios = 1:2,
   theta_scenario = 1,
   convergence_threshold = 1.05
@@ -283,15 +283,15 @@ nvisits <- 4
 Theta_FE <- t(apply(12*diag(nspecies) + 2, 1, function(x) nimble::rdirch(alpha = x)))
 
 FE_data <- simulate_validatedData(
-  n_datasets = 5, 
+  n_datasets = 5,
   validation_design = "FixedPercent",
   scenarios = c(0.05, .35, 0.65), # Note this is now a **vector** of possible scenarios. Also note the extremely small level of validation effort in the first entry!
-  nsites = nsites, 
-  nvisits = nvisits, 
+  nsites = nsites,
+  nvisits = nvisits,
   nspecies = nspecies,
-  psi = psi, 
+  psi = psi,
   lambda = lambda,
-  theta = Theta_FE, 
+  theta = Theta_FE,
   save_datasets = FALSE,
   save_masked_datasets = FALSE,
   directory = here("Testing", "FixedEffortExample")
@@ -301,7 +301,7 @@ FE_data <- simulate_validatedData(
 ## ------------------------------------------------------------------------------------
 # Runtime: with the specified number of sites, visits, species, validation scenarios
 # and parameter settings, this takes ~ 2:20 minutes per scenario, so around 6-7 minutes for
-# this small test case. Plan accordingly! 
+# this small test case. Plan accordingly!
 
 # RUNNING INTO ANOTHER ERROR HERE...
 # Beginning scenario 1.
@@ -317,11 +317,11 @@ FE_data <- simulate_validatedData(
 #   In gzfile(file, mode) :
 #   cannot open compressed file '/Users/c84k467/Library/CloudStorage/OneDrive-MontanaStateUniversity/
 #     BoxMigratedData/student-advising/oram-dissertation_work/ValidationExplorer/Testing/
-      # FixedEffortExample/ThetaFE/summary_df_for_scenario_1.rds', 
+      # FixedEffortExample/ThetaFE/summary_df_for_scenario_1.rds',
 # probable reason 'No such file or directory'
 
 # This error is due to the directory ThetaFE not being set up ahead of time. New fix creates the directory for the user if it
-# does not already exist. 
+# does not already exist.
 
 start <- Sys.time()
 FE_model_fits <- run_sims(
@@ -338,8 +338,8 @@ Sys.time() - start
 
 
 ## ----echo=FALSE----------------------------------------------------------------------
-# For faster knitting. Note that eval=FALSE in previous chunk. If you change 
-# this setting and refit the model, your results may change! 
+# For faster knitting. Note that eval=FALSE in previous chunk. If you change
+# this setting and refit the model, your results may change!
 #saveRDS(FE_model_fits, paste0(here("Testing", "FixedEffortExample"), "/FE_model_fits.rds"))
 # FE_model_fits <- readRDS(paste0(here("Testing", "FixedEffortExample"), "/FE_model_fits.rds"))
 
@@ -362,7 +362,7 @@ summarize_n_validated(FE_data$masked_dfs, theta_scenario = "FE", scenario_names 
 ## ------------------------------------------------------------------------------------
 plot_bias_vs_calls(
   FE_model_fits,
-  summarize_n_validated(FE_data$masked_dfs, theta_scenario = "FE", scenario_names = as.character(1:3)), 
-  theta_scenario = 1, 
+  summarize_n_validated(FE_data$masked_dfs, theta_scenario = "FE", scenario_names = as.character(1:3)),
+  theta_scenario = 1,
   scenarios = 1:4, convergence_threshold = 1.1
 )

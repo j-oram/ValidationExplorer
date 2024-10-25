@@ -75,7 +75,7 @@ simulate_validatedData <- function(n_datasets,
       masked_dataset_list[[s]] <- list()
       for(d in 1:length(datasets_list)){
 
-        masked_df <- mask_spp2(datasets_list[[d]], scenarios[s,])$final_df
+        masked_df <- mask_by_spp(datasets_list[[d]], scenarios[s,])$final_df
         masked_df$scenario <- s
 
         if(save_masked_datasets == TRUE){

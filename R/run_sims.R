@@ -134,9 +134,8 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
 
       if(parallel){
 
-        library(parallel)
         this_cluster <- makeCluster(3)
-        fit <- parLapply(cl = this_cluster,
+        fit <- parallel::parLapply(cl = this_cluster,
                          X = 1:3,
                          fun = runMCMC_fit,
                          code = code,
