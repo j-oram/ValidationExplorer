@@ -1,3 +1,4 @@
+#' @importFrom nimble getNimbleOption
 tune_mcmc <- function(dataset, zeros) {
 
   max_iters <- 10000
@@ -14,9 +15,9 @@ tune_mcmc <- function(dataset, zeros) {
     # priors
     for(species in 1:nspecies){
 
-      psi[species] ~ nimble::dbeta(1,1)
-      lambda[species] ~ nimble::T(nimble::dnorm(0, sd = 10), 0, Inf)
-      theta[species, 1:nspecies] ~ nimble::ddirch(alpha = alpha0[species, 1:nspecies])
+      psi[species] ~ dbeta(1,1)
+      lambda[species] ~ T(dnorm(0, sd = 10), 0, Inf)
+      theta[species, 1:nspecies] ~ ddirch(alpha = alpha0[species, 1:nspecies])
 
     }
 
@@ -26,7 +27,7 @@ tune_mcmc <- function(dataset, zeros) {
     for(i in 1:nsites){
       for(species in 1:nspecies){
 
-        z[i, species] ~ nimble::dbern(psi[species])
+        z[i, species] ~ dbern(psi[species])
 
       }
     }
@@ -35,7 +36,7 @@ tune_mcmc <- function(dataset, zeros) {
     for(i in 1:nsites){
       for(j in 1:nvisits){
 
-        Y.[i,j] ~ nimble::dpois(sum(z[i,1:nspecies] * lambda[1:nspecies]))
+        Y.[i,j] ~ dpois(sum(z[i,1:nspecies] * lambda[1:nspecies]))
 
       }
     }
@@ -48,8 +49,8 @@ tune_mcmc <- function(dataset, zeros) {
       pi[row, 1:nspecies] <- z[site1[row], 1:nspecies] * lambda[1:nspecies] /
         sum(z[site1[row], 1:nspecies] * lambda[1:nspecies])
 
-      k[row] ~ nimble::dcat(pi[row, 1:nspecies])
-      y[row] ~ nimble::dcat(theta[k[row], 1:nspecies])
+      k[row] ~ dcat(pi[row, 1:nspecies])
+      y[row] ~ dcat(theta[k[row], 1:nspecies])
 
     }
 
@@ -110,7 +111,7 @@ tune_mcmc <- function(dataset, zeros) {
       as.matrix()
   )
 
-  print("Fitting MCMC in parallel ... \n this may take a few minutes")
+  print("Fitting MCMC in parallel ... this may take a few minutes")
     this_cluster <- parallel::makeCluster(3)
     start <- Sys.time()
     fit <- parallel::parLapply(

@@ -17,6 +17,7 @@ Imports:
     magrittr,
     nimble,
     purrr,
+    rlang,
     rstan,
     stringr,
     tibble,

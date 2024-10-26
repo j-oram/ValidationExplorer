@@ -167,6 +167,7 @@ head(masked_dfs[[1]][[1]])
 ## for these scenarios because it has the lowest average number of calls validated per
 ## dataset
 
+# problems here with getNimbleOption
 tuning_list <- tune_mcmc(dataset = masked_dfs[[1]][[5]], zeros = fake_data$zeros[[5]])
 
 min_iters <- tuning_list$min_iter

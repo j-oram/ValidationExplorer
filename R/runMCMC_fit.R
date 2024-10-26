@@ -1,3 +1,4 @@
+#' @importFrom nimble getNimbleOption
 runMCMC_fit <- function(seed = 1, code, data, constants,
                         nchains = 1, niter = 2000, nburn = 1200, thin = 1){
 
@@ -27,7 +28,8 @@ runMCMC_fit <- function(seed = 1, code, data, constants,
       if(log) return(log(prob))
       else return(prob)
 
-    }
+    },
+    check = nimble::getNimbleOption("checkNimbleFunction")
   )
 
   # placeholder function to avoid error during compiling. NIMBLE will never use
@@ -38,7 +40,8 @@ runMCMC_fit <- function(seed = 1, code, data, constants,
       returnType(double(0))
       x <- 0
       return(x)
-    }
+    },
+    check = nimble::getNimbleOption("checkNimbleFunction")
   )
 
   # Register the distribution, which will yield an informational warning because we are
