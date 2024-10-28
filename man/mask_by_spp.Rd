@@ -2,7 +2,7 @@
 % Please edit documentation in R/mask_by_spp.R
 \name{mask_by_spp}
 \alias{mask_by_spp}
-\title{Title}
+\title{mask_by_spp: simulate a validation design}
 \usage{
 mask_by_spp(data, props_to_val)
 }
@@ -15,7 +15,7 @@ mask_by_spp(data, props_to_val)
 A list containing two elements: \code{final_df} and \code{data_sum}. \code{final_df} is a copy of the input \code{data} masked according to the validation design supplied by \code{props_to_val}. The second output, \code{data_sum} is a dataframe containing a summary of the number and proportion of ambiguous (i.e., not validated) recordings. It provides a check that the masking function is working correctly.
 }
 \description{
-Title
+mask_by_spp: simulate a validation design
 }
 \examples{
 library(dplyr)

@@ -1,4 +1,25 @@
+#' plot_bias_vs_calls
+#'
+#' @param sim_summary Simulation summary from many datasets under many validation scenarios in the format output by `mcmc_sum()`.
+#' @param calls_summary Summary of the validation design in the format as output from `summarize_n_validated.R`
+#' @param pars A character vector of parameters to visualize.
+#' @param regex_pars String containing the name of a group of parameters to visualize. Must be one of "lambda", "psi", or "theta".
+#' @param theta_scenario String or integer containing the theta scenario ID that was used to simulate data in `simulate_validatedData`
+#' @param scenarios A vector of integers corresponding to the validation designs you would like to visualize.
+#' @param convergence_threshold A threshold for the Gelman-Rubin statistic; values below this threshold indicate that a parameter has converged.
+#'
 #' @importFrom stats quantile
+#'
+#' @examples
+#' plt_example_data <- readRDS('') # need to make sure there is data available with the package.
+#'
+#' sim_summary <- plt_example_data$summary
+#' calls_summary <- plt_example_data$calls
+#'
+#' plot_bias_vs_calls(sim_summary, calls_summary, regex_pars = "lambda",
+#'                    theta_scenario = "1", scenarios = 1:2,
+#'                    convergence threshold = 1.05)
+#'
 plot_bias_vs_calls <- function(sim_summary,
                                calls_summary, # output from summarize_n_validated
                                pars = NULL,

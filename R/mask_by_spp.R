@@ -1,4 +1,4 @@
-#' Title
+#' mask_by_spp: simulate a validation design
 #'
 #' @param data A dataframe containing the columns `site`, `visit`, `true_spp`, `id_spp`, `count`
 #' @param props_to_val a vector containing the proportion of recordings to validate for each species

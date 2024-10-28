@@ -3,6 +3,7 @@
 export("%>%")
 export(L)
 export(mask_by_spp)
+export(mcmc_sum)
 export(sim_dat)
 importFrom(magrittr,"%>%")
 importFrom(nimble,getNimbleOption)
