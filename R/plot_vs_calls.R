@@ -27,7 +27,7 @@ plot_bias_vs_calls <- function(sim_summary,
                                theta_scenario,
                                scenarios,
                                convergence_threshold = 1.1) {
-  ggplot2::theme_set(theme_bw())
+  ggplot2::theme_set(ggplot2::theme_bw())
 
   plt_df <- sim_summary %>%
     dplyr::mutate(
@@ -84,7 +84,7 @@ plot_width_vs_calls <- function(sim_summary,
                                 theta_scenario,
                                 scenarios,
                                 convergence_threshold = 1.1) {
-  ggplot2::theme_set(theme_bw())
+  ggplot2::theme_set(ggplot2::theme_bw())
 
   plt_df <- sim_summary %>%
     dplyr::mutate(
@@ -141,7 +141,7 @@ plot_coverage_vs_calls <- function(sim_summary,
                                    theta_scenario,
                                    scenarios,
                                    convergence_threshold = 1.1) {
-  ggplot2::theme_set(theme_bw())
+  ggplot2::theme_set(ggplot2::theme_bw())
 
   plt_df <- sim_summary %>%
     dplyr::mutate(

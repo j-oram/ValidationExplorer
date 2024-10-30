@@ -4,9 +4,9 @@
 #'   simulated datasets will be subjected to all candidate validation designs.
 #' @param design_type Character string, either "BySpecies" for a stratified-by-species design,
 #'   or "FixedPercentage" for a fixed effort design (see Oram et al., in review for more details on each of these)
-#' @param scenarios if `validation_design = "BySpecies"`, the `scenarios` argument must be a list with each entry corresponding
+#' @param scenarios if `design_type = "BySpecies"`, the `scenarios` argument must be a list with each entry corresponding
 #'   to the potential levels of effort for a particular autoID label. If
-#'   `validation_design == "FixedPercent"`, then the `scenarios` argument must be a vector with each entry corresponding to
+#'   `design_type == "FixedPercent"`, then the `scenarios` argument must be a vector with each entry corresponding to
 #'   a potential percent of calls to be sampled from the first visit at each site. See vignette for an example.
 #' @param nsites number of sites in each dataset
 #' @param nspecies size of the species assemblage
@@ -56,7 +56,7 @@
 #'
 #' fake_data <- simulate_validatedData(
 #'   n_datasets = 5,
-#'   validation_design = "BySpecies",
+#'   design_type = "BySpecies",
 #'   scenarios = val_scenarios,
 #'   nsites = nsites,
 #'   nvisits = nvisits,
@@ -88,7 +88,7 @@ simulate_validatedData <- function(n_datasets,
     stop("The rows of theta do not sum to 1.")
   }
 
-  if(validation_design == "BySpecies" & length(scenarios) != nspecies) {
+  if(design_type == "BySpecies" & length(scenarios) != nspecies) {
     stop("Scenarios must be a list with length = nspecies.")
   }
 
@@ -140,7 +140,7 @@ simulate_validatedData <- function(n_datasets,
   # set up storage for the masked datasets
   masked_dataset_list <- list()
 
-  if(validation_design == "BySpecies"){
+  if(design_type == "BySpecies"){
 
     scenarios <- expand.grid(scenarios)
 
@@ -198,7 +198,7 @@ simulate_validatedData <- function(n_datasets,
   # If the validation design is by-species, also return the scenarios dataframe
   # created by the expand.grid call above. This is potentially useful for users
   # to see exactly which scenarios are being investigated
-  if(validation_design == "BySpecies") {
+  if(design_type == "BySpecies") {
     output <- list(
       full_datasets = datasets_list,
       zeros = zeros,

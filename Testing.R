@@ -50,7 +50,7 @@ val_scenarios <- list(spp1 = c(.75, .5), spp2 = .5)
 ## ----message=FALSE-------------------------------------------------------------------
 fake_data <- simulate_validatedData(
   n_datasets = 5,
-  validation_design = "BySpecies",
+  design_type = "BySpecies",
   scenarios = val_scenarios,
   nsites = nsites,
   nvisits = nvisits,
