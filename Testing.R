@@ -1,48 +1,13 @@
 ## ----setup, include=FALSE, message=FALSE---------------------------------------------
-library(tidyverse)
-library(nimble)
-library(coda)
-library(rstan)
-library(parallel)
-library(here)
-library(kableExtra)
-theme_set(theme_bw())
+# library(tidyverse)
+# library(nimble)
+# library(coda)
+# library(rstan)
+# library(parallel)
+# library(here)
+# library(kableExtra)
 
-# Quiet the chatter
-# ERROR HERE, DO YOU NEED TO LIBRARY KNITR OR RMARKDOWN TO USE
-# THIS "OPTION" FUNCTION? IT SAYS
-# Error in option(dplyr.summarize.inform = FALSE) : could not find function "option"
-options(dplyr.summarize.inform = FALSE)
-
-## ----eval=FALSE, echo=TRUE-----------------------------------------------------------
-## install.packages("your_package_name_here")
-
-
-# ERRORS HERE TOO, LIKELY NEED TO CHANGE PATH from "Data Simulation/"
-# TO R UNTIL YOU HAVE PACKAGE LOADED...BEST TO CHANGE TO devtools::load_all(".")
-# WHILE PACKAGE IS IN DEVELOPMENT...
-## ------------------------------------------------------------------------------------
-# For simulation
-#source("R/simulate_validatedData.R")
-
-# THIS .R FILE NO LONGER EXISTS..ASSUMING IT'S SIMDAT...
-#source("R/count_detection_sim.R")
-#source("R/sim_dat.R")
-#source("R/mask_by_spp.R")
-#source("R/mask_FE.R")
-#source("R/summarize_n_validated.R")
-
-# For model fitting/MCMC SAME ISSUE HERE, CHANGING TO "R", BUT BETTER
-# TO JUST LOAD PACKAGE...
-#source("R/run_sims.R")
-#source("R/MCMC_sum.R")
-#source("R/runMCMC_fit.R")
-#source("R/tune_mcmc.R")
-
-# Visualization ERROR HERE TOO...
-# source("R/visualize_sims.R") CHANGED TO...AGAIN, LOAD THE PACKAGE INSTEAD OF SOURCING
-#source("R/visualize_parameter_group.R")
-#source("R/visualize_single_parameter.R")
+devtools::load_all()
 
 ## ------------------------------------------------------------------------------------
 psi <- c(0.3, 0.6)
@@ -56,8 +21,7 @@ nspecies <- length(psi)
 nsites <- 30
 nvisits <- 5
 
-# CODE NOT IN TIDY FORMAT, USE NEW LINE AFTER A COMMA SO STUFF DOESN'T
-# RUN OFF PAGE. CHANGED THIS FOR THE NEXT COUPLE OF LINES
+
 ## ------------------------------------------------------------------------------------
 test_theta1 <- matrix(c(0.9, 0.1, 0.15, 0.85),
                       byrow = TRUE, nrow = 2)
@@ -69,8 +33,7 @@ test_theta1
 # problems; this doesn't necessarily give exactly 1, but values that are extremely close.
 
 test_theta2 <- t(apply(18*diag(nspecies) + 2, 1,
-                       function(x) nimble::rdirch(alpha = x))
-                 )
+                       function(x) nimble::rdirch(alpha = x)))
 test_theta2
 
 
@@ -81,11 +44,6 @@ rowSums(test_theta2)
 
 
 ## ------------------------------------------------------------------------------------
-# old way: do expand.grid yourself:
-#val_scenarios <- expand.grid(spp1 = c(.75, .5), spp2 = c(.25, .5), spp3 = c(.25, .75))
-
-# simulate_ValidatedData now includes a call to expand.grid call internally, so all that
-# needs to be supplied is a list (when `validation_design = "BySpecies"`)
 
 val_scenarios <- list(spp1 = c(.75, .5), spp2 = .5)
 
@@ -105,10 +63,6 @@ fake_data <- simulate_validatedData(
   directory = paste0(here::here("Testing"))
 )
 
-# ERROR HERE PROHIBITING ME FROM MOVING FORWARD...
-# Error in mask_spp2(datasets_list[[d]], scenarios[s, ]) :
-#   could not find function "mask_spp2"
-
 ## ------------------------------------------------------------------------------------
 # investigate the validation scenarios created by enumerating the species validation levels
 fake_data$scenarios_df
@@ -121,6 +75,9 @@ validation_summary <- summarize_n_validated(
 )
 
 validation_summary
+
+#example_val_sum <- validation_summary
+#usethis::use_data(example_val_sum)
 
 ## ------------------------------------------------------------------------------------
 full_dfs <- fake_data$full_datasets
@@ -146,7 +103,7 @@ head(site_visits_without_calls[[1]]) # notice that counts = 0 for all rows
 ## ------------------------------------------------------------------------------------
 masked_dfs <- fake_data$masked_dfs
 
-# View dataset 3 with scenario 7 validation effort.
+# View dataset 1 with scenario 1 validation effort.
 # HOW DOES THIS CONNECT TO FULL_DFS? LOOKS LIKE IT'S THE DISAGGREGATED
 # VERSION, AND MAYBE THE FIRST 2 ROWS OF MASKED DFS REPRESENT 2 OF THE 5 CALLS THAT
 # WERE CLASSIFIED FROM SPP 3 TO SPP 3 AT SITE 1 VISIT 1, BUT THEN WHY ARE THERE ONLY 3 ROWS
@@ -159,15 +116,11 @@ head(masked_dfs[[1]][[1]])
 # according to scenario 2. I realized that there was a mismatch between the full (unmasked) df
 # above and the masked dataset shown here.
 
-# RECOMMEND A SMALLER TESTING EXAMPLE THAT TAKES <5 MINS, MAYBE JUST 2 OR 3 SCENARIOS?
-# # started at 11:38:42.825776 finished at 2024-09-30 12:06:51 MDT
-# Noted -- I changed it to two species, two scenarios, 5 datasets under each
-
+## -------------------------------------------------------------------------------------
 ## Testing for the MCMC_tuning function: use the "worst case" scenario, which is scenario 1
 ## for these scenarios because it has the lowest average number of calls validated per
 ## dataset
 
-# problems here with getNimbleOption
 tuning_list <- tune_mcmc(dataset = masked_dfs[[1]][[5]], zeros = fake_data$zeros[[5]])
 
 min_iters <- tuning_list$min_iter
@@ -186,7 +139,7 @@ tuning_list$convergence_matrix
 sims_output <- run_sims(
          data_list = fake_data$masked_dfs,
          zeros_list = fake_data$zeros,
-         DGVs = list(lambda = lambda, psi = psi, theta = test_theta2),
+         DGVs = list(lambda = lambda, psi = psi, theta = test_theta1),
          theta_scenario_id = 1,
          parallel = TRUE,
          niter = min_iters,
@@ -194,33 +147,11 @@ sims_output <- run_sims(
          thin = 1,
          save_fits = FALSE,
          save_individual_summaries_list = FALSE,
-         directory = here("Testing")
+         directory = here::here("Testing")
 )
 
-
-## ------------------------------------------------------------------------------------
-# read in fit object -- my sneaky way of making the vignette knit faster was to save the
-# output from the previous chunk and then read in the results, hiding this code block
-# fit_1_1 <- readRDS("../Testing/Theta1/fits/fit_1_1.rds")
-
-# visualize using bayesplot (if `save_fits = TRUE`)
-# bayesplot::mcmc_dens_overlay(fit_1_1, pars = "lambda[1]")
-
-
-## ------------------------------------------------------------------------------------
-# A traceplot, if you like (and you saved fits)
-# bayesplot::mcmc_trace(fit_1_1, regex_pars = "lambda")
-
-
-## ----eval=TRUE, echo=FALSE, message=FALSE--------------------------------------------
-# Sneaky way to get around the knitting/compilation problem
-# biglist <- list()
-# for(i in 1:4){
-#   biglist[[i]] <- readRDS(paste0(here("Testing", "Theta1"), "/summary_df_for_scenario_",i,".rds"))
-# }
-#
-# sims_output <- do.call("bind_rows", biglist)
-
+# example_output <- sims_output
+# usethis::use_data(example_output)
 
 ## ------------------------------------------------------------------------------------
 visualize_parameter_group(sim_summary = sims_output,
@@ -236,11 +167,6 @@ visualize_single_parameter(sims_output, par = "lambda[2]",
                            theta_scenario = 1,
                            scenarios = 1:2,
                            convergence_threshold = 1.03)
-
-# New plotting functions, feedback welcome! (Also, not I'm not wed to either of these;
-# if you think it would be better to get rid of these functions and stick with what we
-# have, let me know! My reason for thinking of these is that this is likely the kind of
-# really simple check that practitioners will be looking for.)
 
 plot_coverage_vs_calls(
   sims_output,
@@ -259,10 +185,6 @@ plot_bias_vs_calls(
   theta_scenario = 1,
   convergence_threshold = 1.1
 )
-
-# I THINK THESE ARE USEFUL, CAN YOU ADD ONE THAT PUTS INTERVAL WIDTH ON THE Y-AXIS?
-
-# Done. See below:
 
 plot_width_vs_calls(
   sims_output,
@@ -304,26 +226,6 @@ FE_data <- simulate_validatedData(
 # and parameter settings, this takes ~ 2:20 minutes per scenario, so around 6-7 minutes for
 # this small test case. Plan accordingly!
 
-# RUNNING INTO ANOTHER ERROR HERE...
-# Beginning scenario 1.
-# 2024-09-30 12:21:22.319989
-# |                                                  |   0%`summarise()` has grouped output by 'site'. You can override using the `.groups` argument.
-# |==========                                        |  20%`summarise()` has grouped output by 'site'. You can override using the `.groups` argument.
-# |====================                              |  40%`summarise()` has grouped output by 'site'. You can override using the `.groups` argument.
-# |==============================                    |  60%`summarise()` has grouped output by 'site'. You can override using the `.groups` argument.
-# |========================================          |  80%`summarise()` has grouped output by 'site'. You can override using the `.groups` argument.
-# |==================================================| 100%
-# Error in gzfile(file, mode) : cannot open the connection
-# In addition: Warning message:
-#   In gzfile(file, mode) :
-#   cannot open compressed file '/Users/c84k467/Library/CloudStorage/OneDrive-MontanaStateUniversity/
-#     BoxMigratedData/student-advising/oram-dissertation_work/ValidationExplorer/Testing/
-      # FixedEffortExample/ThetaFE/summary_df_for_scenario_1.rds',
-# probable reason 'No such file or directory'
-
-# This error is due to the directory ThetaFE not being set up ahead of time. New fix creates the directory for the user if it
-# does not already exist.
-
 start <- Sys.time()
 FE_model_fits <- run_sims(
   data_list = FE_data$masked_dfs,
@@ -338,19 +240,8 @@ FE_model_fits <- run_sims(
 Sys.time() - start
 
 
-## ----echo=FALSE----------------------------------------------------------------------
-# For faster knitting. Note that eval=FALSE in previous chunk. If you change
-# this setting and refit the model, your results may change!
-#saveRDS(FE_model_fits, paste0(here("Testing", "FixedEffortExample"), "/FE_model_fits.rds"))
-# FE_model_fits <- readRDS(paste0(here("Testing", "FixedEffortExample"), "/FE_model_fits.rds"))
-
-
 ## ------------------------------------------------------------------------------------
 visualize_parameter_group(FE_model_fits, pars = "lambda", theta_scenario = 1, scenarios = 1:3)
-
-
-## ------------------------------------------------------------------------------------
-visualize_parameter_group(FE_model_fits, pars = "psi", theta_scenario = 1, scenarios = 1:3)
 
 
 ## ------------------------------------------------------------------------------------

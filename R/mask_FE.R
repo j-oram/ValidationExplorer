@@ -1,3 +1,21 @@
+#' mask_FE: A function for simulating a fixed effort validation design.
+#'
+#' @param df A dataframe object in the format output from simulate_validatedData(...)[["full_dfs"]]
+#' @param effort_prop The proportion of recordings to be randomly sampled from the first visit for validation
+#' @param seed An optional random seed to make masking reproducible
+#'
+#' @return A dataframe object that is a copy of the input `df`, but with the appropriate level of effort
+#'   according to a fixed effort validation design.
+#' @export
+#'
+#' @examples
+#' cd_data <- sim_dat()$full_df %>% tidyr::uncount(weights = count, .remove = FALSE)
+#'
+#' FE_data <- mask_FE(cd_data, effort_prop = 0.2)
+#'
+#' head(cd_data)
+#' head(FE_data)
+#'
 mask_FE <- function(df, effort_prop, seed = NULL) {
 
   # set the seed if specified by the user

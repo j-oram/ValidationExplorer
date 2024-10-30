@@ -1,3 +1,47 @@
+#' Get suggested MCMC settings prior to starting your simulations
+#' @param dataset A dataframe containing the validated and ambiguous data to be fit.
+#'   Expected format is that of a single dataframe contained in the output from
+#'   `simulate_validatedData()$masked_dfs`. We recommend using a dataset from your
+#'   lowest-effort validation scenario.
+#'
+#' @param zeros A dataframe containing the site/visit/true_spp/id_spp combinations
+#'   that were never observed (count = 0). This will be one of the elements of
+#'   `simulate_validatedData()$zeros`.
+#'
+#' @returns A list containing the expected time to fit a single dataset, the
+#'   minimum number of iterations, minimum warmup and a matrix with value of 1 in
+#'   an entry if all model parameters had Rhat <= 1.1 after the corresponding
+#'   warmup and number of iterations. See the examples for more.
+#'
+#' @examples
+#'
+#' psi <- c(0.3, 0.6)
+#' lambda <- c(11, 2)
+#'
+#' nspecies <- length(psi)
+#' nsites <- 30
+#' nvisits <- 5
+#'
+#' test_theta1 <- matrix(c(0.9, 0.1, 0.15, 0.85), byrow = TRUE, nrow = 2)
+#' val_scenarios <- list(spp1 = c(.75, .5), spp2 = .5)
+#'
+#' fake_data <- simulate_validatedData(
+#'   n_datasets = 5,
+#'   validation_design = "BySpecies",
+#'   scenarios = val_scenarios,
+#'   nsites = nsites,
+#'   nvisits = nvisits,
+#'   nspecies = nspecies,
+#'   psi = psi,
+#'   lambda = lambda,
+#'   theta = test_theta1,
+#'   save_datasets = FALSE,
+#'   save_masked_datasets = FALSE,
+#'   directory = paste0(here::here("Testing"))
+#' )
+#' # scenario 1 has the lowest effort, so use the 5th dataset from that scenario
+#' tune_mcmc(dataset = fake_data$masked_dfs[[1]][[5]], zeros = fake_data$zeros[[5]])
+#'
 #' @importFrom nimble getNimbleOption
 tune_mcmc <- function(dataset, zeros) {
 
@@ -113,6 +157,7 @@ tune_mcmc <- function(dataset, zeros) {
 
   print("Fitting MCMC in parallel ... this may take a few minutes")
     this_cluster <- parallel::makeCluster(3)
+    parallel::clusterEvalQ(cl = this_cluster, library(nimble))
     start <- Sys.time()
     fit <- parallel::parLapply(
       cl = this_cluster,

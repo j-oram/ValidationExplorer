@@ -2,9 +2,12 @@
 
 export("%>%")
 export(L)
+export(mask_FE)
 export(mask_by_spp)
 export(mcmc_sum)
 export(sim_dat)
+export(simulate_validatedData)
+export(visualize_single_parameter)
 importFrom(magrittr,"%>%")
 importFrom(nimble,getNimbleOption)
 importFrom(rlang,.data)

@@ -1,4 +1,75 @@
+#' run_sims: conduct simulations easily
+#'
+#'
+#' @param data_list nested list of masked dataframes (datasets nested within scenarios --
+#'   this is the format of sim_validatedData()$masked_dfs)
+#' @param zeros_list list of dataframes containing the site/visit/true_spp/id_spp combinations
+#'   where no calls were observed.
+#' @param DGVs A named list with entries psi, lambda and theta containing
+#'   the true values of the respective parameters.
+#' @param theta_scenario_id The classifier ID as an integer or string
+#' @param parallel Should models be fit in parallel? Default value is TRUE.
+#' @param niter Number of iterations per MCMC chain.
+#' @param nburn Number of warmup iterations.
+#' @param thin Thinning interval for the MCMC chains.
+#' @param save_fits Should individual model fits be saved? This could require large
+#'   amounts of disk space if you are fitting many large models to big datasets.
+#'   Default value is FALSE.
+#' @param save_individual_summaries_list Should summaries for individual model fits
+#'   be saved? While this requires much less space than `save_fits`, we still
+#'   recommend keeping this at the default value of FALSE. Only use it if you
+#'   anticipate that simulations may be interrupted.
+#' @param directory The directory to save objects. Defaults to the current working directory.
+#'
+#' @return a dataframe with the summaries (from `mcmc_sum.R`) for all scenarios and datasets.
+#'   A copy of this output is also saved to the current working directory.
+#'
 #' @importFrom utils setTxtProgressBar txtProgressBar
+#'
+#' @examples
+#' # :::::::::::: Simulate data ::::::::::::: #
+#' psi <- c(0.3, 0.6)
+#' lambda <- c(11, 2)
+#'
+#' nspecies <- length(psi)
+#' nsites <- 30
+#' nvisits <- 5
+#'
+#' test_theta1 <- matrix(c(0.9, 0.1, 0.15, 0.85), byrow = TRUE, nrow = 2)
+#' val_scenarios <- list(spp1 = c(.75, .5), spp2 = .5)
+#'
+#' fake_data <- simulate_validatedData(
+#'   n_datasets = 5,
+#'   validation_design = "BySpecies",
+#'   scenarios = val_scenarios,
+#'   nsites = nsites,
+#'   nvisits = nvisits,
+#'   nspecies = nspecies,
+#'   psi = psi,
+#'   lambda = lambda,
+#'   theta = test_theta1,
+#'   save_datasets = FALSE,
+#'   save_masked_datasets = FALSE,
+#'   directory = paste0(here::here("Testing"))
+#' )
+#'
+#' # ::::::::::::: run simulations on sim'd data ::::::::::: #
+#'
+#' # takes 1-3 minutes
+#' out <- run_sims(
+#'   data_list = fake_data$masked_dfs,
+#'   zeros_list = fake_data$zeros,
+#'   DGVs = list(lambda = lambda, psi = psi, theta = test_theta1),
+#'   theta_scenario_id = 1,
+#'   parallel = TRUE,
+#'   niter = min_iters,
+#'   nburn = warmup,
+#'   thin = 1,
+#'   save_fits = FALSE,
+#'   save_individual_summaries_list = FALSE,
+#'   directory = here::here()
+#' )
+
 run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
                      parallel = TRUE,
                      niter = 2000, nburn = floor(niter/2), thin = 1,
@@ -37,9 +108,9 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
           # priors
           for(species in 1:nspecies){
 
-            psi[species] ~ nimble::dbeta(1,1)
-            lambda[species] ~ nimble::T(nimble::dnorm(0, sd = 10), 0, Inf)
-            theta[species, 1:nspecies] ~ nimble::ddirch(alpha = alpha0[species, 1:nspecies])
+            psi[species] ~ dbeta(1,1)
+            lambda[species] ~ T(dnorm(0, sd = 10), 0, Inf)
+            theta[species, 1:nspecies] ~ ddirch(alpha = alpha0[species, 1:nspecies])
 
           }
 
@@ -49,7 +120,7 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
           for(i in 1:nsites){
             for(species in 1:nspecies){
 
-              z[i, species] ~ nimble::dbern(psi[species])
+              z[i, species] ~ dbern(psi[species])
 
             }
           }
@@ -58,7 +129,7 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
           for(i in 1:nsites){
             for(j in 1:nvisits){
 
-              Y.[i,j] ~ nimble::dpois(sum(z[i,1:nspecies] * lambda[1:nspecies]))
+              Y.[i,j] ~ dpois(sum(z[i,1:nspecies] * lambda[1:nspecies]))
 
             }
           }
@@ -71,8 +142,8 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
             pi[row, 1:nspecies] <- z[site1[row], 1:nspecies] * lambda[1:nspecies] /
               sum(z[site1[row], 1:nspecies] * lambda[1:nspecies])
 
-            k[row] ~ nimble::dcat(pi[row, 1:nspecies])
-            y[row] ~ nimble::dcat(theta[k[row], 1:nspecies])
+            k[row] ~ dcat(pi[row, 1:nspecies])
+            y[row] ~ dcat(theta[k[row], 1:nspecies])
 
           }
 
@@ -137,6 +208,7 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
       if(parallel){
 
         this_cluster <- parallel::makeCluster(3)
+        parallel::clusterEvalQ(cl = this_cluster, library(nimble))
         fit <- parallel::parLapply(cl = this_cluster,
                          X = 1:3,
                          fun = runMCMC_fit,
@@ -207,7 +279,7 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
     close(pb)
 
     # summary df for the entire scenario after all datasets have been fit and summarized
-    individual_summary_df <- do.call("dplyr::bind_rows", individual_summaries_list)
+    individual_summary_df <- do.call(eval(parse(text="dplyr::bind_rows")), individual_summaries_list)
     individual_summary_df$scenario <- scenario
     individual_summary_df$theta_scenario <- theta_scenario_id
 
@@ -224,6 +296,6 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
     big_list[[scenario]] <- individual_summary_df
   }
 
-  out <- do.call("dplyr::bind_rows", big_list) # bind summary dfs for all scenarios into big df (all scenarios, all datasets)
+  out <- do.call(eval(parse(text="dplyr::bind_rows")), big_list) # bind summary dfs for all scenarios into big df (all scenarios, all datasets)
   return(out)
 }
