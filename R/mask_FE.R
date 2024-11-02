@@ -1,11 +1,13 @@
 #' mask_FE: A function for simulating a fixed effort validation design.
 #'
-#' @param df A dataframe object in the format output from simulate_validatedData(...)[["full_dfs"]]
-#' @param effort_prop The proportion of recordings to be randomly sampled from the first visit for validation
+#' @param df A dataframe object in the format  of `full_dfs` output from
+#'   \link{simulate_validatedData}
+#' @param effort_prop The proportion of recordings to be randomly sampled from
+#'   the first visit for validation
 #' @param seed An optional random seed to make masking reproducible
 #'
-#' @return A dataframe object that is a copy of the input `df`, but with the appropriate level of effort
-#'   according to a fixed effort validation design.
+#' @return A dataframe object that is a copy of the input `df`, but with the
+#'   appropriate level of effort according to a fixed effort validation design.
 #' @export
 #'
 #' @examples

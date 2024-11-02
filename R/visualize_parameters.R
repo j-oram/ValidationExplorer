@@ -1,7 +1,9 @@
-#' Visualize your simulation study results
+#' visualize_single_parameter
 #'
-#' @param sim_summary Summary output in the format of `run_sims()`.
-#' @param par The parameter(s) to be visualized.
+#' See detailed simulation study results for a parameter of interest
+#'
+#' @param sim_summary Summary output in the format of \link{run_sims}.
+#' @param par The parameter to be visualized.
 #' @param theta_scenario The theta scenario IDs.
 #' @param scenarios Scenarios to be visualized.
 #' @param convergence_threshold If the Gelman-Rubin statistic is below this value,
@@ -12,20 +14,12 @@
 #'
 #' @examples
 #'
-#'
 #' visualize_single_parameter(
 #'   example_output,
 #'   par = "lambda[1]",
 #'   theta_scenario = "1",
 #'   scenarios = 1:2,
 #'   convergence_threshold = 1.05
-#' )
-#'
-#' visualize_parameter_group(
-#'   example_output,
-#'   pars = "lambda"
-#'   theta_scenario = "1",
-#'   scenarios = 1:2
 #' )
 #'
 visualize_single_parameter <- function(sim_summary,
@@ -96,6 +90,30 @@ visualize_single_parameter <- function(sim_summary,
   return(plt)
 }
 
+#' visualize_parameter_group
+#'
+#' Visualize simulation results for entire groups of parameters
+#'
+#'
+#' @param sim_summary Summary output in the format of `run_sims()`.
+#' @param pars The parameters to be visualized.
+#' @param theta_scenario The theta scenario IDs.
+#' @param scenarios Scenarios to be visualized.
+#' @param convergence_threshold If the Gelman-Rubin statistic is below this value,
+#'   consider an MCMC to have converged. Default value is 1.1, but we recommend 1.05.
+#'
+#' @return A ggplot object summarizing simulation results.
+#' @export
+#'
+#' @examples
+#'
+#' visualize_parameter_group(
+#'   example_output,
+#'   pars = "lambda",
+#'   theta_scenario = "1",
+#'   scenarios = 1:2
+#' )
+#'
 visualize_parameter_group <- function(sim_summary,
                                       pars,
                                       theta_scenario,

@@ -7,15 +7,17 @@
 mask_FE(df, effort_prop, seed = NULL)
 }
 \arguments{
-\item{df}{A dataframe object in the format output from simulate_validatedData(...)[\link{"full_dfs"}]}
+\item{df}{A dataframe object in the format  of \code{full_dfs} output from
+\link{simulate_validatedData}}
 
-\item{effort_prop}{The proportion of recordings to be randomly sampled from the first visit for validation}
+\item{effort_prop}{The proportion of recordings to be randomly sampled from
+the first visit for validation}
 
 \item{seed}{An optional random seed to make masking reproducible}
 }
 \value{
-A dataframe object that is a copy of the input \code{df}, but with the appropriate level of effort
-according to a fixed effort validation design.
+A dataframe object that is a copy of the input \code{df}, but with the
+appropriate level of effort according to a fixed effort validation design.
 }
 \description{
 mask_FE: A function for simulating a fixed effort validation design.

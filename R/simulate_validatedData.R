@@ -36,7 +36,7 @@
 #'   necessary for housekeeping in the model-fitting process. If `save_datasets = TRUE`, the zeros for each
 #'   each dataset will be saved in `directory` individually as zeros_in_dataset_n.rds, where
 #'   n is the dataset number.
-#'   3) `masked_dfs`: A nested list containing each dataset masked under each scenario. masked_dfs[[9]][[27]] contains
+#'   3) `masked_dfs`: A nested list containing each dataset masked under each scenario. masked_dfs\\[\\[9\\]\\]\\[\\[27\\]\\] contains
 #'   dataset 27, assuming validation scenario 9. If `save_masked_datasets = TRUE`, then each dataset/scenario
 #'   scenario combination is saved individually in `directory` as dataset_n_masked_under_scenario_s.rds,
 #'   where n is the dataset number and s is the scenario number.
@@ -44,7 +44,7 @@
 #'
 #' @examples
 #'
-#' #' psi <- c(0.3, 0.6)
+#' psi <- c(0.3, 0.6)
 #' lambda <- c(11, 2)
 #'
 #' nspecies <- length(psi)

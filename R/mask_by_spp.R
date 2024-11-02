@@ -1,9 +1,16 @@
 #' mask_by_spp: simulate a validation design
 #'
-#' @param data A dataframe containing the columns `site`, `visit`, `true_spp`, `id_spp`, `count`
-#' @param props_to_val a vector containing the proportion of recordings to validate for each species
+#' @param data A dataframe containing the columns `site`, `visit`, `true_spp`,
+#'   `id_spp`, `count`
+#' @param props_to_val a vector containing the proportion of recordings to validate
+#'   for each species
 #'
-#' @return A list containing two elements: `final_df` and `data_sum`. `final_df` is a copy of the input `data` masked according to the validation design supplied by `props_to_val`. The second output, `data_sum` is a dataframe containing a summary of the number and proportion of ambiguous (i.e., not validated) recordings. It provides a check that the masking function is working correctly.
+#' @return A list containing two elements: `final_df` and `data_sum`. `final_df`
+#'   is a copy of the input `data` masked according to the validation design
+#'   supplied by `props_to_val`. The second output, `data_sum` is a dataframe
+#'   containing a summary of the number and proportion of ambiguous
+#'   (i.e., not validated) recordings. It provides a check that the masking
+#'   function is working correctly.
 #' @export
 #'
 #' @examples
@@ -16,7 +23,8 @@
 #' dat <- dat %>% tidyr::uncount(weights = count, .remove = FALSE)
 #' val_dat <- mask_by_spp(dat, props_to_val = c(rep(.1, 4), rep(.4, 4)))
 #'
-#' val_dat$final_df %>% group_by(id_spp) %>% summarize(prop_vald = sum(!is.na(true_spp))/n())
+#' val_dat$final_df %>% group_by(id_spp) %>%
+#'   summarize(prop_vald = sum(!is.na(true_spp))/n())
 mask_by_spp <- function(data, props_to_val){
 
   n <- nrow(data)

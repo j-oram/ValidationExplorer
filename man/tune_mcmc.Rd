@@ -8,13 +8,13 @@ tune_mcmc(dataset, zeros)
 }
 \arguments{
 \item{dataset}{A dataframe containing the validated and ambiguous data to be fit.
-Expected format is that of a single dataframe contained in the output from
-\code{simulate_validatedData()$masked_dfs}. We recommend using a dataset from your
+Expected format is that of a single masked dataframe contained in the output from
+\link{simulate_validatedData}. We recommend using a dataset from your
 lowest-effort validation scenario.}
 
 \item{zeros}{A dataframe containing the site/visit/true_spp/id_spp combinations
-that were never observed (count = 0). This will be one of the elements of
-\code{simulate_validatedData()$zeros}.}
+that were never observed (count = 0). This will be one of the elements of the
+zeros object ouput from \link{simulate_validatedData}.}
 }
 \value{
 A list containing the expected time to fit a single dataset, the
@@ -39,7 +39,7 @@ val_scenarios <- list(spp1 = c(.75, .5), spp2 = .5)
 
 fake_data <- simulate_validatedData(
   n_datasets = 5,
-  validation_design = "BySpecies",
+  design_type = "BySpecies",
   scenarios = val_scenarios,
   nsites = nsites,
   nvisits = nvisits,
@@ -52,6 +52,9 @@ fake_data <- simulate_validatedData(
   directory = paste0(here::here("Testing"))
 )
 # scenario 1 has the lowest effort, so use the 5th dataset from that scenario
+# Not run during checks
+\dontrun{
+# note the index of the zeros matches the index of the dataset
 tune_mcmc(dataset = fake_data$masked_dfs[[1]][[5]], zeros = fake_data$zeros[[5]])
-
+}
 }

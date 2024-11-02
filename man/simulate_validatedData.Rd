@@ -26,9 +26,9 @@ simulated datasets will be subjected to all candidate validation designs.}
 \item{design_type}{Character string, either "BySpecies" for a stratified-by-species design,
 or "FixedPercentage" for a fixed effort design (see Oram et al., in review for more details on each of these)}
 
-\item{scenarios}{if \code{validation_design = "BySpecies"}, the \code{scenarios} argument must be a list with each entry corresponding
+\item{scenarios}{if \code{design_type = "BySpecies"}, the \code{scenarios} argument must be a list with each entry corresponding
 to the potential levels of effort for a particular autoID label. If
-\code{validation_design == "FixedPercent"}, then the \code{scenarios} argument must be a vector with each entry corresponding to
+\code{design_type == "FixedPercent"}, then the \code{scenarios} argument must be a vector with each entry corresponding to
 a potential percent of calls to be sampled from the first visit at each site. See vignette for an example.}
 
 \item{nsites}{number of sites in each dataset}
@@ -69,7 +69,7 @@ a row corresponding tosite = 156, visit = 4, true_spp = 1, id_spp = 3, with coun
 necessary for housekeeping in the model-fitting process. If \code{save_datasets = TRUE}, the zeros for each
 each dataset will be saved in \code{directory} individually as zeros_in_dataset_n.rds, where
 n is the dataset number.
-\item \code{masked_dfs}: A nested list containing each dataset masked under each scenario. masked_dfs[\link{9}][\link{27}] contains
+\item \code{masked_dfs}: A nested list containing each dataset masked under each scenario. masked_dfs\[\[9\]\]\[\[27\]\] contains
 dataset 27, assuming validation scenario 9. If \code{save_masked_datasets = TRUE}, then each dataset/scenario
 scenario combination is saved individually in \code{directory} as dataset_n_masked_under_scenario_s.rds,
 where n is the dataset number and s is the scenario number.
@@ -80,7 +80,7 @@ Simulate many datasets under candidate validation designs
 }
 \examples{
 
-#' psi <- c(0.3, 0.6)
+psi <- c(0.3, 0.6)
 lambda <- c(11, 2)
 
 nspecies <- length(psi)
@@ -92,7 +92,7 @@ val_scenarios <- list(spp1 = c(.75, .5), spp2 = .5)
 
 fake_data <- simulate_validatedData(
   n_datasets = 5,
-  validation_design = "BySpecies",
+  design_type = "BySpecies",
   scenarios = val_scenarios,
   nsites = nsites,
   nvisits = nvisits,

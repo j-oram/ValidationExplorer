@@ -1,25 +1,32 @@
-#' plot_X_vs_calls: Compare validation designs based on simulated inference and expected level of effort
+#' plot_bias_vs_calls: Compare validation designs based on estimation error and
+#'   expected level of effort
 #'
-#' @param sim_summary Simulation summary from many datasets under many validation scenarios in the format output by `mcmc_sum()`.
-#' @param calls_summary Summary of the validation design in the format as output from `summarize_n_validated.R`
+#' @param sim_summary Simulation summary from many datasets under many validation
+#'   scenarios in the format output by \link{mcmc_sum}.
+#' @param calls_summary Summary of the validation design in the format as output
+#'   from \link{summarize_n_validated}
 #' @param pars A character vector of parameters to visualize.
-#' @param regex_pars String containing the name of a group of parameters to visualize. Must be one of "lambda", "psi", or "theta".
-#' @param theta_scenario String or integer containing the theta scenario ID that was used to simulate data in `simulate_validatedData`
-#' @param scenarios A vector of integers corresponding to the validation designs you would like to visualize.
-#' @param convergence_threshold A threshold for the Gelman-Rubin statistic; values below this threshold indicate that a parameter has converged.
+#' @param regex_pars String containing the name of a group of parameters to visualize.
+#'   Must be one of "lambda", "psi", or "theta".
+#' @param theta_scenario String or integer containing the theta scenario ID that
+#'   was used to simulate data in \link{simulate_validatedData}
+#' @param scenarios A vector of integers corresponding to the validation designs
+#'   you would like to visualize.
+#' @param convergence_threshold A threshold for the Gelman-Rubin statistic; values
+#'   below this threshold indicate that a parameter has converged.
 #'
 #' @importFrom stats quantile
 #'
 #' @examples
-#' plt_example_data <- readRDS('') # need to make sure there is data available with the package.
 #'
-#' sim_summary <- plt_example_data$summary
-#' calls_summary <- plt_example_data$calls
+#' sim_summary <- example_output
+#' calls_summary <- example_val_sum
 #'
 #' plot_bias_vs_calls(sim_summary, calls_summary, regex_pars = "lambda",
 #'                    theta_scenario = "1", scenarios = 1:2,
 #'                    convergence_threshold = 1.05)
 #'
+#' @export
 plot_bias_vs_calls <- function(sim_summary,
                                calls_summary, # output from summarize_n_validated
                                pars = NULL,
@@ -55,7 +62,7 @@ plot_bias_vs_calls <- function(sim_summary,
   if(!is.null(pars)) {
     plt_df <- plt_df %>% dplyr::filter(parameter %in% pars)
   } else if(!is.null(regex_pars)) {
-    plt_df <- plt_df %>% dplyr::filter(str_detect(parameter, regex_pars))
+    plt_df <- plt_df %>% dplyr::filter(stringr::str_detect(parameter, regex_pars))
   }
 
 
@@ -77,6 +84,35 @@ plot_bias_vs_calls <- function(sim_summary,
 
 }
 
+#' plot_width_vs_calls: Compare validation designs based on 95% posterior interval
+#'   width and expected level of effort
+#'
+#' @param sim_summary Simulation summary from many datasets under many validation
+#'   scenarios in the format output by \link{mcmc_sum}.
+#' @param calls_summary Summary of the validation design in the format as output
+#'   from \link{summarize_n_validated}
+#' @param pars A character vector of parameters to visualize.
+#' @param regex_pars String containing the name of a group of parameters to
+#'   visualize. Must be one of "lambda", "psi", or "theta".
+#' @param theta_scenario String or integer containing the theta scenario ID that
+#'   was used to simulate data in \link{simulate_validatedData}
+#' @param scenarios A vector of integers corresponding to the validation designs
+#'   you would like to visualize.
+#' @param convergence_threshold A threshold for the Gelman-Rubin statistic; values
+#'   below this threshold indicate that a parameter has converged.
+#'
+#' @importFrom stats quantile
+#'
+#' @examples
+#'
+#' sim_summary <- example_output
+#' calls_summary <- example_val_sum
+#'
+#' plot_width_vs_calls(sim_summary, calls_summary, regex_pars = "lambda",
+#'                    theta_scenario = "1", scenarios = 1:2,
+#'                    convergence_threshold = 1.05)
+#'
+#' @export
 plot_width_vs_calls <- function(sim_summary,
                                 calls_summary, # output from summarize_n_validated
                                 pars = NULL,
@@ -134,6 +170,36 @@ plot_width_vs_calls <- function(sim_summary,
 
 }
 
+#' plot_coverage_vs_calls: Compare validation designs based on coverage of 95%
+#'   posterior intervals and expected level of effort
+#'
+#' @param sim_summary Simulation summary from many datasets under many validation
+#'   scenarios in the format output by \link{mcmc_sum}.
+#' @param calls_summary Summary of the validation design in the format as output
+#'   from \link{summarize_n_validated}
+#' @param pars A character vector of parameters to visualize.
+#' @param regex_pars String containing the name of a group of parameters to
+#'   visualize. Must be one of "lambda", "psi", or "theta".
+#' @param theta_scenario String or integer containing the theta scenario ID that
+#'   was used to simulate data in \link{simulate_validatedData}
+#' @param scenarios A vector of integers corresponding to the validation designs
+#'   you would like to visualize.
+#' @param convergence_threshold A threshold for the Gelman-Rubin statistic; values
+#'   below this threshold (and near 1) indicate that a parameter has converged.
+#'
+#' @importFrom stats quantile
+#'
+#' @examples
+#'
+#' sim_summary <- example_output
+#' calls_summary <- example_val_sum
+#'
+#' plot_bias_vs_calls(sim_summary, calls_summary, regex_pars = "lambda",
+#'                    theta_scenario = "1", scenarios = 1:2,
+#'                    convergence_threshold = 1.05)
+#'
+
+#' @export
 plot_coverage_vs_calls <- function(sim_summary,
                                    calls_summary, # output from summarize_n_validated
                                    pars = NULL,

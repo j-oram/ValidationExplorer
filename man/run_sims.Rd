@@ -20,7 +20,7 @@ run_sims(
 }
 \arguments{
 \item{data_list}{nested list of masked dataframes (datasets nested within scenarios --
-this is the format of sim_validatedData()$masked_dfs)}
+this is the format of \code{masked_dfs} output from \link{simulate_validatedData})}
 
 \item{zeros_list}{list of dataframes containing the site/visit/true_spp/id_spp combinations
 where no calls were observed.}
@@ -50,7 +50,7 @@ anticipate that simulations may be interrupted.}
 \item{directory}{The directory to save objects. Defaults to the current working directory.}
 }
 \value{
-a dataframe with the summaries (from \code{mcmc_sum.R}) for all scenarios and datasets.
+a dataframe with the summaries (from \link{mcmc_sum}) for all scenarios and datasets.
 A copy of this output is also saved to the current working directory.
 }
 \description{
@@ -70,7 +70,7 @@ val_scenarios <- list(spp1 = c(.75, .5), spp2 = .5)
 
 fake_data <- simulate_validatedData(
   n_datasets = 5,
-  validation_design = "BySpecies",
+  design_type = "BySpecies",
   scenarios = val_scenarios,
   nsites = nsites,
   nvisits = nvisits,
@@ -85,18 +85,19 @@ fake_data <- simulate_validatedData(
 
 # ::::::::::::: run simulations on sim'd data ::::::::::: #
 
-# takes 1-3 minutes
+\dontrun{ # turn off during check() to speed it up
 out <- run_sims(
   data_list = fake_data$masked_dfs,
   zeros_list = fake_data$zeros,
   DGVs = list(lambda = lambda, psi = psi, theta = test_theta1),
   theta_scenario_id = 1,
   parallel = TRUE,
-  niter = min_iters,
-  nburn = warmup,
+  niter = 1000,
+  nburn = 500,
   thin = 1,
   save_fits = FALSE,
   save_individual_summaries_list = FALSE,
   directory = here::here()
 )
+}
 }

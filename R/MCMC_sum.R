@@ -1,16 +1,24 @@
 #' MCMC_sum: A custom function for summarizing MCMC posterior sampling
 #'
-#' @param out Draws from a model fit using a probabilistic programming language (e.g., Stan, NIMBLE or JAGS).
-#'  The expected format of this input is a list, where each entry is a Markov chain.
+#' @param out Draws from a model fit using a probabilistic programming language
+#'   (e.g., Stan, NIMBLE or JAGS). The expected format of this input is a list,
+#'   where each entry is a Markov chain.
 #' @param thin An optional thinning interval.
-#' @param truth A vector with the true parameter values organized alphanumerically by parameter value (e.g., lambda[1], lambda[2], psi[1], psi[2], theta[1,1], theta[2,1], theta[2,1], theta[2,2])
+#' @param truth A vector with the true parameter values organized alphanumerically
+#'   by parameter value (e.g., lambda\\[1\\], lambda\\[2\\], psi\\[1\\], psi\\[2\\], theta\\[1,1\\],
+#'   theta\\[1,2\\], theta\\[2,1\\], theta\\[2,2\\])
 #'
-#' @return A dataframe object summarizing the MCMC draws, including diagnostics, quantiles and posterior means.
+#' @return A dataframe object summarizing the MCMC draws, including diagnostics,
+#'   quantiles and posterior means.
 #' @export
 #'
 #' @examples
-#' draws <- readRDS('some/path/to/example/draws')
-#' truth <- readRDS('some/path/to/corresponding/values')
+#'
+#' # An example fit of one dataset
+#' draws <- ValExp_example_fit
+#'
+#' # The data generating values
+#' truth <- c(11,2,0.3, 0.6, 0.9, 0.15, 0.10, 0.85)
 #'
 #' mcmc_sum(draws, truth = truth)
 mcmc_sum <- function(out, thin = 1, truth){

@@ -13,9 +13,6 @@ devtools::load_all()
 psi <- c(0.3, 0.6)
 lambda <- c(11, 2)
 
-
-
-
 # Define sites and visits
 nspecies <- length(psi)
 nsites <- 30
@@ -27,7 +24,6 @@ test_theta1 <- matrix(c(0.9, 0.1, 0.15, 0.85),
                       byrow = TRUE, nrow = 2)
 test_theta1
 
-
 ## ------------------------------------------------------------------------------------
 # Generating a confusion matrix in this way appears to be the culprit of the testing
 # problems; this doesn't necessarily give exactly 1, but values that are extremely close.
@@ -36,12 +32,10 @@ test_theta2 <- t(apply(18*diag(nspecies) + 2, 1,
                        function(x) nimble::rdirch(alpha = x)))
 test_theta2
 
-
 ## ------------------------------------------------------------------------------------
 ## Now a built in test within the simulate_ValidatedData function, per Katie's comment
 rowSums(test_theta1)
 rowSums(test_theta2)
-
 
 ## ------------------------------------------------------------------------------------
 
