@@ -102,7 +102,7 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
       observed_df <- data_list[[scenario]][[dataset]] # was df7
       zeros <- zeros_list[[dataset]]
       all_sites_and_visits <- dplyr::bind_rows(observed_df, zeros) %>%
-        dplyr::arrange(site, visit, true_spp, id_spp) # was df8
+        dplyr::arrange(.data$site, .data$visit, .data$true_spp, .data$id_spp) # was df8
 
       ## NIMBLE ---------
 
@@ -194,16 +194,16 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
 
           # Define Y. based on all site-visits, even if it had no calls
           Y. = all_sites_and_visits %>%
-            dplyr::group_by(site, visit) %>%
-            dplyr::summarize(total = unique(Y.)) %>%
+            dplyr::group_by(.data$site, .data$visit) %>%
+            dplyr::summarize(total = unique(.data$Y.)) %>%
             tidyr::pivot_wider(
-              names_from = visit,
+              names_from = .data$visit,
               names_prefix = "visit",
-              values_from = total,
+              values_from = .data$total,
               values_fill = 0 # if NA, turn into a 0, since the NA is due to no calls being detected at that site-visit
             ) %>%
             dplyr::ungroup() %>%
-            dplyr::select(-site) %>%
+            dplyr::select(-.data$site) %>%
             as.matrix()
         )
 

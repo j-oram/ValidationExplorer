@@ -38,40 +38,52 @@ plot_bias_vs_calls <- function(sim_summary,
 
   plt_df <- sim_summary %>%
     dplyr::mutate(
-      below_threshold = ifelse(round(Rhat, 4) <= convergence_threshold, 1, 0)
+      below_threshold = ifelse(round(.data$Rhat, 4) <= convergence_threshold, 1, 0)
     ) %>%
-    dplyr::group_by(theta_scenario, scenario, dataset) %>%
+    dplyr::group_by(.data$theta_scenario, .data$scenario, .data$dataset) %>%
     dplyr::mutate(
-      all_converge = ifelse(any(below_threshold == 0), 0, 1)
+      all_converge = ifelse(any(.data$below_threshold == 0), 0, 1)
     ) %>%
     dplyr::ungroup() %>%
-    dplyr::filter(all_converge == 1) %>%
-    dplyr::mutate(est_error = Mean - truth) %>%
-    dplyr::group_by(theta_scenario, scenario, parameter) %>%
+    dplyr::filter(.data$all_converge == 1) %>%
+    dplyr::mutate(est_error = .data$Mean - .data$truth) %>%
+    dplyr::group_by(.data$theta_scenario, .data$scenario, .data$parameter) %>%
     dplyr::mutate(
-      av_est_err = mean(est_error),
-      low50 = quantile(est_error, 0.25),
-      up50 = quantile(est_error, 0.75)
+      av_est_err = mean(.data$est_error),
+      low50 = quantile(.data$est_error, 0.25),
+      up50 = quantile(.data$est_error, 0.75)
     ) %>%
-    dplyr::select(theta_scenario, scenario, parameter, av_est_err, low50, up50) %>%
+    dplyr::select(
+      .data$theta_scenario,
+      .data$scenario,
+      .data$parameter,
+      .data$av_est_err,
+      .data$low50,
+      .data$up50
+    ) %>%
     dplyr::ungroup() %>%
-    dplyr::mutate(theta_scenario = as.character(theta_scenario),
-           scenario = as.character(scenario)) %>%
-    dplyr::left_join(., calls_summary, by = c("scenario", "theta_scenario"))
+    dplyr::mutate(theta_scenario = as.character(.data$theta_scenario),
+           scenario = as.character(.data$scenario)) %>%
+    dplyr::left_join(calls_summary, by = c("scenario", "theta_scenario"))
 
   if(!is.null(pars)) {
-    plt_df <- plt_df %>% dplyr::filter(parameter %in% pars)
+    plt_df <- plt_df %>% dplyr::filter(.data$parameter %in% pars)
   } else if(!is.null(regex_pars)) {
-    plt_df <- plt_df %>% dplyr::filter(stringr::str_detect(parameter, regex_pars))
+    plt_df <- plt_df %>% dplyr::filter(stringr::str_detect(.data$parameter, regex_pars))
   }
 
 
   plt <- plt_df %>%
     ggplot2::ggplot(
-      ggplot2::aes(x = n_validated, y = av_est_err, group = parameter, color = parameter)
+      ggplot2::aes(
+        x = .data$n_validated,
+        y = .data$av_est_err,
+        group = .data$parameter,
+        color = .data$parameter
+      )
     ) +
     ggplot2::geom_point() +
-    ggplot2::geom_linerange(ggplot2::aes(ymin=low50, ymax=up50))+
+    ggplot2::geom_linerange(ggplot2::aes(ymin=.data$low50, ymax=.data$up50))+
     ggplot2::geom_line() +
     ggplot2::geom_hline(yintercept = 0, linetype = "dotted")+
     ggplot2::labs(
@@ -124,42 +136,53 @@ plot_width_vs_calls <- function(sim_summary,
 
   plt_df <- sim_summary %>%
     dplyr::mutate(
-      below_threshold = ifelse(round(Rhat, 4) <= convergence_threshold, 1, 0)
+      below_threshold = ifelse(round(.data$Rhat, 4) <= convergence_threshold, 1, 0)
     ) %>%
-    dplyr::group_by(theta_scenario, scenario, dataset) %>%
+    dplyr::group_by(.data$theta_scenario, .data$scenario, .data$dataset) %>%
     dplyr::mutate(
-      all_converge = ifelse(any(below_threshold == 0), 0, 1)
+      all_converge = ifelse(any(.data$below_threshold == 0), 0, 1)
     ) %>%
     dplyr::ungroup() %>%
-    dplyr::filter(all_converge == 1) %>%
-    dplyr::mutate(width = `97.5%` - `2.5%`) %>%
-    dplyr::group_by(theta_scenario, scenario, parameter) %>%
+    dplyr::filter(.data$all_converge == 1) %>%
+    dplyr::mutate(width = .data$`97.5%` - .data$`2.5%`) %>%
+    dplyr::group_by(.data$theta_scenario, .data$scenario, .data$parameter) %>%
     dplyr::mutate(
-      mean_width = mean(width),
-      low50_width = quantile(width, 0.25),
-      up50_width = quantile(width, .75)
+      mean_width = mean(.data$width),
+      low50_width = quantile(.data$width, 0.25),
+      up50_width = quantile(.data$width, .75)
     ) %>%
-    dplyr::select(theta_scenario, scenario, parameter, mean_width, low50_width, up50_width) %>%
+    dplyr::select(
+      .data$theta_scenario,
+      .data$scenario,
+      .data$parameter,
+      .data$mean_width,
+      .data$low50_width,
+      .data$up50_width
+    ) %>%
     dplyr::ungroup() %>%
-    dplyr::mutate(theta_scenario = as.character(theta_scenario),
-                  scenario = as.character(scenario)) %>%
-    dplyr::left_join(., calls_summary, by = c("scenario", "theta_scenario"))
+    dplyr::mutate(theta_scenario = as.character(.data$theta_scenario),
+                  scenario = as.character(.data$scenario)) %>%
+    dplyr::left_join(calls_summary, by = c("scenario", "theta_scenario"))
 
   if(!is.null(pars)) {
-    plt_df <- plt_df %>% dplyr::filter(parameter %in% pars)
+    plt_df <- plt_df %>% dplyr::filter(.data$parameter %in% pars)
   } else if(!is.null(regex_pars)) {
-    plt_df <- plt_df %>% dplyr::filter(stringr::str_detect(parameter, regex_pars))
+    plt_df <- plt_df %>% dplyr::filter(stringr::str_detect(.data$parameter, regex_pars))
   }
 
 
   plt <- plt_df %>%
     ggplot2::ggplot(
-      ggplot2::aes(x = n_validated, y = mean_width, group = parameter, color = parameter)
+      ggplot2::aes(
+        x = .data$n_validated,
+        y = .data$mean_width,
+        group = .data$parameter,
+        color = .data$parameter
+      )
     ) +
     ggplot2::geom_point() +
-    ggplot2::geom_linerange(ggplot2::aes(ymin=low50_width, ymax=up50_width))+
+    ggplot2::geom_linerange(ggplot2::aes(ymin=.data$low50_width, ymax=.data$up50_width))+
     ggplot2::geom_line() +
-    ggplot2::geom_hline(yintercept = 0, linetype = "dotted")+
     ggplot2::labs(
       x = "Number of validated calls",
       y = "Average 95% credible interval width",
@@ -211,34 +234,44 @@ plot_coverage_vs_calls <- function(sim_summary,
 
   plt_df <- sim_summary %>%
     dplyr::mutate(
-      below_threshold = ifelse(round(Rhat, 4) <= convergence_threshold, 1, 0)
+      below_threshold = ifelse(round(.data$Rhat, 4) <= convergence_threshold, 1, 0)
     ) %>%
-    dplyr::group_by(theta_scenario, scenario, dataset) %>%
+    dplyr::group_by(.data$theta_scenario, .data$scenario, .data$dataset) %>%
     dplyr::mutate(
-      all_converge = ifelse(any(below_threshold == 0), 0, 1)
+      all_converge = ifelse(any(.data$below_threshold == 0), 0, 1)
     ) %>%
     dplyr::ungroup() %>%
-    dplyr::filter(all_converge == 1) %>%
-    dplyr::group_by(theta_scenario, scenario, parameter) %>%
+    dplyr::filter(.data$all_converge == 1) %>%
+    dplyr::group_by(.data$theta_scenario, .data$scenario, .data$parameter) %>%
     dplyr::mutate(
-      coverage = mean(capture),
+      coverage = mean(.data$capture),
     ) %>%
-    dplyr::select(theta_scenario, scenario, parameter, coverage) %>%
+    dplyr::select(
+      .data$theta_scenario,
+      .data$scenario,
+      .data$parameter,
+      .data$coverage
+    ) %>%
     dplyr::ungroup() %>%
-    dplyr::mutate(theta_scenario = as.character(theta_scenario),
-                  scenario = as.character(scenario)) %>%
-    dplyr::left_join(., calls_summary, by = c("scenario", "theta_scenario"))
+    dplyr::mutate(theta_scenario = as.character(.data$theta_scenario),
+                  scenario = as.character(.data$scenario)) %>%
+    dplyr::left_join(calls_summary, by = c("scenario", "theta_scenario"))
 
   if(!is.null(pars)) {
-    plt_df <- plt_df %>% dplyr::filter(parameter %in% pars)
+    plt_df <- plt_df %>% dplyr::filter(.data$parameter %in% pars)
   } else if(!is.null(regex_pars)) {
-    plt_df <- plt_df %>% dplyr::filter(stringr::str_detect(parameter, regex_pars))
+    plt_df <- plt_df %>% dplyr::filter(stringr::str_detect(.data$parameter, regex_pars))
   }
 
 
   plt <- plt_df %>%
     ggplot2::ggplot(
-      ggplot2::aes(x = n_validated, y = coverage, group = parameter, color = parameter)
+      ggplot2::aes(
+        x = .data$n_validated,
+        y = .data$coverage,
+        group = .data$parameter,
+        color = .data$parameter
+      )
     ) +
     ggplot2::geom_point() +
     ggplot2::geom_line() +

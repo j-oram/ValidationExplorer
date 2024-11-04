@@ -1,12 +1,3 @@
-## ----setup, include=FALSE, message=FALSE---------------------------------------------
-# library(tidyverse)
-# library(nimble)
-# library(coda)
-# library(rstan)
-# library(parallel)
-# library(here)
-# library(kableExtra)
-
 devtools::load_all()
 
 ## ------------------------------------------------------------------------------------
@@ -22,20 +13,11 @@ nvisits <- 5
 ## ------------------------------------------------------------------------------------
 test_theta1 <- matrix(c(0.9, 0.1, 0.15, 0.85),
                       byrow = TRUE, nrow = 2)
-test_theta1
 
 ## ------------------------------------------------------------------------------------
-# Generating a confusion matrix in this way appears to be the culprit of the testing
-# problems; this doesn't necessarily give exactly 1, but values that are extremely close.
 
 test_theta2 <- t(apply(18*diag(nspecies) + 2, 1,
                        function(x) nimble::rdirch(alpha = x)))
-test_theta2
-
-## ------------------------------------------------------------------------------------
-## Now a built in test within the simulate_ValidatedData function, per Katie's comment
-rowSums(test_theta1)
-rowSums(test_theta2)
 
 ## ------------------------------------------------------------------------------------
 
@@ -201,7 +183,7 @@ Theta_FE <- t(apply(12*diag(nspecies) + 2, 1, function(x) nimble::rdirch(alpha =
 
 FE_data <- simulate_validatedData(
   n_datasets = 5,
-  validation_design = "FixedPercent",
+  design_type = "FixedPercent",
   scenarios = c(0.05, .35, 0.65), # Note this is now a **vector** of possible scenarios. Also note the extremely small level of validation effort in the first entry!
   nsites = nsites,
   nvisits = nvisits,
@@ -217,7 +199,7 @@ FE_data <- simulate_validatedData(
 
 ## ------------------------------------------------------------------------------------
 # Runtime: with the specified number of sites, visits, species, validation scenarios
-# and parameter settings, this takes ~ 2:20 minutes per scenario, so around 6-7 minutes for
+# and parameter settings, this takes ~ 2 minutes per scenario, so around 5-6 minutes for
 # this small test case. Plan accordingly!
 
 start <- Sys.time()
@@ -228,7 +210,7 @@ FE_model_fits <- run_sims(
   save_fits = FALSE,
   DGVs = list(lambda = lambda, psi = psi, theta = Theta_FE),
   save_individual_summaries_list = FALSE,
-  directory = here("Testing", "FixedEffortExample")
+  directory = here::here("Testing", "FixedEffortExample")
 )
 
 Sys.time() - start

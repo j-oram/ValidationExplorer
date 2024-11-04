@@ -1,0 +1,11 @@
+^ValidationExplorer\.Rproj$
+^\.Rproj\.user$
+^LICENSE\.md$
+^DISCLAIMER.md$
+^runall.R$
+^Testing.R$
+^ToDo.md$
+^pngs/
+^Testing/
+^jacob_scripts/
+^Vignette/

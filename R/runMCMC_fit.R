@@ -5,15 +5,15 @@ runMCMC_fit <- function(seed = 1, code, data, constants,
   inits_fun <- function(){
 
     out <- list(
-      psi = runif(constants$nspecies),
-      lambda = abs(rnorm(constants$nspecies, sd = 10)),
-      theta = t(apply(data$alpha0, 1, function(x) rdirch(1,x))),
+      psi = stats::runif(constants$nspecies),
+      lambda = abs(stats::rnorm(constants$nspecies, sd = 10)),
+      theta = t(apply(data$alpha0, 1, function(x) nimble::rdirch(1,x))),
       z = matrix(1, nrow = constants$nsites, ncol = constants$nspecies)
     )
     return(out)
   }
 
-  dmarginal_autoID <- nimbleFunction(
+  dmarginal_autoID <- nimble::nimbleFunction(
     run = function(x = integer(0), theta_mat = double(2),
                    pi = double(1), log= integer(0, default = 0)){
 
@@ -49,7 +49,7 @@ runMCMC_fit <- function(seed = 1, code, data, constants,
   # compiles the code
   assign('dmarginal_autoID', dmarginal_autoID, envir = .GlobalEnv)
   assign('rmarginal_autoID', rmarginal_autoID, envir = .GlobalEnv)
-  registerDistributions("dmarginal_autoID")
+  nimble::registerDistributions("dmarginal_autoID")
 
 
   disag_model <- nimble::nimbleModel(code = code, constants = constants, data = data, inits = inits_fun())

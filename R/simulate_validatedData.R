@@ -114,16 +114,16 @@ simulate_validatedData <- function(n_datasets,
 
       # Y. = total calls at each site-visit (L. in the notation of Spiers et el., 2022).
       agg_CD_with_total <- aggregate_CD %>%
-        dplyr::group_by(site, visit) %>%
-        dplyr::mutate(Y. = sum(count))
+        dplyr::group_by(.data$site, .data$visit) %>%
+        dplyr::mutate(Y. = sum(.data$count))
 
       # Disaggregated count detection data gets stored in mth entry of the
       # datasets_list
       datasets_list[[m]] <- agg_CD_with_total %>%
-        tidyr::uncount(., weights = count, .remove = FALSE)
+        tidyr::uncount(weights = .data$count, .remove = FALSE)
 
       # Store the zeros in a list for houskeeping
-      zeros[[m]] <- agg_CD_with_total %>% dplyr::filter(count == 0)
+      zeros[[m]] <- agg_CD_with_total %>% dplyr::filter(.data$count == 0)
 
       # If user wants individual rds files for each dataframe, save them and the zeros
       # in the specified directory

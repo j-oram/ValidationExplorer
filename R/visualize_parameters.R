@@ -30,56 +30,56 @@ visualize_single_parameter <- function(sim_summary,
   ggplot2::theme_set(ggplot2::theme_bw())
   results <- sim_summary %>%
     dplyr::mutate(
-      below_threshold = ifelse(round(Rhat, 4) <= convergence_threshold, 1, 0)
+      below_threshold = ifelse(round(.data$Rhat, 4) <= convergence_threshold, 1, 0)
     ) %>%
-    dplyr::group_by(theta_scenario, scenario, dataset) %>%
+    dplyr::group_by(.data$theta_scenario, .data$scenario, .data$dataset) %>%
     dplyr::mutate(
-      all_converge = ifelse(any(below_threshold == 0), 0, 1)
+      all_converge = ifelse(any(.data$below_threshold == 0), 0, 1)
     ) %>%
     dplyr::ungroup() %>%
-    dplyr::filter(all_converge == 1) %>%
-    dplyr::group_by(theta_scenario, scenario, parameter) %>%
+    dplyr::filter(.data$all_converge == 1) %>%
+    dplyr::group_by(.data$theta_scenario, .data$scenario, .data$parameter) %>%
     dplyr::mutate(
-      av_low95 = mean(`2.5%`),
-      av_up95 = mean(`97.5%`),
-      coverage = mean(capture),
-      av_post_mean = mean(Mean)
+      av_low95 = mean(.data$`2.5%`),
+      av_up95 = mean(.data$`97.5%`),
+      coverage = mean(.data$capture),
+      av_post_mean = mean(.data$Mean)
     )
 
   plt <- results %>%
-    dplyr::mutate(scenario = factor(scenario)) %>%
+    dplyr::mutate(scenario = factor(.data$scenario)) %>%
     dplyr::filter(
-      all_converge == 1,
-      theta_scenario == theta_scenario,
-      parameter == par,
-      scenario %in% scenarios,
+      .data$all_converge == 1,
+      .data$theta_scenario == theta_scenario,
+      .data$parameter == par,
+      .data$scenario %in% scenarios,
     ) %>%
     ggplot2::ggplot(
       ggplot2::aes(
-        x = scenario,
-        y = av_post_mean
+        x = .data$scenario,
+        y = .data$av_post_mean
       )
     ) +
     ggplot2::geom_errorbar(
       ggplot2::aes(
-        ymin = `2.5%`,
-        ymax = `97.5%`
+        ymin = .data$`2.5%`,
+        ymax = .data$`97.5%`
       ),
       position = ggplot2::position_dodge2(width = 0, padding = 0.1),
       alpha = 0.2
     ) +
     ggplot2::geom_errorbar(
       ggplot2::aes(
-        ymin = av_low95,
-        ymax = av_up95,
-        color = coverage
+        ymin = .data$av_low95,
+        ymax = .data$av_up95,
+        color = .data$coverage
       )
     ) +
     viridis::scale_color_viridis(limits = c(0,1)) +
     ggplot2::geom_point(color = "red") +
     ggplot2::geom_point(
       inherit.aes = FALSE,
-      ggplot2::aes(x = scenario, y = truth)
+      ggplot2::aes(x = .data$scenario, y = .data$truth)
     ) +
     ggplot2::labs(
       x = "Manual Verification Scenario",
@@ -123,59 +123,59 @@ visualize_parameter_group <- function(sim_summary,
 
   results <- sim_summary %>%
     dplyr::mutate(
-      below_threshold = ifelse(round(Rhat, 4) <= convergence_threshold, 1, 0)
+      below_threshold = ifelse(round(.data$Rhat, 4) <= convergence_threshold, 1, 0)
     ) %>%
-    dplyr::group_by(theta_scenario, scenario, dataset) %>%
+    dplyr::group_by(.data$theta_scenario, .data$scenario, .data$dataset) %>%
     dplyr::mutate(
-      all_converge = ifelse(any(below_threshold == 0), 0, 1)
+      all_converge = ifelse(any(.data$below_threshold == 0), 0, 1)
     ) %>%
     dplyr::ungroup() %>%
-    dplyr::filter(all_converge == 1) %>%
-    dplyr::group_by(theta_scenario, scenario, parameter) %>%
+    dplyr::filter(.data$all_converge == 1) %>%
+    dplyr::group_by(.data$theta_scenario, .data$scenario, .data$parameter) %>%
     dplyr::mutate(
-      av_low95 = mean(`2.5%`),
-      av_up95 = mean(`97.5%`),
-      coverage = mean(capture),
-      av_post_mean = mean(Mean)
+      av_low95 = mean(.data$`2.5%`),
+      av_up95 = mean(.data$`97.5%`),
+      coverage = mean(.data$capture),
+      av_post_mean = mean(.data$Mean)
     )
 
   plt <- results %>%
-    dplyr::mutate(scenario = factor(scenario)) %>%
+    dplyr::mutate(scenario = factor(.data$scenario)) %>%
     dplyr::filter(
-      all_converge == 1,
-      theta_scenario == theta_scenario,
-      stringr::str_detect(parameter, pattern = pars),
-      scenario %in% scenarios,
+      .data$all_converge == 1,
+      .data$theta_scenario == theta_scenario,
+      stringr::str_detect(.data$parameter, pattern = pars),
+      .data$scenario %in% scenarios,
     ) %>%
     ggplot2::ggplot(
       ggplot2::aes(
-        x = scenario,
-        y = av_post_mean
+        x = .data$scenario,
+        y = .data$av_post_mean
       )
     ) +
     ggplot2::geom_errorbar(
       ggplot2::aes(
-        ymin = `2.5%`,
-        ymax = `97.5%`
+        ymin = .data$`2.5%`,
+        ymax = .data$`97.5%`
       ),
       position = ggplot2::position_dodge2(width = 0, padding = 0.1),
       alpha = 0.2
     ) +
     ggplot2::geom_errorbar(
       ggplot2::aes(
-        ymin = av_low95,
-        ymax = av_up95,
-        color = coverage
+        ymin = .data$av_low95,
+        ymax = .data$av_up95,
+        color = .data$coverage
       )
     ) +
     viridis::scale_color_viridis(limits = c(0,1)) +
     ggplot2::geom_point(color = "red") +
     ggplot2::geom_point(
       inherit.aes = FALSE,
-      ggplot2::aes(x = scenario, y = truth)
+      ggplot2::aes(x = .data$scenario, y = .data$truth)
     ) +
     ggplot2::facet_wrap(
-      ~parameter,
+      ~.data$parameter,
       #scales = "free_y"
       labeller = L
     ) +

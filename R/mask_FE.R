@@ -33,15 +33,15 @@ mask_FE <- function(df, effort_prop, seed = NULL) {
   # from the first visit to each site and mask the true species labels
   visit1 <- df %>%
     dplyr::ungroup() %>%
-    dplyr::filter(visit == 1) %>%
-    dplyr::group_by(site) %>%
+    dplyr::filter(.data$visit == 1) %>%
+    dplyr::group_by(.data$site) %>%
     dplyr::slice_sample(prop = 1-effort_prop) %>%
     dplyr::mutate(true_spp = NA)
 
   # None of the observations from visits 2,3, ... ,J get validated (all masked)
   visitnot1 <- df %>%
     dplyr::ungroup() %>%
-    dplyr::filter(visit != 1) %>%
+    dplyr::filter(.data$visit != 1) %>%
     dplyr::mutate(true_spp = NA)
 
   # bind all the masked rows together
