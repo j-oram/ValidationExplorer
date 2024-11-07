@@ -1,24 +1,23 @@
-#' mask_FE
+#' mask_FE: A function for simulating a fixed effort validation design.
 #'
-#' @param df A dataframe object
-#' @param effort_prop The proportion of observations from the first visit to be validated.
-#' @param seed An optional see to make masking/validation simulation reproducible
+#' @param df A dataframe object in the format  of `full_dfs` output from
+#'   \link{simulate_validatedData}
+#' @param effort_prop The proportion of recordings to be randomly sampled from
+#'   the first visit for validation
+#' @param seed An optional random seed to make masking reproducible
 #'
-#' @return A dataframe object with `effort_prop` of the observations validated from the first visit to each site.
+#' @return A dataframe object that is a copy of the input `df`, but with the
+#'   appropriate level of effort according to a fixed effort validation design.
 #' @export
 #'
 #' @examples
-#' library(dplyr)
+#' cd_data <- sim_dat()$full_df %>% tidyr::uncount(weights = count, .remove = FALSE)
 #'
-#' dat <- sim_dat()$full_df
+#' FE_data <- mask_FE(cd_data, effort_prop = 0.2)
 #'
-#' head(dat)
+#' head(cd_data)
+#' head(FE_data)
 #'
-#' dat <- dat %>% tidyr::uncount(weights = count, .remove = FALSE)
-#' FE_validated_data <- mask_FE(dat, effort_prop = .2, seed = 17)
-#'
-#' head(dat)
-#' head(FE_validated_data)
 mask_FE <- function(df, effort_prop, seed = NULL) {
 
   # set the seed if specified by the user
@@ -33,33 +32,34 @@ mask_FE <- function(df, effort_prop, seed = NULL) {
   # slice off (1 - effort_prop) of the observations
   # from the first visit to each site and mask the true species labels
   visit1 <- df %>%
-    ungroup() %>%
-    filter(visit == 1) %>%
-    group_by(site) %>%
-    slice_sample(prop = 1-effort_prop) %>%
-    mutate(true_spp = NA)
+    dplyr::ungroup() %>%
+    dplyr::filter(.data$visit == 1) %>%
+    dplyr::group_by(.data$site) %>%
+    dplyr::slice_sample(prop = 1-effort_prop) %>%
+    dplyr::mutate(true_spp = NA)
 
   # None of the observations from visits 2,3, ... ,J get validated (all masked)
   visitnot1 <- df %>%
-    ungroup() %>%
-    filter(visit != 1) %>%
-    mutate(true_spp = NA)
+    dplyr::ungroup() %>%
+    dplyr::filter(.data$visit != 1) %>%
+    dplyr::mutate(true_spp = NA)
 
   # bind all the masked rows together
-  masked <- bind_rows(visit1, visitnot1)
+  masked <- dplyr::bind_rows(visit1, visitnot1)
 
   # grab the "validated recordings"
   unmasked <- df[which(df$call %notin% masked$call), ]
 
   # bind the two back together and sort by recording
-  masked_copy <- bind_rows(masked, unmasked) %>% arrange(call)
+  masked_copy <- dplyr::bind_rows(masked, unmasked) %>%
+    dplyr::arrange(call)
 
   # check that the call columns match for both, and if they do, return a
   # masked copy of the OG df
   if(any(masked_copy$call != df$call)) {
     stop(message("dfs were not bound together correctly"))
   } else {
-    return(masked_copy %>% select(-call))
+    return(masked_copy %>% dplyr::select(-call))
   }
 
 }

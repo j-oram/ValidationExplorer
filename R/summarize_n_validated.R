@@ -1,3 +1,47 @@
+#' Summarize the number of validated recordings
+#'
+#' @param data_list A list masked datasets in the format output from
+#'   \link{simulate_validatedData}
+#' @param scenario_names An integer vector denoting the scenarios to be summarized.
+#' @param theta_scenario The identifier for the classifier scenario.
+#'
+#' @return A dataframe object that contains the theta scenario, validation scenario,
+#'   and number of validated calls.
+#' @export
+#'
+#' @examples
+#'
+#' psi <- c(0.3, 0.6)
+#' lambda <- c(11, 2)
+#'
+#' nspecies <- length(psi)
+#' nsites <- 30
+#' nvisits <- 5
+#'
+#' test_theta1 <- matrix(c(0.9, 0.1, 0.15, 0.85), byrow = TRUE, nrow = 2)
+#' val_scenarios <- list(spp1 = c(.75, .5), spp2 = .5)
+#'
+#' fake_data <- simulate_validatedData(
+#'   n_datasets = 5,
+#'   design_type = "BySpecies",
+#'   scenarios = val_scenarios,
+#'   nsites = nsites,
+#'   nvisits = nvisits,
+#'   nspecies = nspecies,
+#'   psi = psi,
+#'   lambda = lambda,
+#'   theta = test_theta1,
+#'   save_datasets = FALSE,
+#'   save_masked_datasets = FALSE,
+#'   directory = paste0(here::here("Testing"))
+#' )
+#'
+#' summarize_n_validated(
+#'   data_list = fake_data$masked_dfs,
+#'   scenario_names = as.character(1:nrow(fake_data$scenarios_df)),
+#'   theta_scenario = "1"
+#' )
+#'
 summarize_n_validated <- function(data_list, scenario_names, theta_scenario) {
 
   n_validated <- lapply(data_list, function(x) { # x is the scenario
@@ -10,6 +54,6 @@ summarize_n_validated <- function(data_list, scenario_names, theta_scenario) {
     unlist() %>%
     return() # return the list of averages (one for each scenario)
 
-  return(tibble(theta_scenario = theta_scenario, scenario = scenario_names, n_validated = n_validated))
+  return(dplyr::tibble(theta_scenario = theta_scenario, scenario = scenario_names, n_validated = n_validated))
 
 }

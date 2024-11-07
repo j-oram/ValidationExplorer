@@ -1,3 +1,78 @@
+#' run_sims: conduct simulations easily
+#'
+#'
+#' @param data_list nested list of masked dataframes (datasets nested within scenarios --
+#'   this is the format of `masked_dfs` output from \link{simulate_validatedData})
+#' @param zeros_list list of dataframes containing the site/visit/true_spp/id_spp combinations
+#'   where no calls were observed.
+#' @param DGVs A named list with entries psi, lambda and theta containing
+#'   the true values of the respective parameters.
+#' @param theta_scenario_id The classifier ID as an integer or string
+#' @param parallel Should models be fit in parallel? Default value is TRUE.
+#' @param niter Number of iterations per MCMC chain.
+#' @param nburn Number of warmup iterations.
+#' @param thin Thinning interval for the MCMC chains.
+#' @param save_fits Should individual model fits be saved? This could require large
+#'   amounts of disk space if you are fitting many large models to big datasets.
+#'   Default value is FALSE.
+#' @param save_individual_summaries_list Should summaries for individual model fits
+#'   be saved? While this requires much less space than `save_fits`, we still
+#'   recommend keeping this at the default value of FALSE. Only use it if you
+#'   anticipate that simulations may be interrupted.
+#' @param directory The directory to save objects. Defaults to the current working directory.
+#'
+#' @export
+#'
+#' @return a dataframe with the summaries (from \link{mcmc_sum}) for all scenarios and datasets.
+#'   A copy of this output is also saved to the current working directory.
+#'
+#' @importFrom utils setTxtProgressBar txtProgressBar
+#'
+#' @examples
+#' # :::::::::::: Simulate data ::::::::::::: #
+#' psi <- c(0.3, 0.6)
+#' lambda <- c(11, 2)
+#'
+#' nspecies <- length(psi)
+#' nsites <- 30
+#' nvisits <- 5
+#'
+#' test_theta1 <- matrix(c(0.9, 0.1, 0.15, 0.85), byrow = TRUE, nrow = 2)
+#' val_scenarios <- list(spp1 = c(.75, .5), spp2 = .5)
+#'
+#' fake_data <- simulate_validatedData(
+#'   n_datasets = 5,
+#'   design_type = "BySpecies",
+#'   scenarios = val_scenarios,
+#'   nsites = nsites,
+#'   nvisits = nvisits,
+#'   nspecies = nspecies,
+#'   psi = psi,
+#'   lambda = lambda,
+#'   theta = test_theta1,
+#'   save_datasets = FALSE,
+#'   save_masked_datasets = FALSE,
+#'   directory = paste0(here::here("Testing"))
+#' )
+#'
+#' # ::::::::::::: run simulations on sim'd data ::::::::::: #
+#'
+#' \dontrun{ # turn off during check() to speed it up
+#' out <- run_sims(
+#'   data_list = fake_data$masked_dfs,
+#'   zeros_list = fake_data$zeros,
+#'   DGVs = list(lambda = lambda, psi = psi, theta = test_theta1),
+#'   theta_scenario_id = 1,
+#'   parallel = TRUE,
+#'   niter = 1000,
+#'   nburn = 500,
+#'   thin = 1,
+#'   save_fits = FALSE,
+#'   save_individual_summaries_list = FALSE,
+#'   directory = here::here()
+#' )
+#' }
+
 run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
                      parallel = TRUE,
                      niter = 2000, nburn = floor(niter/2), thin = 1,
@@ -26,11 +101,12 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
     for(dataset in 1:ndatasets){
       observed_df <- data_list[[scenario]][[dataset]] # was df7
       zeros <- zeros_list[[dataset]]
-      all_sites_and_visits <- bind_rows(observed_df, zeros) %>% arrange(site, visit, true_spp, id_spp) # was df8
+      all_sites_and_visits <- dplyr::bind_rows(observed_df, zeros) %>%
+        dplyr::arrange(.data$site, .data$visit, .data$true_spp, .data$id_spp) # was df8
 
       ## NIMBLE ---------
 
-        code <- nimbleCode({
+        code <- nimble::nimbleCode({
 
           # priors
           for(species in 1:nspecies){
@@ -80,7 +156,7 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
 
             pi2[row, 1:nspecies] <- z[site2[row], 1:nspecies] * lambda[1:nspecies] /
               sum(z[site2[row], 1:nspecies] * lambda[1:nspecies])
-            y2[row] ~ dmarginal_autoID(theta_mat = theta[1:nspecies, 1:nspecies],
+            y2[row] ~ dmarginal_autoID(theta_mat = theta[1:nspecies, 1:nspecies], # may need to switch this to dmultinom (slower, but works better from a dependencies perspective?)
                                        pi = pi2[row, 1:nspecies])
 
           }
@@ -97,9 +173,9 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
         constants <- list(
           site1 = uamb$site, # Only sites where at least one call was made
           site2 = amb$site,
-          nspecies = n_distinct(observed_df$id_spp),
-          nvisits = n_distinct(observed_df$visit),
-          nsites = n_distinct(all_sites_and_visits$site), # we want to have a value for all possible site, even if that val is 0
+          nspecies = dplyr::n_distinct(observed_df$id_spp),
+          nvisits = dplyr::n_distinct(observed_df$visit),
+          nsites = dplyr::n_distinct(all_sites_and_visits$site), # we want to have a value for all possible site, even if that val is 0
           n_confirmed_calls = nrow(uamb),
           n_ambiguous_calls = nrow(amb)
         )
@@ -113,30 +189,30 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
           k = uamb$true_spp,
           y2 = amb$id_spp,
           alpha0 = matrix(1/(constants$nspecies),
-                          nrow = n_distinct(all_sites_and_visits$id_spp),
-                          ncol = n_distinct(all_sites_and_visits$id_spp)),
+                          nrow = dplyr::n_distinct(all_sites_and_visits$id_spp),
+                          ncol = dplyr::n_distinct(all_sites_and_visits$id_spp)),
 
           # Define Y. based on all site-visits, even if it had no calls
           Y. = all_sites_and_visits %>%
-            group_by(site, visit) %>%
-            summarize(total = unique(Y.)) %>%
-            pivot_wider(
-              names_from = visit,
+            dplyr::group_by(.data$site, .data$visit) %>%
+            dplyr::summarize(total = unique(.data$Y.)) %>%
+            tidyr::pivot_wider(
+              names_from = .data$visit,
               names_prefix = "visit",
-              values_from = total,
+              values_from = .data$total,
               values_fill = 0 # if NA, turn into a 0, since the NA is due to no calls being detected at that site-visit
             ) %>%
-            ungroup() %>%
-            select(-site) %>%
+            dplyr::ungroup() %>%
+            dplyr::select(-.data$site) %>%
             as.matrix()
         )
 
 
       if(parallel){
 
-        library(parallel)
-        this_cluster <- makeCluster(3)
-        fit <- parLapply(cl = this_cluster,
+        this_cluster <- parallel::makeCluster(3)
+        parallel::clusterEvalQ(cl = this_cluster, library(nimble))
+        fit <- parallel::parLapply(cl = this_cluster,
                          X = 1:3,
                          fun = runMCMC_fit,
                          code = code,
@@ -146,7 +222,7 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
                          nburn = nburn,
                          thin = thin
         )
-        stopCluster(this_cluster)
+        parallel::stopCluster(this_cluster)
 
       } else {
 
@@ -181,7 +257,7 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
       fit_summary <- mcmc_sum(
         fit, truth = c(DGVs$lambda, DGVs$psi, DGVs$theta)
       ) %>%
-        mutate(
+        dplyr::mutate(
           theta_scenario = theta_scenario_id,
           scenario = scenario_tmp,
           dataset = dataset_tmp
@@ -206,7 +282,7 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
     close(pb)
 
     # summary df for the entire scenario after all datasets have been fit and summarized
-    individual_summary_df <- do.call("bind_rows", individual_summaries_list)
+    individual_summary_df <- do.call(eval(parse(text="dplyr::bind_rows")), individual_summaries_list)
     individual_summary_df$scenario <- scenario
     individual_summary_df$theta_scenario <- theta_scenario_id
 
@@ -223,6 +299,6 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
     big_list[[scenario]] <- individual_summary_df
   }
 
-  out <- do.call("bind_rows", big_list) # bind summary dfs for all scenarios into big df (all scenarios, all datasets)
+  out <- do.call(eval(parse(text="dplyr::bind_rows")), big_list) # bind summary dfs for all scenarios into big df (all scenarios, all datasets)
   return(out)
 }

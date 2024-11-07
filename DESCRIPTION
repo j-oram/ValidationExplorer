@@ -9,3 +9,20 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
+Depends: 
+    nimble,
+    R (>= 2.10)
+Imports: 
+    coda,
+    dplyr,
+    ggplot2,
+    here,
+    magrittr,
+    purrr,
+    rlang,
+    rstan,
+    stringr,
+    tibble,
+    tidyr,
+    viridis
+LazyData: true

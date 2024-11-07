@@ -1,48 +1,32 @@
-#' MCMC_sum
+#' MCMC_sum: A custom function for summarizing MCMC posterior sampling
 #'
-#' @param out A list of outputs from each chain in the MCMC fit. Each list entry should be a matrix where each row corresponds to the iteration and each column corresponds to a parameter. This is the default output format for NIMBLE objects, as well as samples from other PPLs.
-#' @param thin An integer value to thin draws by. Default value is 1.
-#' @param truth a vector containing the true data-generating values for each model parameter
+#' @param out Draws from a model fit using a probabilistic programming language
+#'   (e.g., Stan, NIMBLE or JAGS). The expected format of this input is a list,
+#'   where each entry is a Markov chain.
+#' @param thin An optional thinning interval.
+#' @param truth A vector with the true parameter values organized alphanumerically
+#'   by parameter value (e.g., lambda\\[1\\], lambda\\[2\\], psi\\[1\\], psi\\[2\\], theta\\[1,1\\],
+#'   theta\\[1,2\\], theta\\[2,1\\], theta\\[2,2\\])
 #'
-#' @return a dataframe object with each row corresponding to parameters and columns corresponding to numeric summaries such as mean, sd, standard quantiles and MCMC diagnostics.
-
+#' @return A dataframe object summarizing the MCMC draws, including diagnostics,
+#'   quantiles and posterior means.
 #' @export
 #'
 #' @examples
 #'
-#' library(rstan)
-#' library(coda)
-#' library(dplyr)
+#' # An example fit of one dataset
+#' draws <- ValExp_example_fit
 #'
-#' x <- runif(30, -1, 1)
-#' beta <- -1
-#' y <- rnorm(x*beta, sd = 1)
+#' # The data generating values
+#' truth <- c(11,2,0.3, 0.6, 0.9, 0.15, 0.10, 0.85)
 #'
-#' code <- nimbleCode({
-#'   # priors
-#'   beta ~ dnorm(0, 2)
-#'   sigma ~ T(dnorm(0, 2), 0, Inf)
-#'
-#'   # likelihood
-#'   for(i in 1:n) {
-#'     y[i] ~ dnorm(x[i]*beta, sd = sigma)
-#'   }
-#' })
-#'
-#' fit <- nimbleMCMC(code,
-#'   constants = list(n = length(y)),
-#'   data = list(x = x, y = y),
-#'   inits = list(beta = rnorm(1, 0, 10), sigma = abs(rnorm(0, 10))),
-#'   nchains = 3
-#' )
-#'
-#'mcmc_sum(fit, truth = c(beta, 1))
-#'
+#' mcmc_sum(draws, truth = truth)
+
 mcmc_sum <- function(out, thin = 1, truth){
 
-mcmc.list <- as.mcmc.list(
+mcmc.list <- coda::as.mcmc.list(
   lapply(out,
-         function(x) as.mcmc(
+         function(x) coda::as.mcmc(
            x,
            start = floor(nrow(out[[1]])/2),
            end = nrow(out[[1]]),
@@ -60,12 +44,12 @@ colnames(m) <- c("Rhat", "ess_bulk", "ess_tail")
 
 for(i in 1:nrow(tmp_sum)){
   tmp <- sapply(out, function(x) x[,i])
-  m[i,] <- c(Rhat(tmp), ess_bulk(tmp), ess_tail(tmp))
+  m[i,] <- c(rstan::Rhat(tmp), rstan::ess_bulk(tmp), rstan::ess_tail(tmp))
 }
 
 mcmc_summary <- cbind(tmp_sum, m) %>%
   as.data.frame() %>%
-  rownames_to_column(var = "parameter")
+  tibble::rownames_to_column(var = "parameter")
 
 mcmc_summary$truth <- truth
 mcmc_summary$capture <- ifelse(mcmc_summary$`2.5%` <= mcmc_summary$truth &

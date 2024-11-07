@@ -1,15 +1,65 @@
+#' Get suggested MCMC settings prior to starting your simulations
+#' @param dataset A dataframe containing the validated and ambiguous data to be fit.
+#'   Expected format is that of a single masked dataframe contained in the output from
+#'   \link{simulate_validatedData}. We recommend using a dataset from your
+#'   lowest-effort validation scenario.
+#'
+#' @param zeros A dataframe containing the site/visit/true_spp/id_spp combinations
+#'   that were never observed (count = 0). This will be one of the elements of the
+#'   zeros object ouput from \link{simulate_validatedData}.
+#'
+#' @export
+#'
+#' @returns A list containing the expected time to fit a single dataset, the
+#'   minimum number of iterations, minimum warmup and a matrix with value of 1 in
+#'   an entry if all model parameters had Rhat <= 1.1 after the corresponding
+#'   warmup and number of iterations. See the examples for more.
+#'
+#' @examples
+#'
+#' psi <- c(0.3, 0.6)
+#' lambda <- c(11, 2)
+#'
+#' nspecies <- length(psi)
+#' nsites <- 30
+#' nvisits <- 5
+#'
+#' test_theta1 <- matrix(c(0.9, 0.1, 0.15, 0.85), byrow = TRUE, nrow = 2)
+#' val_scenarios <- list(spp1 = c(.75, .5), spp2 = .5)
+#'
+#' fake_data <- simulate_validatedData(
+#'   n_datasets = 5,
+#'   design_type = "BySpecies",
+#'   scenarios = val_scenarios,
+#'   nsites = nsites,
+#'   nvisits = nvisits,
+#'   nspecies = nspecies,
+#'   psi = psi,
+#'   lambda = lambda,
+#'   theta = test_theta1,
+#'   save_datasets = FALSE,
+#'   save_masked_datasets = FALSE,
+#'   directory = paste0(here::here("Testing"))
+#' )
+#' # scenario 1 has the lowest effort, so use the 5th dataset from that scenario
+#' # Not run during checks
+#' \dontrun{
+#' # note the index of the zeros matches the index of the dataset
+#' tune_mcmc(dataset = fake_data$masked_dfs[[1]][[5]], zeros = fake_data$zeros[[5]])
+#' }
+#' @importFrom nimble getNimbleOption
 tune_mcmc <- function(dataset, zeros) {
 
   max_iters <- 10000
 
   ## :::::::::::::::: fit MCMC with max_iters :::::::::::::::::: ##
   observed_df <- dataset
-  all_sites_and_visits <- bind_rows(observed_df, zeros) %>%
-    arrange(site, visit, true_spp, id_spp)
+  all_sites_and_visits <- dplyr::bind_rows(observed_df, zeros) %>%
+    dplyr::arrange(.data$site, .data$visit, .data$true_spp, .data$id_spp)
 
   ## NIMBLE --------- ##
 
-  code <- nimbleCode({
+  code <- nimble::nimbleCode({
 
     # priors
     for(species in 1:nspecies){
@@ -76,9 +126,9 @@ tune_mcmc <- function(dataset, zeros) {
   constants <- list(
     site1 = uamb$site, # Only sites where at least one call was made
     site2 = amb$site,
-    nspecies = n_distinct(observed_df$id_spp),
-    nvisits = n_distinct(observed_df$visit),
-    nsites = n_distinct(all_sites_and_visits$site), # we want to have a value for all possible site, even if that val is 0
+    nspecies = dplyr::n_distinct(observed_df$id_spp),
+    nvisits = dplyr::n_distinct(observed_df$visit),
+    nsites = dplyr::n_distinct(all_sites_and_visits$site), # we want to have a value for all possible site, even if that val is 0
     n_confirmed_calls = nrow(uamb),
     n_ambiguous_calls = nrow(amb)
   )
@@ -92,29 +142,29 @@ tune_mcmc <- function(dataset, zeros) {
     k = uamb$true_spp,
     y2 = amb$id_spp,
     alpha0 = matrix(1/(constants$nspecies),
-                    nrow = n_distinct(all_sites_and_visits$id_spp),
-                    ncol = n_distinct(all_sites_and_visits$id_spp)),
+                    nrow = dplyr::n_distinct(all_sites_and_visits$id_spp),
+                    ncol = dplyr::n_distinct(all_sites_and_visits$id_spp)),
 
     # Define Y. based on all site-visits, even if it had no calls
     Y. = all_sites_and_visits %>%
-      group_by(site, visit) %>%
-      summarize(total = unique(Y.)) %>%
-      pivot_wider(
-        names_from = visit,
+      dplyr::group_by(.data$site, .data$visit) %>%
+      dplyr::summarize(total = unique(.data$Y.)) %>%
+      tidyr::pivot_wider(
+        names_from = .data$visit,
         names_prefix = "visit",
-        values_from = total,
+        values_from = .data$total,
         values_fill = 0 # if NA, turn into a 0, since the NA is due to no calls being detected at that site-visit
       ) %>%
-      ungroup() %>%
-      select(-site) %>%
+      dplyr::ungroup() %>%
+      dplyr::select(-.data$site) %>%
       as.matrix()
   )
 
-  print("Fitting MCMC in parallel ... ")
-    library(parallel)
-    this_cluster <- makeCluster(3)
+  print("Fitting MCMC in parallel ... this may take a few minutes")
+    this_cluster <- parallel::makeCluster(3)
+    parallel::clusterEvalQ(cl = this_cluster, library(nimble))
     start <- Sys.time()
-    fit <- parLapply(
+    fit <- parallel::parLapply(
       cl = this_cluster,
       X = 1:3,
       fun = runMCMC_fit,
@@ -126,7 +176,7 @@ tune_mcmc <- function(dataset, zeros) {
       thin = 1
     )
     end <- Sys.time()
-    stopCluster(this_cluster)
+    parallel::stopCluster(this_cluster)
 
     ## :::::: Check whether all R-hat values are less than 1.1 ::::: ##
 
@@ -140,7 +190,7 @@ tune_mcmc <- function(dataset, zeros) {
         Rhat <- vector(length = ncol(tmp1[[1]])) # Then, create a vector that is the same length as the number of columns (variables) in the first element in the list of subsets.
         for(k in 1:ncol(tmp1[[1]])) { # Then, fill in the entries of the vector one by one with the Rhat values for each variable.
           tmp2 <- sapply(tmp1, function(a) a[,k])
-          Rhat[k] <- Rhat(tmp2)
+          Rhat[k] <- rstan::Rhat(tmp2)
         }
 
         return(ifelse(all(Rhat <= 1.1), 1, 0)) # If all parameters have Rhat  < 1.1 for this number of iterations given the warmup, return 1. Otherwise, return a 0.

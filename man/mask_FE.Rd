@@ -2,33 +2,32 @@
 % Please edit documentation in R/mask_FE.R
 \name{mask_FE}
 \alias{mask_FE}
-\title{mask_FE}
+\title{mask_FE: A function for simulating a fixed effort validation design.}
 \usage{
 mask_FE(df, effort_prop, seed = NULL)
 }
 \arguments{
-\item{df}{A dataframe object}
+\item{df}{A dataframe object in the format  of \code{full_dfs} output from
+\link{simulate_validatedData}}
 
-\item{effort_prop}{The proportion of observations from the first visit to be validated.}
+\item{effort_prop}{The proportion of recordings to be randomly sampled from
+the first visit for validation}
 
-\item{seed}{An optional see to make masking/validation simulation reproducible}
+\item{seed}{An optional random seed to make masking reproducible}
 }
 \value{
-A dataframe object with \code{effort_prop} of the observations validated from the first visit to each site.
+A dataframe object that is a copy of the input \code{df}, but with the
+appropriate level of effort according to a fixed effort validation design.
 }
 \description{
-mask_FE
+mask_FE: A function for simulating a fixed effort validation design.
 }
 \examples{
-library(dplyr)
+cd_data <- sim_dat()$full_df \%>\% tidyr::uncount(weights = count, .remove = FALSE)
 
-dat <- sim_dat()$full_df
+FE_data <- mask_FE(cd_data, effort_prop = 0.2)
 
-head(dat)
+head(cd_data)
+head(FE_data)
 
-dat <- dat \%>\% tidyr::uncount(weights = count, .remove = FALSE)
-FE_validated_data <- mask_FE(dat, effort_prop = .2, seed = 17)
-
-head(dat)
-head(FE_validated_data)
 }
