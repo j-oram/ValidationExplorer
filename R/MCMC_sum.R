@@ -21,6 +21,7 @@
 #' truth <- c(11,2,0.3, 0.6, 0.9, 0.15, 0.10, 0.85)
 #'
 #' mcmc_sum(draws, truth = truth)
+
 mcmc_sum <- function(out, thin = 1, truth){
 
 mcmc.list <- coda::as.mcmc.list(
