@@ -38,13 +38,9 @@ with concentrations determined by location in the matrix (diagonal values have
 higher concentrations).}
 }
 \value{
-<<<<<<< HEAD
 A list containing \code{full_df}, a complete dataframe simulated under the
 user's specified parameter settings. et_sim_datasets.R. The second list
 element is \code{params}, the parameters used to simulate data in list form.
-=======
-A list containing \code{full_df}, a complete dataframe simulated under the user's specified parameter settings. et_sim_datasets.R. The second list element is \code{params}, the parameters used to simulate data in list form.
->>>>>>> main
 }
 \description{
 Simulate data from the count-detection model with counts per site-visit

@@ -1,24 +1,16 @@
-<<<<<<< HEAD
 #' mask_by_spp: simulate a validation design
-=======
-#' mask_by_spp
->>>>>>> main
 #'
 #' @param data A dataframe containing the columns `site`, `visit`, `true_spp`,
 #'   `id_spp`, `count`
 #' @param props_to_val a vector containing the proportion of recordings to validate
 #'   for each species
 #'
-<<<<<<< HEAD
 #' @return A list containing two elements: `final_df` and `data_sum`. `final_df`
 #'   is a copy of the input `data` masked according to the validation design
 #'   supplied by `props_to_val`. The second output, `data_sum` is a dataframe
 #'   containing a summary of the number and proportion of ambiguous
 #'   (i.e., not validated) recordings. It provides a check that the masking
 #'   function is working correctly.
-=======
-#' @return A dataframe object that is a copy of the input `data` masked according to the validation design supplied by `props_to_val`.
->>>>>>> main
 #' @export
 #'
 #' @examples
@@ -69,7 +61,6 @@ mask_by_spp <- function(data, props_to_val){
   ) %>%
     dplyr::arrange(call)
 
-<<<<<<< HEAD
   # Compute a summary of the masked dataset (good check to make sure masking is
   # working as expected)
   data_summary <- final_df %>%
@@ -82,9 +73,6 @@ mask_by_spp <- function(data, props_to_val){
 
   out.list <- list(final_df = final_df, data_sum = data_summary)
   return(out.list)
-=======
-  return(final_df)
->>>>>>> main
 
 }
 
