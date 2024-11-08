@@ -1,11 +1,11 @@
 ## To-do 
 
-- [ ] Restructure repo 
-- [ ] Redo documentation 
-- [ ] Update README 
-- [ ] email Katie to let her know that she needs to hold off on testing
-- [ ] Tidy up 
+- [X] Restructure repo 
+- [X] Redo documentation 
+- [X] Update README 
+- [X] email Katie to let her know that she needs to hold off on testing
+- [X] Tidy up 
 - [ ] Obtain new code review from Patrick
 - [ ] Update/rework vignette 
-- [ ] Finish writing MEE apps paper
+- [X] Finish writing MEE apps draft
 - [ ] Submit for USGS code release
