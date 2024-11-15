@@ -1,5 +1,5 @@
 ---
-title: "Vignette: Simulation and fitting of the count-detection model with the observed-data likelihood when validated recordings are missing at random"
+title: "Vignette: Simulation studies with `ValidationExplorer` under a fixed-effort design type"
 author:
   - name: Jacob Oram
     email: jacoboram@montana.edu
@@ -35,7 +35,8 @@ header-includes:
   - \usepackage{float}
   - \usepackage{amsmath}
 bibliography: Vignette.bib
-abstract: "Our vignette demonstrates the use of software designed to simulate from and fit the count-detection model when validated true species labels are missing at random. Our functions allow the user to specify varying degrees of validation effort (i.e., number of recordings selected for validation) under two possible designs. We provide examples of data simulation, model fitting, MCMC evaluation, and visualization of simulation results under each validation design. Our demonstration here is intended to aid researchers and others to tailor a validation design that provides useful inference while also ensuring that the level of effort  meets cost constraints. \\vfill"
+abstract: "Our vignette demonstrates the use of the `ValidationExplorer` package, which was designed to facilitate statistical simulation studies that explore the costs and inferential benefits (e.g., near nominal coverage and minimal estimation error) of alternative validation designs. 
+Our functions allow the user to specify a suite of candidate validation designs using either a stratified sampling procedure or a fixed-effort design type. An example of the former is provided in the manuscript entitled 'ValidationExplorer`: Streamlined simulations to aid informed management decisions using bioacoustic data in the presence of misclassification', which was submitted to the Applications series of *Methods in Ecology and Evolution*. In this vignette, we provide an additional example of data simulation, model fitting, and visualization of simulation results when using a fixed-effort design type. Our demonstration here is intended to aid researchers and others to tailor a validation design that provides useful inference while also ensuring that the level of effort meets cost constraints. \\vfill"
 ---
 
 ```{r setup, include=FALSE, message=FALSE}
@@ -72,99 +73,21 @@ knitr::knit_hooks$set(chunk = function(x, options) {
 
 # Introduction
 
-Stationary acoustic detectors provide one of the main sources of data used by the North American Bat Monitoring program to obtain inference about species status and trends [@loeb15]. However, to obtain reliable inference about bat species occurrence and relative activity, monitoring programs that rely on passive acoustic methods must account for imperfect detection and misclassification by automated software in statistical models [@banner18?, @irvine22, @stratton22, @wright20, others?].
-The most realistic model to date is the count-detection framework as proposed by @wright20, which relies on expert-validated data to inform the misclassification process model. However, validation of recordings by experts is bottleneck in the acoustic-data workflow that has hampered the adoption of the count-detection framework. In an effort to lower the costs associated with manual verification of machine-generated autoIDs and the use of the count-detection model, we developed the ValidationExplorer, a software tool that streamlines simulation studies so that researchers can determine which validation design (and how many recordings must be validated) to obtain reliable inference.
+Automated recording units (ARUs) provide one of the main data sources for many contemporary monitoring programs that aim to provide inference about status and trends for assemblages of species [@loeb15]. As described in "`ValidationExplorer`: Streamlined simulations to aid informed management decisions using bioacoustic data in the presence of misclassification" (hereafter, "the main text"), substantial practical interest lies in identifying cost-effective validation designs that will allow a monitoring program to obtain its measurable objectives. We believe that statistical simulation studies are a valuable tool for evaluating the relative merits of candidate validation designs prior to gathering and validating ARU data, and it is our goal for `ValidationExplorer` to provide those tools. 
 
-The user inputs for the ValidationExplorer are
+This vignette provides detailed demonstrations of the `ValidationExplorer` package under a fixed-effort design. As described in the main text, this design assumes that $x\%$ of recordings obtained from the first visit to a site are validated by experts. The level of validation effort (LOVE), or sample size, of the validation design is controlled by the value of $x.$ In the following section we consider four possible LOVEs. 
 
--   The type of validation design (i.e., the mechanism by which recordings are selected for validation by experts)
--   The possible levels of effort (i.e., given the validation design, how many recordings are selected)
--   The assumed occupancy and relative activity parameter values for species of interest.
 
-The output from simulations are numerical summaries of the number of recordings validated as well as numerical and visual summaries of posterior means, 95% posterior intervals, estimation error and coverage for each parameter in the model.
+# Conducting a simulation study with a fixed effort design type
 
-In this document, we demonstrate the use of the ValidationExplorer software, including the simulation of synthetic data under the count-detection model framework, the subsequent model-fitting process when accounting for the validation design, and the visualization of simulation results to aid in the decision process. Our software provides the option to specify two validation designs: a stratified-by-species validation design and a fixed-effort design, as described by Oram et al., (in press). We provide detailed step-by-step instructions for using a stratified-by-species design to validate acoustic recordings that have already been classified by automated software algorithms. We also provide a streamlined example of simulations under the fixed-effort design, as well as a mock decision-making process given a feasible number of recordings. All simulation assume an observation-level form of the count-detection model, described in the following subsection.
+Recall from the main text that the first step -- before opening R and loading `ValidationExplorer` --  is to identify and write down the set of measurable objectives that the data will be used for. Suppose that, for this example, the assumed species assemblage and measurable objectives are the same as those in the example provided in the main text: 
 
-## Model specification {#model}
 
-We assume that the inferential goal is to estimate the occurrence probability and relative activity levels for all species in a multi-species assemblage while accounting for errors in the detection and classification process. The model formulation assumes a latent occupancy indicator, denoted as $Z_{ik},$ so that
 
-$$Z_{ik}=
-\begin{cases}
-  1 \text{ if species }k\text{ is present at site } i \\
-  0 \text{ otherwise }
-\end{cases}.
-$$
-
-The occupancy indicator is modeled as a Bernoulli random variable with occurrence probability $\psi_{k}$
-
-$$Z_{ik} \sim \text{Bernoulli}(\psi_{k}).$$ In the ValidationExplorer, we assume that each species has a occurrence probability $\psi_k$ that is constant across sites. In the future, we intend to extend the model to accommodate covariates in a generalized linear model framework so that species occurrence may change based on relevant covariates.
-
-Next, let $\mathbf{Z}_{i} = (Z_{i1}, Z_{i2}, \dots, Z_{iK})'$ denote the vector of species occurrence indicators at location $i$. Further, Let $j = 1, 2, \dots, J$ index a detector night. At locations where species $k$ is present (i.e., $Z_{ik} = 1$), we model the number of recordings from that species on visit $j$ to site $i$ as a Poisson random variable with rate $\lambda_{k}$, representing the relative activity of species $k$:
-
-$$Y_{ijk} \vert Z_{ik} = 1 \sim \text{Poisson}(\lambda_{ijk}).$$
-
-\noindent We assume independence of $Y_{ijk}$ across species. Furthermore, we assume that each species has a single relative activity paramter that is constant across detector nights. In the presence of an imperfect classification algorithm, we do not directly observe $Y_{ijk}.$ However, we do observe the total number of calls from the site-night, which is denoted as $Y_{ij\cdot} = \sum_{k=1}^K Y_{ijk}$. We assume independence across visits $j$ and model $Y_{ij\cdot}$ as a mixture distribution with components defined by the species occurrence indicators $\mathbf{Z}_{i}$:
-
-```{=tex}
-\begin{align}
-    Y_{ij\cdot} \vert \mathbf{Z}_i &\sim 
-            \begin{cases}
-                0 \text{ with probability } \prod_k (1 - \psi_{ik}) \\ 
-                \text{Poisson}\left(\mathbf{Z}_{i}' \boldsymbol{\lambda}\right) \text{ with probability } (1 - \prod_k (1 - \psi_{ik})) 
-            \end{cases} \label{eqn:total-calls}
-\end{align}
-```
-\noindent In Equation \ref{eqn:total-calls}, $\boldsymbol{\lambda}$ denotes a $K \times 1$ vector where the $k^\text{th}$ entry contains the relative activity parameter for species $k$.
-
-At locations where observations were made (i.e., at least one species was present and recorded so that $Y_{ij\cdot} > 0$), let $l_{ij} = 1, 2, \dots, Y_{ij\cdot}$ index an individual observation within a site-night $(i,j)$. Further let, $\mathbf{T}_{l_{ij}}$ and $\mathbf{A}_{l_{ij}}$ denote the $K \times 1$ vectors indicating the true and autoID species labels, respectively. We sometimes write $T_{l_{ij}} = k$ to denote $\mathbf{T}_{l_{ij}} = (T_{l_{ij}1}, T_{l_{ij}2}, \dots, T_{l_{ij}k}, \dots, T_{l_{ij}K})' = (0, 0, \dots, 0, 1, 0, \dots, 0)',$ where the only non-zero entry is the $k^{\text{th}}$ element. After manually validating a recording, the true species label $\mathbf{T}_{l_{ij}}$ is known. We assume that human-validated true species labels are always correct and refer to the subset of validated recordings with known true labels as the validation set.
-
-Due to properties of independent Poisson random variables, and conditional on the observed total count of recordings $Y_{ij.} = y_{ij\cdot} > 0$, the number of recordings due to true species $k$ is a Multinomial random variable with probability vector $\mathbf{p}_i$ (defined below). Assuming independence among recordings, we model the true species label of an individual recording, $\mathbf{T}_{l_{ij}}$ as a multinomial random variable with the same probability vector $\mathbf{p}_i:$
-
-```{=tex}
-\begin{align}
-    \mathbf{T}_{l_{ij}} \vert \mathbf{Z}_{i}, \boldsymbol{\lambda} \sim& \text{Multinomial}(1, \mathbf{p}_i), \text{ } l_{ij} = 1, 2, \dots, y_{ij\cdot} \label{eqn:T-vec}\\ 
-    \nonumber \mathbf{p}_i =& (p_{i1}, p_{i2}, \dots p_{iK})\\ 
-    \nonumber p_{ik} =& \frac{Z_{ik}\lambda_{k}}{\sum_{m=1}^K Z_{im}\lambda_m}.
-\end{align}
-```
-\noindent The $k^\text{th}$ entry in $\mathbf{p},$ $p_{ik},$ corresponds to the probability that a recording observed at location $i$ is attributable to species $k$.
-
-Conditional on the true species label, we model the classification process through a classification matrix $\Theta$, where entry $\{k, k^\star\} = \theta_{kk^\star}$ denotes the probability that a recording from true species $k$ is assigned autoID label $k^\star$. Note that diagonal entries in this classification matrix correspond to the probability of correct classification and the rows of $\Theta$ sum to 1: $\sum_{m} \theta_{km} = 1.$ Given the true species label for recording $l_{ij}$, the autoID $\mathbf{A}_{l_{ij}}$ is modeled as a multinomial random variable with the probability vector determined by row of $\Theta$ corresponding to the true species that generated the recording:
-
-```{=tex}
-\begin{align}
-    \mathbf{A}_{l_{ij}} \vert \mathbf{T}_{l_{ij}}, \Theta \sim& \text{Multinomial}(1, \mathbf{T}_{l_{ij}}'\Theta).\label{eqn:A}
-\end{align}
-```
-\noindent As with $\mathbf{T}_{l_{ij}}$, we sometimes use $A_{l_{ij}} = m$ as a notational shorthand for $\mathbf{A}_{l_{ij}} =$ \newline $(A_{l_{ij}1}, \dots, A_{l_{ij}m-1},A_{l_{ij}m}, A_{l_{ij}m+1}, \dots, A_{l_{ij}K}) = (0, \dots, 0, 1, 0, \dots, 0)',$ where the 1 is in the $m^{\text{th}}$ entry.
-
-To complete the model, we must specify prior distributions on the classification matrix elements, $\Theta,$ the relative activity rates $\boldsymbol{\lambda}$ and the occurrence probabilities $\boldsymbol{\psi}.$
-
-We adopt the priors used by @stratton22: independent $\text{Beta}(1,1)$ priors for each $\psi_k$, independent half-normal priors $N_{+}(0, \sigma = 100)$ for each $\lambda_k$, and $\text{Dirichlet}(\boldsymbol{\alpha})$ priors on each row of $\Theta$. We set the concentration vector $\boldsymbol{\alpha} = 1/K \times \boldsymbol{1}$, the reference distance prior recommended by @stratton22.
-
-The ValidationExplorer automates the specification and model-fitting process for this framework using the NIMBLE package [@nimble, @nimblejournal].
-
-# Conducting your own simulation study: stratified-by-species designs
-
-The goal of the ValidationExplorer software is to provide insight about how validation design (and effort) may influence inference. Assuming that the data arise according to the model in Section \@ref{model}, will a particular level of effort under a specific validation design be expected to yield enough information to reliably estimate species occurrence and relative activity?
-
-For our first example simulation study, we assume a stratified-by-species validation design. Briefly, this design takes a stratified random sample with unequal probabilities within each stratum, which is formed by the AutoID labels. The motivation for this design is to allow monitoring programs to strategically tailor the available validation effort to prioritize species of greater conservation concern. The purpose of this example is to demonstrate the mechanics of using the functions in greater detail. For a mock simulation study that includes an example decision-making process, see Section **Y**.
 
 ## Step 1: Installing and loading required packages
 
-After cloning this repo, the next step is loading the necessary packages in R. To simulate, fit and visualize models used with a stratified-by-species validation design using our code, the following packages are necessary:
-
--   `tidyverse`
--   `nimble`
--   `coda`
--   `rstan`
--   `parallel`
--   `here`
--   `viridis`
--   `bayesplot` (optional)
-
-If you do not have one or more of these packages installed, run the following, with the name of the missing package in place of `your_package_name_here`:
+Our package has a number of dependencies 
 
 ```{r eval=FALSE, echo=TRUE}
 install.packages("your_package_name_here")
@@ -179,57 +102,38 @@ library(coda)
 library(rstan)
 library(parallel)
 library(here)
+# library(ValidationExplorer)
 ```
 
-## Step 2: Set up your working directory
-
-In the course of the simulation study, several objects are saved:
-
--   simulated datasets (optional)
--   simulated datasets after validation (optional)
--   model fits (optional)
--   individual summaries for one dataset/validation scenario combination (optional)
--   overall summaries for each validation scenario (always saved)
-
-Functions that save any part of the simulation require a `directory` argument be specified. If you choose to save model fits or individual summaries, our simulation functions expect your working directory to contain the folders
-
--   `PathToYourWorkingDirectory/ThetaID/fits`
--   `PathToYourWorkingDirectory/ThetaID/individual_summaries`
-
-Above, `PathToYourWorkingDirectory` is replaced with the file path to your working directory (e.g. `~/Documents` for the local Documents folder on Mac) and `ID` is replaced with the classifier scenario ID. Visually, this file structure should appear as follows:
-
-```{=latex}
-\begin{itemize}
- \item YourWorkingDirectory
- \begin{itemize}
-    \item ThetaID
-    \begin{itemize}
-      \item fits
-      \item individual\_summaries
-    \end{itemize}
- \end{itemize}
-\end{itemize}
-```
-See the Testing folder in this repo for an example (ignore the blank placeHold.txt files, which are simply there to retain the empty directory structure). Here, we use numbers for the classifier scenarios. The first scenario has `ID=1`, giving the paths to the necessary directories `your/working/directory/Testing/Theta1/fits` and `your/working/directory/Testing/Theta1/individual_summaries`.
 
 ## Step 3: Simulate data {dataSimulation}
 
-With the required folder structure set up, we can now simulate data using stratified-by-species validation. This is accomplished using the `simulate_validatedData` function. Load this function by running
-
 ```{r}
-source("../Data Simulation/simulate_validatedData.R")
+# Set the number of sites,species and visits
+nsites <- 30
+nspecies <- 6
+nvisits <- 4
+
+# Simulate a hypothetical confusion matrix 
+set.seed(10092024) 
+Theta <- t(apply(diag(29, nspecies) + 1, 1, function(x) {nimble::rdirch(alpha = x)}))
 ```
 
-Next, determine the species assemblage to simulate, and the number of sites and visits. We start by assigning the occurrence and relative activity parameters for the three species, then define the number of sites and visits.
-
 ```{r}
-psi <- c(0.3, 0.6, 0.9)
-lambda <- c(11, 2, 4)
-
-# Define sites and visits 
-nspecies <- length(psi)
-nsites <- 100
-nvisits <- 4
+psi <- c(0.6331, 0.6122, 0.8490, 0.6972, 0.2365, 0.7036)
+lambda <- c(5.9347, 4.1603, 14.2532, 6.1985, 11.8649, 2.4050)
+    
+sim_data <- simulate_validatedData(
+    n_datasets = n_datasets,
+    nsites = nsites, 
+    nvisits = nvisits, 
+    nspecies = nspecies, 
+    design_type = "FixedPercent", 
+    scenarios = c(0.05, 0.1, 0.15, 0.3, 0.5),
+    psi = psi, 
+    lambda = lambda,
+    theta = Theta
+)
 ```
 
 The data simulation function also requires that we define the classifier and validation scenarios to be used in the simulations. Here, the classifier is encoded as a matrix with rows corresponding to the true species that generated the call, and columns corresponding to the assigned autoID label. Thus the $i,j^\text{th}$ entry of the matrix (denoted $\theta_{ij}$) is the probability that species $i$ is classified as species $j.$ In `test_theta1` below, the probability that species 2 is classified as species 1 is 0.1, and the probability that species 3 is correctly classified as species 3 is 0.95.

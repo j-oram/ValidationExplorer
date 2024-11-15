@@ -1,0 +1,70 @@
+---
+title: "ValidationExplorer model specification"
+author: "Jacob Oram"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Model specification {#model}
+
+We assume that the inferential goal is to estimate the occurrence probability and relative activity levels for all species in a multi-species assemblage while accounting for errors in the detection and classification process. The model formulation assumes a latent occupancy indicator, denoted as $Z_{ik},$ so that
+
+$$Z_{ik}=
+\begin{cases}
+  1 \text{ if species }k\text{ is present at site } i \\
+  0 \text{ otherwise }
+\end{cases}.
+$$
+
+The occupancy indicator is modeled as a Bernoulli random variable with occurrence probability $\psi_{k}$
+
+$$Z_{ik} \sim \text{Bernoulli}(\psi_{k}).$$ In the ValidationExplorer, we assume that each species has a occurrence probability $\psi_k$ that is constant across sites. In the future, we intend to extend the model to accommodate covariates in a generalized linear model framework so that species occurrence may change based on relevant covariates.
+
+Next, let $\mathbf{Z}_{i} = (Z_{i1}, Z_{i2}, \dots, Z_{iK})'$ denote the vector of species occurrence indicators at location $i$. Further, Let $j = 1, 2, \dots, J$ index a detector night. At locations where species $k$ is present (i.e., $Z_{ik} = 1$), we model the number of recordings from that species on visit $j$ to site $i$ as a Poisson random variable with rate $\lambda_{k}$, representing the relative activity of species $k$:
+
+$$Y_{ijk} \vert Z_{ik} = 1 \sim \text{Poisson}(\lambda_{ijk}).$$
+
+\noindent We assume independence of $Y_{ijk}$ across species. Furthermore, we assume that each species has a single relative activity paramter that is constant across detector nights. In the presence of an imperfect classification algorithm, we do not directly observe $Y_{ijk}.$ However, we do observe the total number of calls from the site-night, which is denoted as $Y_{ij\cdot} = \sum_{k=1}^K Y_{ijk}$. We assume independence across visits $j$ and model $Y_{ij\cdot}$ as a mixture distribution with components defined by the species occurrence indicators $\mathbf{Z}_{i}$:
+
+```{=tex}
+\begin{align}
+    Y_{ij\cdot} \vert \mathbf{Z}_i &\sim 
+            \begin{cases}
+                0 \text{ with probability } \prod_k (1 - \psi_{ik}) \\ 
+                \text{Poisson}\left(\mathbf{Z}_{i}' \boldsymbol{\lambda}\right) \text{ with probability } (1 - \prod_k (1 - \psi_{ik})) 
+            \end{cases} \label{eqn:total-calls}
+\end{align}
+```
+\noindent In Equation \ref{eqn:total-calls}, $\boldsymbol{\lambda}$ denotes a $K \times 1$ vector where the $k^\text{th}$ entry contains the relative activity parameter for species $k$.
+
+At locations where observations were made (i.e., at least one species was present and recorded so that $Y_{ij\cdot} > 0$), let $l_{ij} = 1, 2, \dots, Y_{ij\cdot}$ index an individual observation within a site-night $(i,j)$. Further let, $\mathbf{T}_{l_{ij}}$ and $\mathbf{A}_{l_{ij}}$ denote the $K \times 1$ vectors indicating the true and autoID species labels, respectively. We sometimes write $T_{l_{ij}} = k$ to denote $\mathbf{T}_{l_{ij}} = (T_{l_{ij}1}, T_{l_{ij}2}, \dots, T_{l_{ij}k}, \dots, T_{l_{ij}K})' = (0, 0, \dots, 0, 1, 0, \dots, 0)',$ where the only non-zero entry is the $k^{\text{th}}$ element. After manually validating a recording, the true species label $\mathbf{T}_{l_{ij}}$ is known. We assume that human-validated true species labels are always correct and refer to the subset of validated recordings with known true labels as the validation set.
+
+Due to properties of independent Poisson random variables, and conditional on the observed total count of recordings $Y_{ij.} = y_{ij\cdot} > 0$, the number of recordings due to true species $k$ is a Multinomial random variable with probability vector $\mathbf{p}_i$ (defined below). Assuming independence among recordings, we model the true species label of an individual recording, $\mathbf{T}_{l_{ij}}$ as a multinomial random variable with the same probability vector $\mathbf{p}_i:$
+
+```{=tex}
+\begin{align}
+    \mathbf{T}_{l_{ij}} \vert \mathbf{Z}_{i}, \boldsymbol{\lambda} \sim& \text{Multinomial}(1, \mathbf{p}_i), \text{ } l_{ij} = 1, 2, \dots, y_{ij\cdot} \label{eqn:T-vec}\\ 
+    \nonumber \mathbf{p}_i =& (p_{i1}, p_{i2}, \dots p_{iK})\\ 
+    \nonumber p_{ik} =& \frac{Z_{ik}\lambda_{k}}{\sum_{m=1}^K Z_{im}\lambda_m}.
+\end{align}
+```
+\noindent The $k^\text{th}$ entry in $\mathbf{p},$ $p_{ik},$ corresponds to the probability that a recording observed at location $i$ is attributable to species $k$.
+
+Conditional on the true species label, we model the classification process through a classification matrix $\Theta$, where entry $\{k, k^\star\} = \theta_{kk^\star}$ denotes the probability that a recording from true species $k$ is assigned autoID label $k^\star$. Note that diagonal entries in this classification matrix correspond to the probability of correct classification and the rows of $\Theta$ sum to 1: $\sum_{m} \theta_{km} = 1.$ Given the true species label for recording $l_{ij}$, the autoID $\mathbf{A}_{l_{ij}}$ is modeled as a multinomial random variable with the probability vector determined by row of $\Theta$ corresponding to the true species that generated the recording:
+
+```{=tex}
+\begin{align}
+    \mathbf{A}_{l_{ij}} \vert \mathbf{T}_{l_{ij}}, \Theta \sim& \text{Multinomial}(1, \mathbf{T}_{l_{ij}}'\Theta).\label{eqn:A}
+\end{align}
+```
+\noindent As with $\mathbf{T}_{l_{ij}}$, we sometimes use $A_{l_{ij}} = m$ as a notational shorthand for $\mathbf{A}_{l_{ij}} =$ \newline $(A_{l_{ij}1}, \dots, A_{l_{ij}m-1},A_{l_{ij}m}, A_{l_{ij}m+1}, \dots, A_{l_{ij}K}) = (0, \dots, 0, 1, 0, \dots, 0)',$ where the 1 is in the $m^{\text{th}}$ entry.
+
+To complete the model, we must specify prior distributions on the classification matrix elements, $\Theta,$ the relative activity rates $\boldsymbol{\lambda}$ and the occurrence probabilities $\boldsymbol{\psi}.$
+
+We adopt the priors used by @stratton22: independent $\text{Beta}(1,1)$ priors for each $\psi_k$, independent half-normal priors $N_{+}(0, \sigma = 100)$ for each $\lambda_k$, and $\text{Dirichlet}(\boldsymbol{\alpha})$ priors on each row of $\Theta$. We set the concentration vector $\boldsymbol{\alpha} = 1/K \times \boldsymbol{1}$, the reference distance prior recommended by @stratton22.
+
+The ValidationExplorer automates the specification and model-fitting process for this framework using the NIMBLE package [@nimble, @nimblejournal].
