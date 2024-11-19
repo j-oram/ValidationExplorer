@@ -200,7 +200,7 @@ tune_mcmc <- function(dataset, zeros) {
     })
 
     colnames(M) <- paste0("warmup = ", as.character(warmups))
-    rownames(M) <- paste0("iters = ", as.character(iters_to_check))
+    rownames(M) <- paste0("post-warmup iters = ", as.character(iters_to_check))
 
     iter <- min(which(M == 1, arr.ind = TRUE)[, "row"])
     warmup_out <- warmups[min(which(M[iter, ] == 1,))]

@@ -83,15 +83,28 @@ simulate_validatedData <- function(n_datasets,
                                    save_masked_datasets = FALSE,
                                    directory = here::here()){
 
-
+  # check the users's specified classifier
   if(any(round(rowSums(theta), 5) != 1)) {
     stop("The rows of theta do not sum to 1.")
   }
-
+  
+  # check the length of scenarios under BySpecies validation design
   if(design_type == "BySpecies" & length(scenarios) != nspecies) {
     stop("Scenarios must be a list with length = nspecies.")
   }
-
+  
+  # if the requisite directories don't exist, create them.
+  if(!dir.exists(file.path(directory)) & (save_datasets | save_masked_datasets)){
+    dir.create(file.path(directory))
+  }
+  if(save_datasets & !dir.exists(file.path(directory, "datasets"))) {
+      dir.create(file.path(directory, "datasets"), recursive = TRUE)
+      dir.create(file.path(directory, "zeros"), recursive = TRUE)
+  }
+  if(save_masked_datasets & !dir.exists(file.path(directory, "masked_datasets"))) {
+      dir.create(file.path(directory, "masked_datasets"), recursive = TRUE)
+  }
+  
   # Quiet the chatter
   options(dplyr.summarize.inform = FALSE)
 
@@ -128,9 +141,10 @@ simulate_validatedData <- function(n_datasets,
       # If user wants individual rds files for each dataframe, save them and the zeros
       # in the specified directory
       if(save_datasets == TRUE){
-        saveRDS(datasets_list[[m]], file = file.path(directory, paste0("dataset_", m, ".rds")))
+        
+        saveRDS(datasets_list[[m]], file = file.path(directory, "datasets", paste0("dataset_", m, ".rds")))
         saveRDS(zeros[[m]],
-                file = file.path(directory, paste0("zeros_in_dataset_", m, ".rds")))
+                file = file.path(directory, "zeros", paste0("zeros_in_dataset_", m, ".rds")))
       }
 
     }
@@ -154,8 +168,9 @@ simulate_validatedData <- function(n_datasets,
         masked_df$scenario <- s
 
         if(save_masked_datasets == TRUE){
+         
           saveRDS(masked_df,
-                  file = file.path(directory, paste0("dataset_", d, "_masked_under_BSV_scenario_", s, ".rds")))
+                  file = file.path(directory, "masked_datasets", paste0("dataset_", d, "_masked_under_BSV_scenario_", s, ".rds")))
         }
 
         masked_dataset_list[[s]][[d]] <- masked_df
@@ -166,7 +181,7 @@ simulate_validatedData <- function(n_datasets,
     # add a column for the scenario number to make it easy to see which
     # LOVE for each species goes with which number on x-axis of plots
     scenarios <- scenarios %>%
-      tibble::rownames_to_column(var = "Scenario_Number")
+      tibble::rownames_to_column(var = "scenario")
 
   } else {
 
@@ -182,9 +197,10 @@ simulate_validatedData <- function(n_datasets,
         ) %>% dplyr::mutate(scenario = s)
 
         if(save_masked_datasets == TRUE) {
+    
           saveRDS(
             masked_df,
-            file = file.path(directory, paste0("dataset_", d, "_masked_under_FE_scenario_", s, ".rds"))
+            file = file.path(directory, "masked_datasets", paste0("dataset_", d, "_masked_under_FE_scenario_", s, ".rds"))
           )
         }
 
