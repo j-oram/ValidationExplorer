@@ -91,7 +91,7 @@ Recall from the main text that the first step -- before opening R and loading `V
   \item The monitoring program can pay their expert bat biologists to validate at most 4000 recordings. WE make the assumption that all recordings are approximately the same cost to validate (i.e., rare species autoIDs are not necessarily more expensive or time consuming than extremely common ones). 
 \end{itemize}
 
-Suppose further that the species assemblage is the same as that in the main text. That is, we have six species of interest that co-occur. The existing prior knowledge (perhaps from another study) about the relative activity rates and occurrence probabilities for each species are summarized in Table \@ref(tab:assemblage). 
+Suppose further that the species assemblage is the same as in the main text. That is, we have six species of interest that co-occur. The existing prior knowledge (perhaps from another study) about the relative activity rates and occurrence probabilities for each species are summarized in Table \@ref(tab:assemblage). 
 
 ```{r assemblage, echo=FALSE}
 psi <- c(0.6331, 0.6122, 0.8490, 0.6972, 0.2365, 0.7036)
@@ -138,7 +138,7 @@ Note: to knit this vignette, you may also need to install the `kableExtra` packa
 
 ## Step 3: Simulate data {dataSimulation}
 
-The first step in a simulation study is to simulate data under each of the candidate validation designs, which is accomplished with the `simulate_validatedData` function in `ValidationExplorer`. We begin by assigning values for the number of sites, visits, species, as well as the parameter values in Table \@ref(tab:assemblage):
+The first step in a simulation study is to simulate data under each of the candidate validation designs, which is accomplished with the `simulate_validatedData` function in `ValidationExplorer`. We begin by assigning values for the number of sites, visits, and species, as well as the parameter values in Table \@ref(tab:assemblage):
 
 ```{r pars}
 # Set the number of sites,species and visits
@@ -165,7 +165,8 @@ Note that the above definition of `Theta` places high values on the diagonal of 
 another_Theta <- t(apply(diag(5, nspecies) + 1, 1, function(x) {nimble::rdirch(alpha = x)}))
 print(another_Theta)
 ```
-`another_Theta` has lower values on the diagonal, and greater off-diagonal values (i.e., higher probability of misclassification). If you have specific values you would like to use for the assumed classification probabilities, these can be supplied manually: 
+
+`another_Theta` has lower values on the diagonal, and greater off-diagonal values (i.e., higher probability of misclassification). If you have specific values you would like to use for the assumed classification probabilities (e.g., from an experiment), these can be supplied manually: 
 
 ```{r manTheta}
 manual_Theta <- matrix(c(0.9, 0.05, 0.01, 0.01, 0.02, 0.01, 
@@ -210,16 +211,18 @@ Note that we specified the design type through the argument `design_type = "Fixe
 
 To understand the output from `simulate_validatedData`, we can investigate `sim_data`. The output is a list, containing three objects:
 
--   `full_datasets`: A list of length `n_datasets` with unmasked datasets (i.e., the datasets if all recordings were validated so that every recording has an autoID and a true species label). We opted to not save these datasets by setting `save_datasets = FALSE`. If `save_datasets = TRUE`, then these will be saved individually in `directory` as `dataset_n.rds`, where `n` is the dataset number.
--   `zeros`: A list of length `n_datasets` containing the true species- autoID combinations that were never observed at each site visit. For example, if, in dataset 10, there were no calls from species 1 that were classified as 3 on visit 4 to site 30, then the 10th entry of this list would contain a dataset with a row corresponding to site = 30, visit = 4, true_spp = 1, id_spp = 3, with count = 0. These zeros are necessary for the model to identify occurrence probabilities and relative activity rates. If `save_datasets = TRUE`, the zeros for each dataset will also be saved in `directory` individually as `zeros_in_dataset_n.rds`, where `n` is the dataset number.
--   `masked_dfs`: A nested list containing each dataset masked under each scenario. For example, `masked_dfs[[9]][[27]]` contains dataset 27, assuming validation scenario 9. If `save_masked_datasets = TRUE`, then each dataset/scenario combination is saved individually in `directory` as dataset_n_masked_under_scenario_s.rds, where n is the dataset number and s is the scenario number.
+-   `full_datasets`: A list of length `n_datasets` with unmasked datasets (i.e., the datasets if all recordings were validated so that every recording has an autoID and a true species label). We opted to not save these datasets by setting `save_datasets = FALSE`. If we had specified `save_datasets = TRUE`, then these will be saved individually in `directory` as `dataset_n.rds`, where `n` is the dataset number. 
+-   `zeros`: A list of length `n_datasets` containing the true species-autoID combinations that were never observed at each site visit. For example, if, in dataset 10, no calls from species 1 were classified as species 3 on visit 4 to site 30, then the 10th entry of this list would contain a dataframe with a row corresponding to site = 30, visit = 4, true_spp = 1, id_spp = 3, with count = 0. These zeros are necessary for the model to identify occurrence probabilities and relative activity rates. If `save_datasets = TRUE`, the zeros for each dataset will also be saved in `directory` individually as `zeros_in_dataset_n.rds`, where `n` is the dataset number.
+-   `masked_dfs`: A nested list containing each dataset masked under each scenario. For example, `masked_dfs[[9]][[27]]` contains dataset 27, assuming validation scenario 9. If `save_masked_datasets = TRUE`, then each dataset/scenario combination is saved individually in `directory` as `dataset_n_masked_under_scenario_s.rds`, where `n` is the dataset number and `s` is the scenario number.
 
-Examples of each are given below:
+Examples of each output are given below. First, we examine the third simulated full dataset. Notice that in addition to the site, vist, true species and autoID (`id_spp`) columns, the parameter values (`lambda`, `psi`, and `theta`) are given for each true species-autoID combination. In addition, the occupancy state `z` for the true species is given and the count of calls at that site visit with an true species-autoID pair. For example, at site 1, visit 1, there are four calls from species 1 that are assigned autoID 1, yielding 4 rows with `count = 4`. There is also one call from species 4 that was assigned a species 2 label with probability 0.02893559. Because this happened once, it is documented with `count = 1` and only occupies a single row. Next, we can see that there were 10 calls that were correctly identified as species 3; ten rows will have `true_spp = 3` and `autoID = 3`. Finally, the `Y.` column tells us how many observations were made from all species at that site visit; for visit 1 to site 1, the unique value is 24. That is, the 25th row of this dataset will contain the first observation from visit 2 to site 1. 
 
 ```{r fullDfs}
 full_dfs <- sim_data$full_datasets
 head(full_dfs[[3]]) # Dataset number 3 if all recordings were validated
 ```
+
+The next object output from `simulate_validatedData` is the list of `zeros`. These are the potential true species-autoID combinations that were not observed at each site-visit. Notice that `count=0` for all observations; for instance, we never observed species 1 being classified as species 2 on visit 1 to site 1, despite species 1 being present. 
 
 ```{r zeros}
 zeros <- sim_data$zeros
@@ -228,6 +231,9 @@ zeros <- sim_data$zeros
 # dataset 3. Notice that count = 0 for all rows! 
 head(zeros[[3]]) 
 ```
+
+The final output object is the nested list of `masked_dfs`. The name of this nested list comes from the way that validation effort is simulated: recordings that are not selected for validation have their `true_spp` label masked with an `NA`. Notice that in the example below, we are considering the 3rd dataset under validation scenario 4. Further, all entries in the dataset are identical to the unmasked version output in `full_dfs` above, with the exception of the `true_spp` column. From this column we can see that calls 1, 3, 5 and 6 were not selected for validation (because `true_spp = NA`), while recordings 2 and 4 were (both calls came from species 1).  
+
 
 ```{r mdfs}
 masked_dfs <- sim_data$masked_dfs
@@ -238,10 +244,10 @@ masked_dfs <- sim_data$masked_dfs
 head(masked_dfs[[4]][[3]])
 ```
 
-For most simulations, it will be useful to summarize the number of recordings that are validated under a given validation design and scenario. This can be accomplished using the `summarize_n_validated` function, which outputs a vector containing the average number of recordings validated in a dataset under each scenario. Note that in our example, there are 8 scenarios (each contained in a row of the `val_scenarios` dataframe), meaning that the output is of length 8:
+For most simulations, it will be useful to summarize the number of recordings that are validated under a given validation design and scenario. This can be accomplished using the `summarize_n_validated` function:
 
 ```{r sumN}
-summarize_n_validated(data_list = sim_data$masked_dfs, theta_scenario = "1", scenario_names = 1:5)
+summarize_n_validated(data_list = sim_data$masked_dfs, theta_scenario = "1", scenario_numbers = 1:5)
 ```
 
 
@@ -249,16 +255,16 @@ summarize_n_validated(data_list = sim_data$masked_dfs, theta_scenario = "1", sce
 
 Running a complete simulation study can be time consuming. In an effort to help users improve the efficiency of their simulations, we provide the `tune_mcmc` function, which provides the user with information about the warmup and number of iterations required for the MCMC to reach approximate convergence.  This function takes in a masked dataset and the corresponding zeros, fits a model to these data, and outputs an estimated run time for 10,000 iterations, as well as the estimated number of required warmup and total iterations. 
 
-As in the main text, we use a dataset with the lowest number of validated recordings, for which we expect the greatest number of iterations. In our example, this is scenario 1, in which an average of $\approx 55$ recordings are validated per dataset. When we run `tune_mcmc` with dataset 39 under scenario 1, we get an error message, telling us that convergence was not reached in under 10,000 iterations. We have several options: 
+As in the main text, we use a dataset with the lowest number of validated recordings, for which we expect the greatest number of iterations. In our example, this is scenario 1, in which an average of $\approx 55$ recordings are validated per dataset. When we ran `tune_mcmc` with dataset 39 under scenario 1, we received a series of error messages, with the message that convergence was not reached in under 10,000 iterations. We have several options: 
 
 1. We could increase the number of iterations above 10,000 -- perhaps to 20,000 and settle for a longer run time of the simulation study.
 
 2. We could take this as a sign that the level of effort ($55$ calls validated per dataset of size $\approx 3300$) is insufficient to identify model parameters. In this case, this scenario should not be considered. 
 
-In our experience fitting these models, the second option seems to often be the case. We adopt this approach here and run `tune_mcmc` again under scenario 2: 
+In our experience fitting these models, the second option seems to often be the case. We adopt this approach here and run `tune_mcmc` again under scenario 2, which has around 94 calls validated per dataset on average. 
 
 ```{r tune, cache=TRUE}
-tune_list <- tune_mcmc(dataset = sim_data$masked_dfs[[2]][[39]], zeros = sim_data$zeros[[39]])
+tune_list <- tune_mcmc(dataset = sim_data$masked_dfs[[2]][[25]], zeros = sim_data$zeros[[25]])
 ```
 
 We can see from the output that minimum number of iterations is 2000 with a warmup of 1000: 
@@ -272,23 +278,27 @@ If we were to specify 10,000 iterations per dataset, each model fit would take a
 ```{r}
 tune_list$max_iter_time
 ```
-This may seem insignificant, but over the course of an entire simulations study with 5 scenarios $\times$ 50 datasets, that corresponds to around 8 hours of run time. 
+This may seem insignificant, but over the course of an entire simulations study with 5 scenarios $\times$ 50 datasets, that corresponds to around 8 hours of run time. Using fewer than 10,000 iterations will substantially reduce the time to run a simulation study. 
 
-To understand the MCMC in greater detail, we can examine the `convergence_matrix` output 
+To understand the MCMC in greater detail, we examine the `convergence_matrix` output:
 
 ```{r}
 tune_list$convergence_matrix
 ```
 
-We emphasize that these results are from a single model fit; they are supplied only as guidelines, so it may be a good idea to increase the number of iterations above the minimum values output from `tune_mcmc`. This is what we do in the following section, where we specify that there should be 3000 iterations with the first 1500 discarded as warmup. 
+This matrix shows which combinations of warmups and post-warmup iterations yielded a set of markov chains that exhibited evidence of convergence (as indicated by a value of 1 in the corresponding entry). For example, our fitted model shows approximate convergence after running the MCMC for 3000 iterations, and discarding the first 2000 as warmup (`warmup = 2000`, `post-warmup iters = 1000`). This gives an idea of how to tune the MCMC. 
+
+We emphasize that these results are from a single model fit; they are supplied only as guidelines, and we encourage users to increase the number of iterations above the minimum values output from `tune_mcmc`. While each model fit will take slightly longer, this approach may save time in the long run by avoiding the need to re-run simulations.  We show this approach in the following section, where we specify that there should be 3500 iterations with the first 2500 discarded as warmup. 
 
 ## Step 5: Fit models to simulated data
 
-The following code block shows our use of `run_sims` to fit models to simulated data.
+With the simulated dataset and some informed choices about tuning of the MCMC, we use `run_sims` to run the simulations: 
 
 ```{r run, cache=TRUE}
 # reduce the size of the list since validation scenario 1 is too low: 
-# we want scenarios 2-5 for fitting
+# we want scenarios 2-5 for fitting. 
+# Note that now scenario 1 in the output will correspond to validation scenario 2, 
+# scenario 2 in the output will correspond to validation scenario 3, and so on.
 masked_dfs_reduced <- masked_dfs[2:5]
 
 sims_output <- run_sims(
@@ -297,8 +307,8 @@ sims_output <- run_sims(
          DGVs = list(lambda = lambda, psi = psi, theta = Theta), 
          theta_scenario_id = "FE", # for "fixed effort"
          parallel = TRUE, 
-         niter = 3000, 
-         nburn = 1500,  
+         niter = 3500, 
+         nburn = 2500,  
          thin = 1,
          save_fits = TRUE, 
          save_individual_summaries_list = FALSE, 
@@ -308,25 +318,9 @@ sims_output <- run_sims(
 
 ## Step 6: Visualize simulations
 
-Once the simulation study is complete, you can visualize the results using several functions.  `visualize_parameter_group` and `visualize_single_parameter`. These functions ensure that only converged models are included in the visualization. `visualize_parameter_group` is useful for examining an entire set of parameters, such as all relative activity parameters. The set of expected inputs for `visualize_parameter_group` are:
+Once the simulation study is complete, you can visualize the results using several functions. The most detailed functions are `visualize_parameter_group` and `visualize_single_parameter`.  
 
--   `sim_summary`: A dataframe in the format of the summaries output by `run_sims`. Column names must match those of the `run_sims` output.
--   `pars`: The name of the parameter "group" to be visualized (e.g, "psi", "lambda" or "theta").
--   `theta_scenario`: The $\Theta$ classifier ID.
--   `scenarios`: Which scenarios to visualize?
--   `convergence_threshold`: What value should $\hat{R}$ be below to be considered "converged"? Default value is 1.1. This value matters because only model fits where all parameter values are below the `convergence_threshold` are used for visualization.
-
-We can visualize the inference for the relative activity parameters in the first three scenarios in our simulation study above by running the code below. Note that we have set `convergence_threshold` to be unrealistically high for illustration purposes. Typically, the default value of 1.1 is as high of an $\hat{R}$ value as possible for the MCMC chains to be considered "converged".
-
-```{r vizGroup, eval=FALSE}
-visualize_parameter_group(sim_summary = sims_output, 
-                          pars = "lambda", 
-                          theta_scenario = 1, 
-                          scenarios = 1:4, # recall that scenario 1 in the figure is actually scenario 2 IRL
-                          convergence_threshold = 1.1)
-```
-
-The features of the plot are as follows:
+The plots output from these functions have the following features.
 
 -   Facet grids: parameters
 -   X-axis: Manual verification scenario
@@ -337,16 +331,52 @@ The features of the plot are as follows:
 -   Black dots: the true value of the parameter
 -   Red dots: average posterior mean
 
-If you would like to visualize a single parameter, use `visualize_single_parameter`, which takes the same arguments as the previous visualization function:
+`visualize_parameter_group` is useful for examining an entire set of parameters, such as all relative activity parameters. For example, we can visualize the inference for the relative activity parameters in the first three scenarios in our simulation study above by running the code below.
 
-```{r vizOne, eval=FALSE}
-visualize_single_parameter(sims_output, par = "theta[2, 1]", 
-                           theta_scenario = 1, 
-                           scenarios = 1:3, 
-                           convergence_threshold = 1.2)
+```{r}
+# correct the scenario numbers in the output to match the validation scenario 
+# numbers
+sims_output$scenario <- sims_output$scenario + 1
 ```
 
-Note that the scale of the y-axis is free to change from one visualization to the next. Additionally, if no datasets show evidence of convergence (i.e., no fitted models have $\hat{R} \leq c$ for all parameters, where $c$ is the specified convergence threshold) under a given scenario, the scenario will not appear on the x-axis.
+
+```{r vizGroup, eval=FALSE}
+visualize_parameter_group(sim_summary = sims_output, 
+                          pars = "lambda", 
+                          theta_scenario = 1, 
+                          scenarios = 2:5,
+                          convergence_threshold = 1.05)
+```
+The output indicates that under all validation scenarios we considered (2-5), the expected inference for relative activity rates of species 1-4 and 6 meets our measurable objectives: the posterior interval width is less than three  for these species and there is minimal estimation error. However, note that under validation scenario 2, fewer of the models converged within 3000 iterations of the MCMC, which is visible from smaller number of grey intervals. This suggests that a higher level of validation effort could be beneficial. Additionally, average interval width is never below 3 for species 5; none of the designs considered here meet the measurable for this species. We can see this more clearly by examining output through alternative visualization functions. 
+
+A first step would be to use `visualize_single_parameter`, which takes the same arguments as the previous visualization function:
+
+```{r vizOne, eval=FALSE}
+visualize_single_parameter(sims_output, par = "lambda[5]", 
+                           theta_scenario = 1, 
+                           scenarios = 2:4, 
+                           convergence_threshold = 1.05)
+```
+
+The greater detail of `visualize_single_parameter` underscores the difference in the number of converged models, shown by the number grey 95% posterior interval for each converged model fit. The visualization also helps clarify that while average interval width is larger than 3, it is not substantially larger in validation scenario 4. This can also be seen using the `plot_width_vs_calls` function, which compares average interval widths (and the IQR for interval widths) across scenarios based on the number of recordings validated. An example is provided below: 
+
+```{r}
+s <-  summarize_n_validated(
+  data_list = sim_data$masked_dfs, 
+  theta_scenario = "FE", 
+  scenario_numbers = 2:5
+)
+
+plot_width_vs_calls(
+  sim_summary = sims_output, 
+  calls_summary = s, 
+  regex_pars = "lambda", 
+  theta_scenario = "FE", 
+  scenarios = 2:5
+)
+```
+
+We provide analogous functions `plot_coverage_vs_calls` and `plot_bias_vs_calls` taking identical arguments that show how coverage and estimation error change with the number of calls validated.  Note that in all of our visualization functions, if no fitted models have $\hat{R} \leq c$ for all parameters, where $c$ is the specified convergence threshold) under a given scenario, then the scenario will not appear on the x-axis.
 
 # Conclusion 
 
