@@ -1,9 +1,9 @@
 #' Summarize the number of validated recordings
 #'
-#' @param data_list A list masked datasets in the format output from
-#'   \link{simulate_validatedData}
-#' @param scenario_names An integer vector denoting the scenarios to be summarized.
-#' @param theta_scenario The identifier for the classifier scenario.
+#' @param data_list A list of masked datasets in the format output from
+#'   \link{simulate_validatedData}.
+#' @param scenario_numbers An integer vector denoting the scenarios to be summarized.
+#' @param theta_scenario The identifier for the classifier scenario as a character string.
 #'
 #' @return A dataframe object that contains the theta scenario, validation scenario,
 #'   and number of validated calls.
@@ -42,18 +42,29 @@
 #'   theta_scenario = "1"
 #' )
 #'
-summarize_n_validated <- function(data_list, scenario_names, theta_scenario) {
-
+summarize_n_validated <- function(data_list, scenario_numbers, theta_scenario=NULL) {
+  
+  data_list <- data_list[scenario_numbers]
+  
   n_validated <- lapply(data_list, function(x) { # x is the scenario
     lapply(x, function(y) { # y is an individual dataset
       sum(!is.na(y$true_spp)) # find the number of validated calls in y
     }) %>% # output is a list.
       unlist() %>% # Take this, make it a vector and
-      mean() # take the average -- this is the expected number of validated recordings under scenario x
+      mean() # take the average (over datasets within the scenario) -- this is the expected number of validated recordings under scenario x
   }) %>%
-    unlist() %>%
-    return() # return the list of averages (one for each scenario)
+    unlist() %>% # turn the list of averages into a vector
+    return() # return the vector
 
-  return(dplyr::tibble(theta_scenario = theta_scenario, scenario = scenario_names, n_validated = n_validated))
+  if(is.null(theta_scenario)){
+    return(dplyr::tibble(scenario = as.character(scenario_numbers), 
+                         n_validated = n_validated))
+  } else {
+    return(dplyr::tibble(theta_scenario = as.character(theta_scenario), 
+                         scenario = as.character(scenario_numbers), 
+                         n_validated = n_validated))
+  }
+  
+  
 
 }

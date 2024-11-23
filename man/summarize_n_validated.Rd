@@ -4,15 +4,15 @@
 \alias{summarize_n_validated}
 \title{Summarize the number of validated recordings}
 \usage{
-summarize_n_validated(data_list, scenario_names, theta_scenario)
+summarize_n_validated(data_list, scenario_numbers, theta_scenario = NULL)
 }
 \arguments{
-\item{data_list}{A list masked datasets in the format output from
-\link{simulate_validatedData}}
+\item{data_list}{A list of masked datasets in the format output from
+\link{simulate_validatedData}.}
 
-\item{scenario_names}{An integer vector denoting the scenarios to be summarized.}
+\item{scenario_numbers}{An integer vector denoting the scenarios to be summarized.}
 
-\item{theta_scenario}{The identifier for the classifier scenario.}
+\item{theta_scenario}{The identifier for the classifier scenario as a character string.}
 }
 \value{
 A dataframe object that contains the theta scenario, validation scenario,

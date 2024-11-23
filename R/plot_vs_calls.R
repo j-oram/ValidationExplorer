@@ -168,6 +168,8 @@ plot_width_vs_calls <- function(sim_summary,
     plt_df <- plt_df %>% dplyr::filter(.data$parameter %in% pars)
   } else if(!is.null(regex_pars)) {
     plt_df <- plt_df %>% dplyr::filter(stringr::str_detect(.data$parameter, regex_pars))
+  } else {
+    plt_df <- plt_df
   }
 
 
@@ -276,6 +278,7 @@ plot_coverage_vs_calls <- function(sim_summary,
     ggplot2::geom_point() +
     ggplot2::geom_line() +
     ggplot2::ylim(0,1) +
+    geom_hline(yintercept = 0.95, linetype = "dotted")+
     ggplot2::labs(
       x = "Number of validated calls",
       y = "Coverage",
