@@ -286,9 +286,9 @@ To understand the MCMC in greater detail, we examine the `convergence_matrix` ou
 tune_list$convergence_matrix
 ```
 
-This matrix shows which combinations of warmups and post-warmup iterations yielded a set of markov chains that exhibited evidence of convergence (as indicated by a value of 1 in the corresponding entry). For example, our fitted model shows approximate convergence after running the MCMC for 3000 iterations, and discarding the first 2000 as warmup (`warmup = 2000`, `post-warmup iters = 1000`). This gives an idea of how to tune the MCMC. 
+This matrix indicates whether, at given warmup and number of iterations, markov chains exhibited evidence of convergence. For example, our fitted model shows approximate convergence after running the MCMC for 3000 iterations, and discarding the first 2000 as warmup (`warmup = 2000`, `post-warmup iters = 1000` has an entry of 1 in the matrix).
 
-We emphasize that these results are from a single model fit; they are supplied only as guidelines, and we encourage users to increase the number of iterations above the minimum values output from `tune_mcmc`. While each model fit will take slightly longer, this approach may save time in the long run by avoiding the need to re-run simulations.  We show this approach in the following section, where we specify that there should be 3500 iterations with the first 2500 discarded as warmup. 
+We emphasize that the results from `tune_mcmc` are from a single model fit; they are supplied only as guidelines, and we encourage users to increase the number of iterations above the minimum values output from `tune_mcmc`. While each model fit will take slightly longer with an increased number of total iterations, this approach may save time in the long run by avoiding the need to re-run simulations. 
 
 ## Step 5: Fit models to simulated data
 
@@ -316,22 +316,26 @@ sims_output <- run_sims(
 )
 ```
 
+The output object, `sims_output` is a dataframe with summaries of the MCMC draws for each parameter estimated from each dataset under each validation scenario. Summaries include the posterior mean, standard deviation, Naive standard error, Time-series standard error, quantiles for 50% and 95% posterior intervals, median, and MCMC diagnostics (Gelman-Rubin statistic, and effective samples sizes in the tails and bulk of the distribution).
+
+```{r}
+str(sims_output)
+```
+
 ## Step 6: Visualize simulations
 
-Once the simulation study is complete, you can visualize the results using several functions. The most detailed functions are `visualize_parameter_group` and `visualize_single_parameter`.  
+Once models have been fit to all simulated datasets, you can visualize results using several functions. We recommend beginning with the most detailed functions, which are `visualize_parameter_group` and `visualize_single_parameter`. The plots output from these functions show many following features of the simulation study. These are
 
-The plots output from these functions have the following features.
-
--   Facet grids: parameters
+-   Facet grids: parameters (only for `visualize_parameter_group`)
 -   X-axis: Manual verification scenario
 -   y-axis: parameter values
 -   Small grey error bars: 95% posterior interval for an individual model fit where all parameters were below `convergence_threshold`.
 -   Colored error bars: average 95% posterior interval across all converged models under that scenario.
 -   Color: Coverage, or the rate at which 95% posterior intervals contain the true data-generating parameter value.
--   Black dots: the true value of the parameter
--   Red dots: average posterior mean
+-   Black points: the true value of the parameter
+-   Red points: average posterior mean
 
-`visualize_parameter_group` is useful for examining an entire set of parameters, such as all relative activity parameters. For example, we can visualize the inference for the relative activity parameters in the first three scenarios in our simulation study above by running the code below.
+The `visualize_parameter_group` function is useful for examining an entire set of parameters, such as all relative activity parameters. For example, we can visualize the inference for the relative activity parameters in the first three scenarios in our simulation study above by running the code below.
 
 ```{r}
 # correct the scenario numbers in the output to match the validation scenario 
@@ -376,11 +380,15 @@ plot_width_vs_calls(
 )
 ```
 
-We provide analogous functions `plot_coverage_vs_calls` and `plot_bias_vs_calls` taking identical arguments that show how coverage and estimation error change with the number of calls validated.  Note that in all of our visualization functions, if no fitted models have $\hat{R} \leq c$ for all parameters, where $c$ is the specified convergence threshold) under a given scenario, then the scenario will not appear on the x-axis.
+We provide analogous functions `plot_coverage_vs_calls` and `plot_bias_vs_calls` taking identical arguments that show how coverage and estimation error change with the number of calls validated.  Note that in all of our visualization functions, if no fitted models have $\hat{R} \leq c$ for all parameters, where $c$ is the specified convergence threshold under a given scenario, then the scenario will not appear on the x-axis.
 
 # Conclusion 
 
-We have demonstrated the use of the `ValidationExplorer` package. Note that with any simulation study results are conditional on the settings and assumptions. In the case of the count-detection model framework, the assumptions are 
+We have demonstrated the use of the `ValidationExplorer` package when the objective is to compare the merits of four competing LOVEs for a fixed-effort design. Specifically, we considered validating a random sample of 5%, 10%, 15%, 30% or 50% of the recordings obtained during the first visit to each site will allow us to estimate the relative activity parameters for each species, with estimation error less than 1 and 95% posterior interval width less than 3.
+
+While tuning the mcmc, we found that the first validation scenario - validating a random sample of 5% of recordings from the first visit to each site, required more than 10,000 MCMC iterations to converge. In our experience, this is often an indication that insufficient information is available to estimate one or more model parameter. As a result, we dropped this scenario from consideration. Of the remaining scenarios, `visualize_parameter_group` indicated that scenario 2 -- validating a random sample of 10% of recordings from the first visit to each site -- often led to models that did not converge. Under this scenario, models that did converge exhibited wide posterior intervals for some parameters. Among the remaining scenarios, only inference for $\lambda_3$ did not meet measurable objectives; average posterior interval widths were slightly larger than 3. The sceanario that yielded the narrowest intervals for this parameter was scenario 5, which assumed that 50% of recordings from the first site-visit are randomly selected for validation. Faced with results such as these, monitoring programs must consider whether the deviations from measurable objectives are acceptable, or whether a greater level of effort is required. In our case, we would advocate for an increased level of effort because the number of recordings validated under scenario 5 is substantially below the budget of 4000 recordings. 
+
+Note that with any simulation study results are conditional on the settings and assumptions. In the case of the count-detection model framework, the assumptions are 
 
 - The occurrence of species within a site are independent; the presence of one species carries no information about the presence or absence of another. 
 - For any one species, its occurrence at one location is independent of its occurrence at any other location (independence across sites).
