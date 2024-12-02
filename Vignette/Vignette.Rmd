@@ -425,4 +425,90 @@ As a final point, we emphasize that results from any simulation study -- includi
 
 Our hope is that `ValidationExplorer` provides a useful set of tools that allow monitoring programs to make informed decisions prior to the manual review stage of the bioacoustic workflow. By assessing the merits of various validation designs through simulation, effort can be thoughtfully assigned based on program goals and monitoring objectives.
 
+## Table of Functionality 
+
+\singlespacing
+\begin{longtable}{p{0.27\linewidth}p{0.32\linewidth}p{0.33\linewidth}}
+    \toprule
+        Function & Argument & Description   \\
+        \midrule
+        
+        \texttt{simulate\textunderscore validatedData} &  \texttt{n\textunderscore datasets} & The number of datasets to be simulated \\ 
+        \addlinespace
+        & \texttt{design\textunderscore type} & The type of validation design. Must be one of \texttt{"BySpecies"} or \texttt{"FixedPercent"} \\ 
+        \addlinespace
+        & \texttt{scenarios} & The possible levels of effort. If \texttt{design\textunderscore type = "BySpecies"}, this is provided as a list with vector-valued entries containing the possible percentages to validate for each species. If \texttt{design\textunderscore type = "FixedPercent"}, this argument is a vector of possible percentages. \\ 
+        \addlinespace
+        & \texttt{n\textunderscore sites, n\textunderscore visits, n\textunderscore species} & The number of sites, visits and species in the assemblage \\ 
+        \addlinespace
+        & \texttt{psi, lambda, theta},  & Vectors of length \texttt{nspecies} containing the the parameter values for each species \\ 
+        \addlinespace
+        & \texttt{directory} & The working directory where datasets are to be saved if the following arguments are set to TRUE \\
+        \addlinespace
+        & \texttt{save\textunderscore datasets, save\textunderscore masked_datasets} & Logicals indicating whether to save each type of dataset \\
+        \addlinespace
+
+        \hline
+        \texttt{summarize\textunderscore n\textunderscore validated} & \texttt{data\textunderscore list} & A list of simulated (masked) datasets output from \texttt{simulate\textunderscore validatedData} \\ 
+        \addlinespace
+
+        \hline
+        \texttt{run\textunderscore sims} & \texttt{data\textunderscore list} & A nested list of masked datasets in the format output from \texttt{simualate\textunderscore validatedData}. The first layer of the list corresponds to scenarios, with each entry containing a list of \texttt{n\textunderscore datasets} validated according to the scenario. \\ 
+        \addlinespace
+        & \texttt{zeros\textunderscore list} & A list of length \texttt{n\textunderscore datasets} containing the site-visit-true-autoID combinations that were never observed. \\ 
+        \addlinespace 
+        & \texttt{DGVs} & A named list of the true data-generating values with entries \texttt{"psi", "lambda"} and \texttt{"theta"}. \\ 
+        \addlinespace
+        & \texttt{theta\textunderscore scenario\textunderscore id} & An ID to show which classifier the scenario is under. This is provided as a convenience for the user if multiple simulation studies are to be conducted.\\
+        \addlinespace
+        & \texttt{parallel} &  A logical indicating whether MCMC sampling should be fit in parallel (default setting is TRUE). If you have many datasets and many scenarios, we recommend this setting. \\
+        \addlinespace
+        & \texttt{n\textunderscore iter, nburn, thin} &  The number of iterations, warmup and thinning interval for each chain in the MCMC. Default values are 2000, 1000, and 1, respectively. \\ 
+        \addlinespace
+        & \texttt{save\textunderscore fits} &  A logical denoting whether or not to save the draws from individual fitted models. If TRUE, you must have the file structure described in Step 2. Fits will be saved as RDS objects that can be read in later. Default value is FALSE.\\
+        \addlinespace
+        & \texttt{save\textunderscore individual\textunderscore summaries\textunderscore list} & A logical indicating whether to save individual summary lists that are output after each validation scenario. Default value is FALSE.\\ 
+        \addlinespace
+        & \texttt{directory} &  Where to save fits and summaries. Required if \texttt{save\textunderscore fits\ =\ TRUE} or \texttt{save\textunderscore individual\textunderscore summaries\textunderscore list\ =\ TRUE}. Default value is the current working directory given by \texttt{here::here()} \\ 
+        \addlinespace 
+
+        \hline
+    
+        \texttt{visualize\textunderscore parameter\textunderscore group} & \texttt{sim\textunderscore summary} & A dataframe in the format of the summaries output by \texttt{run\textunderscore sims}. Column names must match those of the \texttt{run\textunderscore sims} output. \\ 
+        \addlinespace 
+        & \texttt{pars} & The name of the parameter ``group'' to be visualized (e.g, \texttt{"psi"}, \texttt{"lambda"} or \texttt{"theta"}). \\ 
+        \addlinespace 
+        & \texttt{theta\textunderscore scenario}&  The \(\Theta\) classifier ID. \\ 
+        \addlinespace 
+        & \texttt{scenarios} &  Which scenarios to visualize? \\ 
+        \addlinespace 
+        & \texttt{convergence\textunderscore threshold}& What value should $\hat{R}$ be below to be considered ``converged''? Default value is 1.1. This value matters because only model fits where all parameter values are below the \texttt{convergence\textunderscore threshold} are used for visualization. \\ 
+        \addlinespace 
+        
+        \hline
+        \texttt{visualize\textunderscore single\textunderscore parameter} & & Arguments are identical to  \texttt{visualize\textunderscore parameter\textunderscore group} \\ 
+        \addlinespace
+        
+        \hline 
+        
+        \texttt{plot_bias_vs_calls}, \texttt{plot_coverage_vs_calls}, \texttt{plot_width_vs_calls} & \texttt{sims_summary} & The summary output in the format from \texttt{run\textunderscore sims} \\ 
+        \addlinespace
+        & \texttt{calls\textunderscore summary} & A summary of the number of calls validated per scenario. Expected format is that of output from \texttt{summarize\textunderscore n\textunderscore validated}. \\ 
+        \addlinespace
+        & \texttt{pars} & The parameters to visualize. \\ 
+        \addlinespace
+        & \texttt{regex\textunderscore pars} & A group of parameters to visualize. One of \texttt{"psi"}, \texttt{"lambda"} or \texttt{"theta"}. \\ 
+        \addlinespace
+        & \texttt{theta\textunderscore scenario} & The classifier scenario ID. \\
+        \addlinespace
+        & \texttt{scenarios} & The scenarios to be compared. \\
+        \addlinespace
+        & \texttt{convergence\textunderscore threshold} & At what value is an MCMC algorithm considered ``converged"? \\ 
+        \addlinespace
+        \bottomrule
+    \caption{Argument descriptions for each function in the \texttt{ValidationExplorer} software. My hope is that in the eventual final paper, this will be a scrollable html table}
+    \label{tab:my_label}
+\end{longtable}
+\doublespacing
+
 # References
