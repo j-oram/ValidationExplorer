@@ -18,7 +18,7 @@
 #' head(cd_data)
 #' head(FE_data)
 #'
-mask_FE <- function(df, effort_prop, seed = NULL) {
+mask_FE <- function (df, effort_prop, seed = NULL) {
 
   # set the seed if specified by the user
   if(!is.null(seed)) {
@@ -30,7 +30,9 @@ mask_FE <- function(df, effort_prop, seed = NULL) {
   df$call <- 1:nrow(df)
 
   # slice off (1 - effort_prop) of the observations
-  # from the first visit to each site and mask the true species labels
+  # from a randomly sampled visit to each site and mask the true species labels
+  n_visits <- max(df$visit)
+  
   visit1 <- df %>%
     dplyr::ungroup() %>%
     dplyr::filter(.data$visit == 1) %>%
@@ -56,7 +58,7 @@ mask_FE <- function(df, effort_prop, seed = NULL) {
 
   # check that the call columns match for both, and if they do, return a
   # masked copy of the OG df
-  if(any(masked_copy$call != df$call)) {
+  if (any(masked_copy$call != df$call)) {
     stop(message("dfs were not bound together correctly"))
   } else {
     return(masked_copy %>% dplyr::select(-call))
