@@ -34,6 +34,7 @@ header-includes:
   - \usepackage{setspace}
   - \usepackage{float}
   - \usepackage{amsmath}
+  - \usepackage{underscore}
 bibliography: Vignette.bib
 abstract: "Our vignette demonstrates the use of the `ValidationExplorer` package to conduct statistical simulation studies that explore the costs and inferential properties (e.g., near nominal coverage and/or minimal estimation error) of alternative validation designs. 
 Our functions allow the user to specify a suite of candidate validation designs using either a stratified sampling procedure or a fixed-effort design type. An example of the former is provided in the manuscript entitled 'ValidationExplorer`: Streamlined simulations to aid informed management decisions using bioacoustic data in the presence of misclassification', which was submitted to the Applications series of *Methods in Ecology and Evolution*. In this vignette, we provide an additional example of data simulation, model fitting, and visualization of simulation results when using a fixed-effort design type. Our demonstration here is intended to aid researchers and others to tailor a validation design that provides useful inference while also ensuring that the level of effort meets cost constraints. \\vfill"
@@ -76,9 +77,7 @@ devtools::load_all(path = "..")
 
 # Introduction
 
-Automated recording units (ARUs) provide one of the main data sources for many contemporary monitoring programs that aim to provide inference about status and trends for assemblages of species [@loeb15]. As described in the main text, entitled, "`ValidationExplorer`: Streamlined simulations to inform management decisions using bioacoustic data in the presence of misclassification," substantial practical interest lies in identifying cost-effective validation designs that will allow a monitoring program to obtain its measurable objectives. We believe that statistical simulation studies are a valuable tool for evaluating the relative merits of candidate validation designs prior to gathering and validating ARU data, and it is our goal for `ValidationExplorer` to provide those tools in a user-friendly way.
-
-**[Do I need to include a paragraph here that explains the idea behind a statistical simulation study? E.g., do I need to mention that these simulations are unbiased? If I do, it may warrant additional discussion regarding why we wouldn't automatically expect a statistical model to recover the data-generating values, which might be beyond the scope of this vignette.]**
+Automated recording units (ARUs) provide one of the main data sources for many contemporary monitoring programs that aim to provide inference about status and trends for assemblages of species [@loeb15]. As described in the main text, entitled, "`ValidationExplorer`: Streamlined simulations to inform management decisions using bioacoustic data in the presence of misclassification," substantial practical interest lies in identifying cost-effective validation designs that will allow a monitoring program to obtain its measurable objectives. We believe that statistical simulation studies are a valuable tool for evaluating the relative merits of candidate validation designs prior to gathering and validating ARU data, and it is our goal for `ValidationExplorer` to provide those tools in an approachable package. 
 
 This vignette provides detailed demonstrations of the `ValidationExplorer` package under a fixed-effort design. As described in the main text, a validation design is composed of two parts: a random mechanism for selecting observations to be manually reviewed by experts ("validated"), and a percentage or proportion that controls the sample size. We refer to the random mechanism as the *design type* and the proportion as the level of validation effort (LOVE). In our example, we assume a fixed-effort (the design type) validation design, under which, $x\%$ of recordings obtained from the first visit to a site are validated by experts. The level of validation effort is controlled by the value of $x.$ In the following section we consider five possible LOVEs and show an example of a fixed effort design.
 
@@ -136,7 +135,7 @@ devtools::install_github(repo = "j-oram/ValidationExplorer")
 library(ValidationExplorer)
 ```
 
-Note: to knit this vignette, you may also need to install the `kableExtra` package.
+With `ValidationExplorer` installed, users have access to all the functions outlined in the appendix.
 
 ## Step 3: Simulate data \label{dataSimulation}
 
@@ -274,8 +273,8 @@ In our experience fitting these models, the second option seems to often be the 
 
 ```{r tune, cache=TRUE}
 tune_list <- tune_mcmc(
-  dataset = sim_data$masked_dfs[[2]][[25]], 
-  zeros = sim_data$zeros[[25]]
+  dataset = sim_data$masked_dfs[[2]][[26]], 
+  zeros = sim_data$zeros[[26]]
 )
 ```
 
@@ -380,7 +379,7 @@ visualize_single_parameter(
 )
 ```
 
-The greater detail of `visualize_single_parameter` in Figure \@ref(fig:vizOne)underscores the difference in the number of converged models, shown by the number grey 95% posterior interval for each converged model fit. The visualization also helps clarify that while average interval width is larger than 3, it is not substantially larger in validation scenario 4. This can also be seen using the `plot_width_vs_calls` function, which compares average interval widths (and the IQR for interval widths) across scenarios based on the number of recordings validated. An example is provided below:
+The greater detail of `visualize_single_parameter` in Figure \@ref(fig:vizOne) underscores the difference in the number of converged models, shown by the number grey 95% posterior interval for each converged model fit. The visualization also helps clarify that while average interval width is larger than 3, it is not substantially larger in validation scenario 4. This can also be seen using the `plot_width_vs_calls` function (Figure \@ref(fig:plotWidth)), which compares average interval widths (and the IQR for interval widths) across scenarios based on the number of recordings validated. An example is provided below:
 
 ```{r}
 # obtain summary of validation effort as an object that can be used with 
@@ -427,7 +426,12 @@ As a final point, we emphasize that results from any simulation study -- includi
 
 Our hope is that `ValidationExplorer` provides a useful set of tools that allow monitoring programs to make informed decisions prior to the manual review stage of the bioacoustic workflow. By assessing the merits of various validation designs through simulation, effort can be thoughtfully assigned based on program goals and monitoring objectives.
 
-## Table of Functionality
+# References 
+
+<div id="refs"></div>
+
+\newpage
+# Appendix: Table of Functions 
 
 \singlespacing
 \begin{longtable}{p{0.27\linewidth}p{0.32\linewidth}p{0.33\linewidth}}
@@ -513,4 +517,3 @@ Our hope is that `ValidationExplorer` provides a useful set of tools that allow 
 \end{longtable}
 \doublespacing
 
-# References
