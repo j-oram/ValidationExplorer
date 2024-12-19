@@ -50,8 +50,7 @@ fake_data <- simulate_validatedData(
 
 summarize_n_validated(
   data_list = fake_data$masked_dfs,
-  scenario_names = as.character(1:nrow(fake_data$scenarios_df)),
-  theta_scenario = "1"
+  scenario_numbers = 1:nrow(fake_data$scenarios_df),
 )
 
 }
