@@ -1,0 +1,1006 @@
+---
+title: "Untitled"
+format: gfm
+editor: visual
+---
+
+```{r}
+library(tidyverse)
+library(nimble)
+library(rstan)
+library(parallel)
+source("../R/sim_CD_with_covs.R")
+source("../R/mask_sampled_visit.R")
+source("../R/mask_FE_all_visits.R")
+source("../R/simulate_validatedData_covs.R")
+source("../R/helpers.R")
+```
+
+## Goal
+
+The objective of this document is to do a quick simulation study that compares the performance of two "fixed effort" designs: one randomly samples a fixed proportion of recordings to be validated from each site-night, while the other randomly selects a night at each site and validates a fixed proportion of recordings. Below is the design under which these are to be compared.
+
+## Design space
+
+We want to hold the species assemblage and classifier constant to make sure we're comparing apples to apples. The levels of effort across the two designs ought to be pretty similar as well. This means that if, under the "random visit" design, we validate 20% of recordings from a randomly selected visit at each site, then we'd better be comparing that against validating 5% sampled from each of four visits.
+
+Factor to be compared:
+
+-   "random visit" or "all visits" variant of a fixed effort design
+
+-   correct model (i.e., a model with covariate on $\lambda_{ijk}$) and incorrect model (naively assume that $\lambda_k$ does not change across sites and visits).
+
+## Simulate data
+
+```{r}
+set.seed(12192024)
+nsites <- 100
+nspecies <- 3
+nvisits <- 4
+psi <- runif(nspecies)
+alpha <- matrix(rnorm(nspecies*2), 2, nspecies)
+theta <- t(apply(18*diag(nspecies)+2, 1, function(x) rdirch(1, x)))
+```
+
+```{r}
+sims <- simulate_validatedData_covs(
+  n_datasets = 50,
+  nsites = nsites, 
+  nvisits = nvisits, 
+  nspecies = nspecies,
+  scenarios = c(0.05, 0.1, 0.2),
+  psi = psi, 
+  alpha = alpha, 
+  theta = theta, 
+  design_type = "FixedPercent", 
+  FE_type = "all_visits"
+)
+
+sims2 <- simulate_validatedData_covs(
+  n_datasets = 50,
+  nsites = nsites, 
+  nvisits = nvisits, 
+  nspecies = nspecies,
+  scenarios = c(.2, 0.4, 0.8),
+  psi = psi, 
+  alpha = alpha, 
+  theta = theta, 
+  design_type = "FixedPercent", 
+  FE_type = "random_visit"
+)
+
+## Note: sims$full_datasets is the same as sims2$full_datasets because of the seed argument embedded in the loop
+```
+
+## Fit incorrect (no-covariate model)
+
+### Tuning
+
+```{r}
+summarize_n_validated(data_list = sims$masked_dfs, scenario_numbers = 1:3)
+summarize_n_validated(data_list = sims2$masked_dfs, scenario_numbers = 1:3)
+```
+
+```{r}
+tune_list <- tune_mcmc(sims$masked_dfs[[1]][[r]], zeros = sims$zeros[[r]])
+```
+
+We fit the incorrect model (that assumes homogeneity in $\lambda_k$ across site-nights. This is easy with the run_sims function from `ValidationExplorer`.
+
+```{r}
+all_visits_fits <- run_sims(
+  data_list = sims$masked_dfs, 
+  zeros_list = sims$zeros, 
+  DGVs = list(
+    lambda = rep(0, nspecies),
+    psi = psi, 
+    theta = c(theta)
+  ), 
+  theta_scenario_id = "all_visits",
+  parallel = TRUE, 
+  niter = 2500, 
+  nburn = 1000, 
+  thin = 1, 
+  save_fits = FALSE,
+  save_individual_summaries_list = FALSE, 
+  directory = here::here("all_visits_no_covs")
+)
+```
+
+And do the same for the randomly-selected visit.
+
+```{r}
+random_visit_fits <- run_sims(
+  data_list = sims2$masked_dfs, 
+  zeros_list = sims2$zeros, 
+  DGVs = list(
+    lambda = rep(0, nspecies),
+    psi = psi, 
+    theta = c(theta)
+  ), 
+  theta_scenario_id = "random_visit",
+  parallel = TRUE, 
+  niter = 2500, 
+  nburn = 1000, 
+  thin = 1, 
+  save_fits = FALSE,
+  save_individual_summaries_list = FALSE, 
+  directory = here::here("random_visit_no_covs")
+)
+```
+
+Let's make sure that output is saved for the sake of visualization:
+
+```{r}
+# saveRDS(all_visits_fits, file = here::here("compare-FE-sims/all_visits_fits.rds")) 
+# saveRDS(random_visit_fits, file = here::here("compare-FE-sims/random_visit_fits.rds"))
+```
+
+## Fit correct model
+
+### Setup
+
+We don't have the same function for the setting where there is one covariate on $\lambda$. This means that to fit the first model, we need to define the NIMBLE code object, and build functions that obtain the constants and data objects that NIMBLE requires for fitting. These are defined in the following two code blocks:
+
+```{r}
+covs_model <- nimbleCode({
+
+  # Priors ---------------------------------------------
+  
+  for(species in 1:nspecies){
+    a0[species] ~ dnorm(0, sd = 5)
+    alpha[species] ~ dnorm(0, sd = 5)
+    psi[species] ~ dbeta(1,1) # correctly assuming no covariates on psi. 
+    theta[species, 1:nspecies] ~ ddirch(alpha = alpha0[species, 1:nspecies])
+  }
+
+  ## Likelihood -----------------------------------------
+
+  for(i in 1:nsites){
+    for(species in 1:nspecies){
+      z[i, species] ~ dbern(psi[species])
+    }
+  }
+  
+  # note that lambda is a three-dimensional array now because it 
+  # varies by site and visit
+  for(i in 1:nsites){
+    for(j in 1:nvisits){
+      for(spp in 1:nspecies){
+        log(lambda[i,j,spp]) <- a0[spp] + W[i,j] * alpha[spp]
+      }
+      zlam[i,j] <- sum(z[i,1:nspecies] * lambda[i,j,1:nspecies])
+      Y.[i,j] ~ dpois(zlam[i,j])
+    }
+  }
+  
+  ## Likelihood contribution from the recordings where we observed
+  # both the autoID and the true species label
+  for(row in 1:n_confirmed_calls){
+    
+    # compute prob for each true spp
+    pi[row, 1:nspecies] <- z[site1[row], 1:nspecies] * 
+      lambda[site1[row], visit1[row], 1:nspecies] /
+      sum(z[site1[row], 1:nspecies] * lambda[site1[row], visit1[row], 1:nspecies])
+
+    k[row] ~ dcat(pi[row, 1:nspecies])
+    y[row] ~ dcat(theta[k[row], 1:nspecies])
+
+  }
+
+  ## Contribution from ambiguous recordings
+  for(row in 1:n_ambiguous_calls){
+    
+    # compute the marginal probabilities for each autoID label 
+    pi2[row, 1:nspecies] <- z[site2[row], 1:nspecies] * 
+      lambda[site2[row], visit2[row], 1:nspecies] /
+      sum(z[site2[row], 1:nspecies] * lambda[site2[row], visit2[row], 1:nspecies])
+    y2[row] ~ dmarginal_autoID(theta_mat = theta[1:nspecies, 1:nspecies],
+                                pi = pi2[row, 1:nspecies])
+
+  }
+
+})
+```
+
+```{r}
+get_constants_and_data_covs <- function (observed_df, zeros, cov) {
+  # Define the ambiguous and unambiguous datasets
+  amb <- observed_df[is.na(observed_df$true_spp), ]
+  uamb <- observed_df[!is.na(observed_df$true_spp), ]
+
+  all_sites_and_visits <- bind_rows(observed_df, zeros) %>% 
+    arrange(site, visit, id_spp)
+
+  W <- all_sites_and_visits %>% 
+    select(site,visit, all_of(cov)) %>% 
+    distinct() %>% 
+    pivot_wider(names_from = "visit", values_from = all_of(cov)) %>% 
+    ungroup() %>% 
+    select(-site) %>% 
+    as.matrix()
+  
+  # values passed to Nimble for indexing.
+  constants <- list(
+    site1 = uamb$site, # Only sites where at least one call was made
+    site2 = amb$site,
+    visit1 = uamb$visit,
+    visit2 = amb$visit,
+    nspecies = dplyr::n_distinct(observed_df$id_spp),
+    nvisits = dplyr::n_distinct(observed_df$visit),
+    nsites = dplyr::n_distinct(all_sites_and_visits$site),
+          n_confirmed_calls = nrow(uamb),
+          n_ambiguous_calls = nrow(amb)
+  )
+  
+  # y = observed autoID, k = observed true spp label
+  # y2 = observed autoIDs from ambiguous data, k2 = unobserved true label
+  # alpha0 = reference distance prior specification for classification pars
+  # Y. = total number of calls observed (all spp) at each site-visit
+  nimble_data <- list(
+    y = uamb$id_spp,
+    k = uamb$true_spp,
+    y2 = amb$id_spp,
+    W = W,
+    alpha0 = matrix(1/(constants$nspecies),
+                    nrow = dplyr::n_distinct(all_sites_and_visits$id_spp),
+                    ncol = dplyr::n_distinct(all_sites_and_visits$id_spp)),
+
+  # Define Y. based on all site-visits, even if it had no calls
+  Y. = all_sites_and_visits %>%
+      dplyr::group_by(.data$site, .data$visit) %>%
+      dplyr::summarize(total = unique(.data$Y.)) %>%
+      tidyr::pivot_wider(
+        names_from = .data$visit,
+        names_prefix = "visit",
+        values_from = .data$total,
+        values_fill = 0 # if NA, turn into a 0, since the NA is due to no calls being detected at that site-visit
+      ) %>%
+      dplyr::ungroup() %>%
+      dplyr::select(-.data$site) %>%
+      as.matrix()
+    )
+  return(list(constants = constants, data = nimble_data))
+}
+```
+
+The next code block defines the function that is to be used for fitting models in parallel.
+
+```{r}
+runMCMC_fit_1cov <- function(seed = 1, code, data, constants,
+                        nchains = 1, niter = 2000, nburn = 1200, thin = 1){
+
+  inits_fun <- function (){
+    out <- list(
+      psi = stats::runif(constants$nspecies),
+      alpha = rnorm(constants$nspecies, mean = 0, sd = 5),
+      theta = t(apply(data$alpha0, 1, function(x) nimble::rdirch(1,x))),
+      z = matrix(1, nrow = constants$nsites, ncol = constants$nspecies)
+    )
+    return(out)
+  }
+
+  dmarginal_autoID <- nimble::nimbleFunction(
+    run = function(x = integer(0), theta_mat = double(2),
+                   pi = double(1), log= integer(0, default = 0)){
+
+      returnType(double(0))
+
+      # select the appropriate column of the confusion matrix
+      theta_kprime <- theta_mat[ , x]
+
+      # prob= sum_k(\theta_{kk'} * (z_{ik}\lambda_k) /sum_k (z_{ik}\lambda_k))
+      prob <- sum(theta_kprime * pi)
+
+      if(log) return(log(prob))
+      else return(prob)
+
+    },
+    check = getNimbleOption("checkNimbleFunction")
+  )
+
+  # placeholder function to avoid error during compiling. NIMBLE will never use
+  # this function, but it is required to be specified for fitting in parallel.
+  # This placeholder is taken exactly from the NIMBLE manual.
+  rmarginal_autoID <- nimble::nimbleFunction(
+    run = function(n = integer(0, default = 1), theta_mat = double(2), pi = double(1)) {
+      returnType(double(0))
+      x <- 0
+      return(x)
+    },
+    check = nimble::getNimbleOption("checkNimbleFunction")
+  )
+
+  # Register the distribution, which will yield an informational warning because we are
+  # "overwriting" the user-specified distribution that NIMBLE detects when it
+  # compiles the code
+  assign('dmarginal_autoID', dmarginal_autoID, envir = .GlobalEnv)
+  assign('rmarginal_autoID', rmarginal_autoID, envir = .GlobalEnv)
+  nimble::registerDistributions("dmarginal_autoID")
+
+  disag_model <- nimble::nimbleModel(
+    code = code, 
+    constants = constants, 
+    data = data, 
+    inits = inits_fun()
+  )
+  model_c <- nimble::compileNimble(disag_model)
+  model_conf <- nimble::configureMCMC(disag_model)
+  #model_conf$addMonitors("lambda")
+  mcmc <- nimble::buildMCMC(model_conf)
+  mcmc_c <- nimble::compileNimble(mcmc, project = model_c)
+
+
+  out <- nimble::runMCMC(
+    mcmc_c,
+    niter = niter,
+    nburnin = nburn,
+    nchains = nchains, # Just 1 chain by default: parallelization gives multiple chains
+    thin = thin,
+    init = inits_fun(),
+    setSeed = seed
+  )
+
+  return(out)
+}
+```
+
+The follwoing code block uses these functions to create an equivalent of the `run_sims` function for the case where there is one covariate on $\lambda_{ijk}$.
+
+```{r}
+run_sims_cov <- function(data_list, zeros_list, DGVs, theta_scenario_id,
+                     parallel = TRUE,
+                     niter = 2000, nburn = floor(niter/2), thin = 1,
+                     save_fits = FALSE,
+                     save_individual_summaries_list = FALSE,
+                     directory = here::here()) {
+
+  # housekeeping
+  ndatasets <- length(data_list[[1]])
+  nscenarios <- length(data_list)
+
+  # storage
+  big_list <- list()
+
+  # run scenarios
+  for(scenario in 1:nscenarios){
+    # progress
+    message(paste0("Beginning scenario ", scenario, "."))
+    message(Sys.time())
+
+    # storage
+    individual_summaries_list <- list()
+
+    # progress
+    pb <- txtProgressBar(min = 0, max = ndatasets, style = 3, width = 50, char = "=")
+    for(dataset in 1:ndatasets){
+      observed_df <- data_list[[scenario]][[dataset]] # was df7
+      zeros <- zeros_list[[dataset]]
+      all_sites_and_visits <- dplyr::bind_rows(observed_df, zeros) %>%
+        dplyr::arrange(.data$site, .data$visit, .data$true_spp, .data$id_spp) # was df8
+
+      ## Fit models ---------
+
+        prep_list <- get_constants_and_data_covs(
+          observed_df = observed_df, 
+          zeros = zeros,
+          cov = "w"
+        )
+
+      if(parallel){
+
+        this_cluster <- parallel::makeCluster(3)
+        parallel::clusterEvalQ(cl = this_cluster, library(nimble))
+        fit <- parallel::parLapply(cl = this_cluster,
+                         X = 1:3,
+                         fun = runMCMC_fit_1cov,
+                         code = covs_model,
+                         data = prep_list$data,
+                         constants = prep_list$constants,
+                         niter = niter,
+                         nburn = nburn,
+                         thin = thin
+        )
+        parallel::stopCluster(this_cluster)
+
+      } else {
+
+        fit <- runMCMC_fit(code = covs_model,
+                           data = prep_list$data,
+                           constants = prep_list$constants,
+                           nchains = 3,
+                           niter = niter,
+                           nburn = nburn,
+                           thin = thin,
+                           seed = 1:3)
+
+      }
+
+      if (save_fits == TRUE){
+        # if directory/ThetaScenarioID/fits does not exist, create it
+        if(!dir.exists(file.path(directory, paste0("Theta", theta_scenario_id), "fits"))) {
+          dir.create(file.path(directory, paste0("Theta", theta_scenario_id), "fits"), recursive = TRUE)
+        }
+
+        saveRDS(
+          fit,
+          file=file.path(directory, paste0("Theta", theta_scenario_id),"fits", paste0("fit_", scenario, "_", dataset, ".rds"))
+        )
+
+      }
+
+
+      # summarize fit
+      scenario_tmp <- scenario
+      dataset_tmp <- dataset
+      fit_summary <- mcmc_sum(
+        fit, truth = c(DGVs$a0, DGVs$alpha, DGVs$psi, DGVs$theta)
+      ) %>%
+        dplyr::mutate(
+          theta_scenario = theta_scenario_id,
+          scenario = scenario_tmp,
+          dataset = dataset_tmp
+        )
+      individual_summaries_list[[dataset]] <- fit_summary
+
+      if (save_individual_summaries_list == TRUE){
+        # if directory/ThetaScenarioID/individual_summaries does not exist, create it
+        if(!dir.exists(file.path(directory, paste0("Theta", theta_scenario_id), "individual_summaries"))) {
+          dir.create(file.path(directory, paste0("Theta", theta_scenario_id), "individual_summaries"), recursive = TRUE)
+        }
+        saveRDS(
+          individual_summaries_list,
+          file=file.path(directory, paste0("Theta", theta_scenario_id),"individual_summaries", paste0("list_", scenario, ".rds"))
+        )
+
+      }
+
+      # increment progress bar
+      setTxtProgressBar(pb, dataset)
+    }
+    close(pb)
+
+    # summary df for the entire scenario after all datasets have been fit and summarized
+    individual_summary_df <- do.call(eval(parse(text="dplyr::bind_rows")), individual_summaries_list)
+    individual_summary_df$scenario <- scenario
+    individual_summary_df$theta_scenario <- theta_scenario_id
+
+    # make sure that the ThetaSCENARIOID folder is available for saving
+    if(!dir.exists(file.path(directory, paste0("Theta", theta_scenario_id)))) {
+      dir.create(file.path(directory, paste0("Theta", theta_scenario_id)), recursive = TRUE)
+    }
+
+    saveRDS(
+      individual_summary_df,
+      file=file.path(directory, paste0("Theta", theta_scenario_id), paste0("summary_df_for_scenario_", scenario, ".rds"))
+    )
+
+    big_list[[scenario]] <- individual_summary_df
+  }
+
+  out <- do.call(eval(parse(text="dplyr::bind_rows")), big_list) # bind summary dfs for all scenarios into big df (all scenarios, all datasets)
+  return(out)
+}
+
+```
+
+### Tuning the MCMC
+
+Rather than build another tuning function, the tuning process here is done manually.
+
+```{r}
+prep_list <- get_constants_and_data_covs(observed_df = sims$masked_dfs[[1]][[r]], zeros = sims$zeros[[r]], cov = "w")
+
+tuning_fit <- runMCMC_fit_1cov(seed = 1:3, code = covs_model, data = prep_list$data, constants = prep_list$constants, nchains = 3, niter = 6000, nburn = 3000, thin = 1)
+```
+
+```{r}
+bayesplot::mcmc_trace(tuning_fit, regex_pars = "alpha")
+```
+
+```{r}
+mcmc_sum(tuning_fit, truth = rep(0, ncol(tuning_fit[[1]])))
+```
+
+### Fit models
+
+Based on the tuning it looks like 6000 iterations with a warmup of 3000 should work well. With this information, we can run simulations.
+
+```{r}
+all_visits_with_cov <- run_sims_cov(
+  data_list = sims$masked_dfs,
+  zeros_list = sims$zeros,
+  DGVs = list(
+    a0 = alpha[1, ], 
+    alpha = alpha[2, ],
+    psi = psi, 
+    theta = c(theta)
+  ),
+  theta_scenario_id = "all_visits_cov",
+  parallel = TRUE,
+  niter = 6000, 
+  nburn = floor(niter/2), 
+  thin = 1,
+  save_fits = FALSE,
+  save_individual_summaries_list = FALSE,
+  directory = here::here("all_visits_cov")
+)
+```
+
+```{r}
+# saveRDS(all_visits_with_cov, 
+#         file = here::here("compare-FE-sims/all_visits_fits_with_cov.rds"))
+```
+
+```{r}
+random_visit_with_cov <- run_sims_cov(
+  data_list = sims2$masked_dfs,
+  zeros_list = sims2$zeros,
+  DGVs = list(
+    a0 = alpha[1, ], 
+    alpha = alpha[2, ],
+    psi = psi, 
+    theta = c(theta)
+  ),
+  theta_scenario_id = "random_visit_cov",
+  parallel = TRUE,
+  niter = 6000, 
+  nburn = floor(niter/2), 
+  thin = 1,
+  save_fits = FALSE,
+  save_individual_summaries_list = FALSE,
+  directory = here::here("random_visit_cov")
+)
+```
+
+```{r}
+# saveRDS(random_visit_with_cov, 
+        # file = here::here("compare-FE-sims/random_visit_fits_with_cov.rds"))
+```
+
+## Visualize results
+
+```{r}
+compare_FE_sims <- bind_rows(all_visits_fits, all_visits_with_cov, random_visit_fits, random_visit_with_cov)
+
+# saveRDS(compare_FE_sims, file = here::here("compare-FE-sims/results.rds"))
+```
+
+### Models with covariates
+
+```{r}
+for_plots <- compare_FE_sims %>%
+    dplyr::mutate(
+      below_threshold = ifelse(round(Rhat, 4) <= 1.1, 1, 0)
+    ) %>%
+    dplyr::group_by(theta_scenario, scenario, dataset) %>%
+    dplyr::mutate(
+      all_converge = ifelse(any(below_threshold == 0), 0, 1)
+    ) %>%
+    dplyr::ungroup() %>%
+    dplyr::filter(all_converge == 1) %>%
+    dplyr::group_by(theta_scenario, scenario, parameter) %>%
+    dplyr::mutate(
+      av_low95 = mean(`2.5%`),
+      av_up95 = mean(`97.5%`),
+      coverage = mean(capture),
+      av_post_mean = mean(Mean)
+    )
+
+  a0_plt <- for_plots %>%
+    dplyr::mutate(scenario = factor(scenario)) %>%
+    dplyr::filter(
+      all_converge == 1,
+      theta_scenario %in% c("all_visits_cov", "random_visit_cov"),
+      str_detect(parameter, pattern = "a0"),
+      # scenario %in% 1:3,
+    ) %>%
+    ggplot2::ggplot(
+      ggplot2::aes(
+        x = .data$scenario,
+        y = .data$av_post_mean
+      )
+    ) +
+    ggplot2::geom_errorbar(
+      ggplot2::aes(
+        ymin = .data$`2.5%`,
+        ymax = .data$`97.5%`
+      ),
+      position = ggplot2::position_dodge2(width = 0, padding = 0.1),
+      alpha = 0.2
+    ) +
+    ggplot2::geom_errorbar(
+      ggplot2::aes(
+        ymin = .data$av_low95,
+        ymax = .data$av_up95,
+        color = .data$coverage
+      )
+    ) +
+    viridis::scale_color_viridis(limits = c(0,1)) +
+    ggplot2::geom_point(color = "red") +
+    ggplot2::geom_point(
+      inherit.aes = FALSE,
+      ggplot2::aes(x = .data$scenario, y = .data$truth)
+    ) +
+    ggplot2::facet_grid(
+      theta_scenario~parameter,
+      scales = "free_y",
+      labeller = L
+    ) +
+    ggplot2::labs(
+      x = "Manual Verification Scenario",
+      y = "",
+      color = "Coverage"
+    )
+  
+  plt
+```
+
+```{r}
+alpha_plt <- for_plots %>%
+    dplyr::mutate(scenario = factor(scenario)) %>%
+    dplyr::filter(
+      all_converge == 1,
+      theta_scenario %in% c("all_visits_cov", "random_visit_cov"),
+      str_detect(parameter, pattern = "alpha"),
+      # scenario %in% 1:3,
+    ) %>%
+    ggplot2::ggplot(
+      ggplot2::aes(
+        x = .data$scenario,
+        y = .data$av_post_mean
+      )
+    ) +
+    ggplot2::geom_errorbar(
+      ggplot2::aes(
+        ymin = .data$`2.5%`,
+        ymax = .data$`97.5%`
+      ),
+      position = ggplot2::position_dodge2(width = 0, padding = 0.1),
+      alpha = 0.2
+    ) +
+    ggplot2::geom_errorbar(
+      ggplot2::aes(
+        ymin = .data$av_low95,
+        ymax = .data$av_up95,
+        color = .data$coverage
+      )
+    ) +
+    viridis::scale_color_viridis(limits = c(0,1)) +
+    ggplot2::geom_point(color = "red") +
+    ggplot2::geom_point(
+      inherit.aes = FALSE,
+      ggplot2::aes(x = .data$scenario, y = .data$truth)
+    ) +
+    ggplot2::facet_grid(
+      theta_scenario~parameter,
+      scales = "free_y",
+      labeller = L
+    ) +
+    ggplot2::labs(
+      x = "Manual Verification Scenario",
+      y = "",
+      color = "Coverage"
+    )
+
+alpha_plt
+```
+
+In modeling regression coefficients in a correctly specified model, it appears that for extremely rare species (e.g., species 1, which has $\psi_1 = 0.014$) there is slightly low coverage and some negative estimation error for both fixed effort designs. However, there might be slightly lower bias of the intercept term when using a stratified-by-site-night design (i.e., validation of a small percentage from all site-nights).
+
+```{r}
+psi_plt <- for_plots %>%
+    dplyr::mutate(scenario = factor(scenario)) %>%
+    dplyr::filter(
+      all_converge == 1,
+      theta_scenario %in% c("all_visits_cov", "random_visit_cov"),
+      str_detect(parameter, pattern = "psi"),
+      # scenario %in% 1:3,
+    ) %>%
+    ggplot2::ggplot(
+      ggplot2::aes(
+        x = .data$scenario,
+        y = .data$av_post_mean
+      )
+    ) +
+    ggplot2::geom_errorbar(
+      ggplot2::aes(
+        ymin = .data$`2.5%`,
+        ymax = .data$`97.5%`
+      ),
+      position = ggplot2::position_dodge2(width = 0, padding = 0.1),
+      alpha = 0.2
+    ) +
+    ggplot2::geom_errorbar(
+      ggplot2::aes(
+        ymin = .data$av_low95,
+        ymax = .data$av_up95,
+        color = .data$coverage
+      )
+    ) +
+    viridis::scale_color_viridis(limits = c(0,1)) +
+    ggplot2::geom_point(color = "red") +
+    ggplot2::geom_point(
+      inherit.aes = FALSE,
+      ggplot2::aes(x = .data$scenario, y = .data$truth)
+    ) +
+    ggplot2::facet_grid(
+      theta_scenario~parameter,
+      scales = "free_y",
+      labeller = L
+    ) +
+    ggplot2::labs(
+      x = "Manual Verification Scenario",
+      y = "",
+      color = "Coverage"
+    )
+
+psi_plt
+```
+
+Model estimates for occupancy probabilities are generally very accurate with near-nominal coverage, except for very rare species (species 1), which has coverage slightly below nominal levels and I'm not totally sure, but I would expect that the estimation error in $\psi_1$ and $\alpha_{01}$ would be alleviated by a larger number of sites; this species was likely only observed in 1 site per dataset.
+
+```{r}
+theta_plt <- for_plots %>%
+    dplyr::mutate(scenario = factor(scenario)) %>%
+    dplyr::filter(
+      all_converge == 1,
+      theta_scenario == "all_visits_cov",
+      str_detect(parameter, pattern = "theta"),
+      # scenario %in% 1:3,
+    ) %>%
+    ggplot2::ggplot(
+      ggplot2::aes(
+        x = .data$scenario,
+        y = .data$av_post_mean
+      )
+    ) +
+    ggplot2::geom_errorbar(
+      ggplot2::aes(
+        ymin = .data$`2.5%`,
+        ymax = .data$`97.5%`
+      ),
+      position = ggplot2::position_dodge2(width = 0, padding = 0.1),
+      alpha = 0.2
+    ) +
+    ggplot2::geom_errorbar(
+      ggplot2::aes(
+        ymin = .data$av_low95,
+        ymax = .data$av_up95,
+        color = .data$coverage
+      )
+    ) +
+    viridis::scale_color_viridis(limits = c(0,1)) +
+    ggplot2::geom_point(color = "red") +
+    ggplot2::geom_point(
+      inherit.aes = FALSE,
+      ggplot2::aes(x = .data$scenario, y = .data$truth)
+    ) +
+    ggplot2::facet_wrap(
+      ~parameter,
+      scales = "free_y",
+      labeller = L
+    ) +
+    ggplot2::labs(
+      x = "Manual Verification Scenario",
+      y = "",
+      color = "Coverage"
+    )
+
+theta_plt
+```
+
+```{r}
+theta_plt2 <- for_plots %>%
+    dplyr::mutate(scenario = factor(scenario)) %>%
+    dplyr::filter(
+      all_converge == 1,
+      theta_scenario == "random_visit_cov",
+      str_detect(parameter, pattern = "theta"),
+      # scenario %in% 1:3,
+    ) %>%
+    ggplot2::ggplot(
+      ggplot2::aes(
+        x = .data$scenario,
+        y = .data$av_post_mean
+      )
+    ) +
+    ggplot2::geom_errorbar(
+      ggplot2::aes(
+        ymin = .data$`2.5%`,
+        ymax = .data$`97.5%`
+      ),
+      position = ggplot2::position_dodge2(width = 0, padding = 0.1),
+      alpha = 0.2
+    ) +
+    ggplot2::geom_errorbar(
+      ggplot2::aes(
+        ymin = .data$av_low95,
+        ymax = .data$av_up95,
+        color = .data$coverage
+      )
+    ) +
+    viridis::scale_color_viridis(limits = c(0,1)) +
+    ggplot2::geom_point(color = "red") +
+    ggplot2::geom_point(
+      inherit.aes = FALSE,
+      ggplot2::aes(x = .data$scenario, y = .data$truth)
+    ) +
+    ggplot2::facet_wrap(
+      ~parameter,
+      scales = "free_y",
+      labeller = L
+    ) +
+    ggplot2::labs(
+      x = "Manual Verification Scenario",
+      y = "",
+      color = "Coverage"
+    )
+
+theta_plt2
+```
+
+There is also some estimation error for classification probabilities of species 1, which also means coverage that is slightly below nominal levels. The degree of estimation error and departures of coverage from nominal levels appear slightly lower for the "all visits" design than for the randomly selected visit design.
+
+The big takeaway for this subsection is that, when the model is correctly specified, a 'all visits' design might perform slightly better than the 'random visit' design, but the differences are marginal.
+
+### Without covariates
+
+The challenge with specifying an incorrect model is that the model assumes nspecies = 3 values for $\lambda_k$, but in reality there are nsites $\times$ nvisits $\times$ nspecies = 1200 unique relative activity values per dataset. This means there will be quite a bit of work to compare the two fixed effort validation designs regarding inference for relative activity. However, we do still assume (correctly) that $\psi$ does not vary across sites, so we can still make comparisons for these parameters, as well as for the elements of $\Theta$:
+
+```{r}
+for_plots %>%
+    dplyr::mutate(scenario = factor(scenario)) %>%
+    dplyr::filter(
+      all_converge == 1,
+      theta_scenario %in% c("all_visits", "random_visit"),
+      str_detect(parameter, pattern = "psi"),
+      # scenario %in% 1:3,
+    ) %>%
+    ggplot2::ggplot(
+      ggplot2::aes(
+        x = .data$scenario,
+        y = .data$av_post_mean
+      )
+    ) +
+    ggplot2::geom_errorbar(
+      ggplot2::aes(
+        ymin = .data$`2.5%`,
+        ymax = .data$`97.5%`
+      ),
+      position = ggplot2::position_dodge2(width = 0, padding = 0.1),
+      alpha = 0.2
+    ) +
+    ggplot2::geom_errorbar(
+      ggplot2::aes(
+        ymin = .data$av_low95,
+        ymax = .data$av_up95,
+        color = .data$coverage
+      )
+    ) +
+    viridis::scale_color_viridis(limits = c(0,1)) +
+    ggplot2::geom_point(color = "red") +
+    ggplot2::geom_point(
+      inherit.aes = FALSE,
+      ggplot2::aes(x = .data$scenario, y = .data$truth)
+    ) +
+    ggplot2::facet_grid(
+      theta_scenario~parameter,
+      #scales = "free_y",
+      labeller = L
+    ) +
+    ggplot2::labs(
+      x = "Manual Verification Scenario",
+      y = "",
+      color = "Coverage"
+    )
+```
+
+Interestingly, for $\psi_1$, the random visit design appears to have similar estimation error, but slightly better coverage (in the sense that it is more similar to the nominal level of 95%). However, that is the only parameter for which the random visit looks better, and it is a very marginal difference. For $\psi_2$ and $\psi_3$, the "all visits" design provides a greater number of converged datasets, lower estimation error and better coverage. Coverage is still below nominal levels for $\psi_2$, but it is nominal for $\psi_3$.
+
+While the elements of the classification matrix $\Theta$ are technically nuisance parameters, we can still examine how the two methods compare; it might provide some interesting insights.
+
+```{r}
+theta_plt_av <- for_plots %>%
+    dplyr::mutate(scenario = factor(scenario)) %>%
+    dplyr::filter(
+      all_converge == 1,
+      theta_scenario == "all_visits",
+      str_detect(parameter, pattern = "theta"),
+      # scenario %in% 1:3,
+    ) %>%
+    ggplot2::ggplot(
+      ggplot2::aes(
+        x = .data$scenario,
+        y = .data$av_post_mean
+      )
+    ) +
+    ggplot2::geom_errorbar(
+      ggplot2::aes(
+        ymin = .data$`2.5%`,
+        ymax = .data$`97.5%`
+      ),
+      position = ggplot2::position_dodge2(width = 0, padding = 0.1),
+      alpha = 0.2
+    ) +
+    ggplot2::geom_errorbar(
+      ggplot2::aes(
+        ymin = .data$av_low95,
+        ymax = .data$av_up95,
+        color = .data$coverage
+      )
+    ) +
+    viridis::scale_color_viridis(limits = c(0,1)) +
+    ggplot2::geom_point(color = "red") +
+    ggplot2::geom_point(
+      inherit.aes = FALSE,
+      ggplot2::aes(x = .data$scenario, y = .data$truth)
+    ) +
+    ggplot2::facet_wrap(
+      ~parameter,
+      scales = "free_y",
+      labeller = L
+    ) +
+    ggplot2::labs(
+      x = "Manual Verification Scenario",
+      y = "",
+      color = "Coverage"
+    )
+
+theta_plt_av
+```
+
+Inference for most elements of $\Theta$ appears excellent under the "all visits" fixed effort design. The exception is the classification probabilities for the extremely rare species, $\theta_{1,1:3}$. These have coverage near zero, and large estimation error. Let's compare that against the random visit fixed effort design:
+
+```{r}
+theta_plt_rv <- for_plots %>%
+    dplyr::mutate(scenario = factor(scenario)) %>%
+    dplyr::filter(
+      all_converge == 1,
+      theta_scenario == "random_visit",
+      str_detect(parameter, pattern = "theta"),
+    ) %>%
+    ggplot2::ggplot(
+      ggplot2::aes(
+        x = .data$scenario,
+        y = .data$av_post_mean
+      )
+    ) +
+    ggplot2::geom_errorbar(
+      ggplot2::aes(
+        ymin = .data$`2.5%`,
+        ymax = .data$`97.5%`
+      ),
+      position = ggplot2::position_dodge2(width = 0, padding = 0.1),
+      alpha = 0.2
+    ) +
+    ggplot2::geom_errorbar(
+      ggplot2::aes(
+        ymin = .data$av_low95,
+        ymax = .data$av_up95,
+        color = .data$coverage
+      )
+    ) +
+    viridis::scale_color_viridis(limits = c(0,1)) +
+    ggplot2::geom_point(color = "red") +
+    ggplot2::geom_point(
+      inherit.aes = FALSE,
+      ggplot2::aes(x = .data$scenario, y = .data$truth)
+    ) +
+    ggplot2::facet_wrap(
+      ~parameter,
+      scales = "free_y",
+      labeller = L
+    ) +
+    ggplot2::labs(
+      x = "Manual Verification Scenario",
+      y = "",
+      color = "Coverage"
+    )
+
+theta_plt_rv
+```
+
+The random visit fixed effort design does substantially worse for the classification probabilities of species 2 and 3. In addition, many of the posterior intervals are much narrower for species 1, which is undesireable since we hardly ever observe this species; we would want there to be large uncertainty because we likely do not observe many recordings yielding substantially less information.
+
+Having not compared $\boldsymbol{\lambda}$ yet (largely because this seems time-consuming with minimal added value), the general takeaway is that an "all visit" fixed effort design is perhaps slightly more robust than randomly selecting a single visit.
