@@ -20,13 +20,10 @@ A dataframe object that is a copy of the input \code{df}, but with the
 appropriate level of effort according to a fixed effort validation design.
 }
 \description{
-This function implements a fixed effort design to be used when heterogenous
-relative activity is expected. Rather than validating a random x\% from the
-first visit, which assumes that the first visit is representative of all
-others in terms of the number of recordings that are expected, this design
-randomly selects y\% from each visit. This is the design used in the Oregon-
-Washington dataset that was previously analyzed by Oram et al. (in
-submission).
+This function implements a fixed effort design, but rather than validating a
+random x\% from the first visit, which assumes that the first visit is
+representative of all others in terms of the number of recordings that are
+expected, this design randomly selects y\% from each visit.
 }
 \examples{
 library(dplyr)

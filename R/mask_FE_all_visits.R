@@ -45,10 +45,11 @@ mask_FE_all_visits <- function (df, effort_prop, seed = NULL) {
     dplyr::slice_sample(prop = 1 - effort_prop) %>% 
     dplyr::mutate(true_spp = NA)
   
-  # grab the calls that were validated
+  # grab the calls that were validated (not turned to NA)
   unmasked <- df %>% dplyr::filter(call %notin% masked$call)
   
-  # return a copy of the original dataframe but with the mask applied
+  # return a copy of the original dataframe but with the mask applied to 
+  # ambiguous recordings
   out_df <- dplyr::bind_rows(masked, unmasked) %>% 
     dplyr::arrange(call) %>% 
     dplyr::select(-call)

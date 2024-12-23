@@ -48,7 +48,7 @@
 #' tune_mcmc(dataset = fake_data$masked_dfs[[1]][[5]], zeros = fake_data$zeros[[5]])
 #' }
 #' @importFrom nimble getNimbleOption
-tune_mcmc <- function(dataset, zeros) {
+tune_mcmc <- function(dataset, zeros, return_fit = FALSE) {
 
   max_iters <- 10000
 
@@ -206,14 +206,26 @@ tune_mcmc <- function(dataset, zeros) {
     warmup_out <- warmups[min(which(M[iter, ] == 1,))]
     iter_out <- iters_to_check[iter]
 
-    if(all(M == 0)) stop(message("Convergence was not reached in under 10,000 iterations. You must run chains for longer!"))
-
-    return(list(max_iter_time = end-start,
-                min_warmup = warmup_out,
-                min_iter = iter_out + warmup_out,
-                convergence_matrix = M))
-
-
+    if (all(M == 0)) {
+      stop(message("Convergence was not reached in under 10,000 iterations. You must run chains for longer!"))
+    }
+    
+    if (return_fit) {
+      out <- list(
+        max_iter_time = end-start,
+        min_warmup = warmup_out,
+        min_iter = iter_out + warmup_out,
+        convergence_matrix = M,
+        fit = fit
+      )
+    } else {
+      out <- list(max_iter_time = end-start,
+                  min_warmup = warmup_out,
+                  min_iter = iter_out + warmup_out,
+                  convergence_matrix = M)
+    }
+    
+    return (out)
 
 }
 

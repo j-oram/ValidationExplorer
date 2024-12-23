@@ -183,7 +183,7 @@ simulate_validatedData <- function(n_datasets,
     scenarios <- scenarios %>%
       tibble::rownames_to_column(var = "scenario")
 
-  } else {
+  } else if (design_type == "FixedPercent") { # user specified a fixed effort design
 
     # Loop over the specified vector of percentages
     # Note: here `scenarios` is a vector!
@@ -191,7 +191,7 @@ simulate_validatedData <- function(n_datasets,
       masked_dataset_list[[s]] <- list() # initiate interior storage for each scenario (i.e., for each distinct percentage)
       for(d in 1:length(datasets_list)) { # loop over the datasets list, masking each according to the scenario
 
-        masked_df <- mask_FE(
+        masked_df <- mask_FE_all_visits(
           df = datasets_list[[d]],
           effort_prop = scenarios[s]
         ) %>% dplyr::mutate(scenario = s)
@@ -209,6 +209,8 @@ simulate_validatedData <- function(n_datasets,
       }
     }
 
+  } else {
+    stop(message("design_type must be one of c('BySpecies', 'FixedPercent')"))
   }
 
   # If the validation design is by-species, also return the scenarios dataframe
