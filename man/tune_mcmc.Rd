@@ -4,7 +4,7 @@
 \alias{tune_mcmc}
 \title{Get suggested MCMC settings prior to starting your simulations}
 \usage{
-tune_mcmc(dataset, zeros)
+tune_mcmc(dataset, zeros, return_fit = FALSE)
 }
 \arguments{
 \item{dataset}{A dataframe containing the validated and ambiguous data to be fit.

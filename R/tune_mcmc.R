@@ -205,7 +205,13 @@ tune_mcmc <- function(dataset, zeros, return_fit = FALSE) {
     iter <- min(which(M == 1, arr.ind = TRUE)[, "row"])
     warmup_out <- warmups[min(which(M[iter, ] == 1,))]
     iter_out <- iters_to_check[iter]
-
+    
+    n_eff_df <- data.frame(
+      parameter = colnames(fit[[1]]),
+      ess_bulk = ess_bulk(fit),
+      ess_tail = ess_tail(fit)
+    )
+    
     if (all(M == 0)) {
       stop(message("Convergence was not reached in under 10,000 iterations. You must run chains for longer!"))
     }
@@ -216,13 +222,15 @@ tune_mcmc <- function(dataset, zeros, return_fit = FALSE) {
         min_warmup = warmup_out,
         min_iter = iter_out + warmup_out,
         convergence_matrix = M,
-        fit = fit
+        fit = fit,
+        n_eff = n_eff_df
       )
     } else {
       out <- list(max_iter_time = end-start,
                   min_warmup = warmup_out,
                   min_iter = iter_out + warmup_out,
-                  convergence_matrix = M)
+                  convergence_matrix = M,
+                  n_eff = n_eff_df)
     }
     
     return (out)
