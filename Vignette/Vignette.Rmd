@@ -1,5 +1,5 @@
 ---
-title: "Vignette: Simulation studies with `ValidationExplorer` under a fixed-effort design type"
+title: "Vignette: Simulation studies with `ValidationExplorer` "
 author:
   - name: Jacob Oram
     email: jacoboram@montana.edu
@@ -36,8 +36,8 @@ header-includes:
   - \usepackage{amsmath}
   - \usepackage{underscore}
 bibliography: Vignette.bib
-abstract: "Our vignette demonstrates the use of the `ValidationExplorer` package to conduct statistical simulation studies that explore the costs and inferential properties (e.g., near nominal coverage and/or minimal estimation error) of alternative validation designs. 
-Our functions allow the user to specify a suite of candidate validation designs using either a stratified sampling procedure or a fixed-effort design type. An example of the former is provided in the manuscript entitled 'ValidationExplorer`: Streamlined simulations to aid informed management decisions using bioacoustic data in the presence of misclassification', which was submitted to the Applications series of *Methods in Ecology and Evolution*. In this vignette, we provide an additional example of data simulation, model fitting, and visualization of simulation results when using a fixed-effort design type. Our demonstration here is intended to aid researchers and others to tailor a validation design that provides useful inference while also ensuring that the level of effort meets cost constraints. \\vfill"
+abstract: "Our vignette demonstrates the use of the `ValidationExplorer` package to conduct statistical simulation studies that explore the costs and inferential properties (e.g., near nominal coverage and/or minimal estimation error) of alternative validation designs in the context of the count detection model framework. 
+Our functions allow the user to specify a suite of candidate validation designs using either a stratified sampling procedure or a fixed-effort design type. An example of the former is provided in the manuscript entitled '`ValidationExplorer`: Streamlined simulations to aid informed management decisions using bioacoustic data in the presence of misclassification', which was submitted to the Applications series of *Methods in Ecology and Evolution*. In this vignette, we provide further details not covered in the manuscript and an additional example of data simulation, model fitting, and visualization of simulation results when using a fixed-effort design type. Our demonstration here is intended to aid researchers and others to tailor a validation design that provides useful inference while also ensuring that the level of effort meets cost constraints. \\vfill"
 ---
 
 ```{r setup, include=FALSE, message=FALSE}
@@ -77,15 +77,19 @@ devtools::load_all(path = "..")
 
 # Introduction
 
-Automated recording units (ARUs) provide one of the main data sources for many contemporary monitoring programs that aim to provide inference about status and trends for assemblages of species [@loeb15]. As described in the main text, entitled, "`ValidationExplorer`: Streamlined simulations to inform management decisions using bioacoustic data in the presence of misclassification," substantial practical interest lies in identifying cost-effective validation designs that will allow a monitoring program to obtain its measurable objectives. We believe that statistical simulation studies are a valuable tool for evaluating the relative merits of candidate validation designs prior to gathering and validating ARU data, and it is our goal for `ValidationExplorer` to provide those tools in an approachable package. 
+Automated recording units (ARUs) provide one of the main data sources for many contemporary monitoring programs that aim to provide inference about status and trends for assemblages of species [@loeb15]. As described in the main text, entitled, "`ValidationExplorer`: Streamlined simulations to inform management decisions using bioacoustic data in the presence of misclassification," substantial practical interest lies in identifying cost-effective validation designs that will allow a monitoring program to obtain its measurable objectives. We believe that statistical simulation studies are a valuable tool for evaluating the relative merits of candidate validation designs prior to gathering and validating ARU data, and it is our goal for `ValidationExplorer` to provide those tools in an approachable package.
 
-This vignette provides detailed demonstrations of the `ValidationExplorer` package under a fixed-effort design. As described in the main text, a validation design is composed of two parts: a random mechanism for selecting observations to be manually reviewed by experts ("validated"), and a percentage or proportion that controls the sample size. We refer to the random mechanism as the *design type* and the proportion as the level of validation effort (LOVE). In our example, we assume a fixed-effort (the design type) validation design, under which, $x\%$ of recordings obtained from the first visit to a site are validated by experts. The level of validation effort is controlled by the value of $x.$ In the following section we consider five possible LOVEs and show an example of a fixed effort design.
+This vignette aids exploration of possible validation designs within a count-detection framework using the `ValidationExplorer` package. As described in the main text, a validation design is composed of two parts: a random mechanism for selecting observations to be manually reviewed by experts ("validated"), and a percentage or proportion that controls the sample size. We refer to the random mechanism as the *design type* and the proportion as the level of validation effort (LOVE). In the following section we consider five possible LOVEs and show an example of a fixed effort design.
 
-# Conducting a simulation study with a fixed effort design type
+# Conducting a simulation study with a fixed effort design type \label{FEEx}
+
+## What is a fixed effort design?
+
+In this section, we assume a fixed-effort (the design type) validation design, under which $x\%$ of recordings obtained from each visit to a site are validated by experts. The level of validation effort is controlled by the value of $x.$ We begin the process of simulating under this design by defining the real-world objectives and constraints we anticipate.
 
 ## Step 0: Define measurable objectives and constraints
 
-Recall from the main text that the first step -- before opening R and loading `ValidationExplorer` -- is to identify and write down the set of measurable objectives that the data will be used for. Suppose that, for this example, the measurable objectives and cost constraints are the same as those Section 3 of the main text:
+Recall from the main text that the first step -- before opening R and loading `ValidationExplorer` -- is to identify and write down the set of measurable objectives that the data will be used for. Suppose that, for this example, the measurable objectives and cost constraints are the same as those in Section 3 of the main text:
 
 \begin{itemize}
   \item The measurable objective is to estimate relative activity parameters (denoted as $\lambda_k$) for each species with estimation error less than 1 call per night and with the expected width of 95\% posterior intervals less than 3 calls per night.
@@ -102,11 +106,11 @@ tibble(
   Species = c("Eptesicus fuscus (EPFU)", "Lasiurus cinereus (LACI)", 
               "Lasionycteris noctivagans (LANO)", "Myotis californicus (MYCA)", 
               "Myotis ciliolabrum (MYCI)", "Myotis evotis (MYEV)"),
-  psi = psi, 
-  lambda = lambda, 
+  psi = round(psi,2),
+  lambda = round(lambda,1)
 ) %>% 
   rename("$\\psi$" = "psi", "$\\lambda$" = "lambda") %>% 
-  kbl(format = "latex", booktabs = TRUE, caption = "Prior knowledge of relative activity rates and occurrence probabilities for the six bat species of interest. These values will be used to simulate data. ")
+  kbl(format = "latex", booktabs = TRUE, escape = FALSE, caption = "Prior knowledge of relative activity rates and occurrence probabilities for the six bat species of interest. These values will be used to simulate data. ")
 ```
 
 ## Step 1: Installing and loading required packages
@@ -135,14 +139,14 @@ devtools::install_github(repo = "j-oram/ValidationExplorer")
 library(ValidationExplorer)
 ```
 
-With `ValidationExplorer` installed, users have access to all the functions outlined in the appendix.
+With `ValidationExplorer` installed, users have access to all the functions outlined in the table of functions found in Section \ref(BigTable).
 
 ## Step 3: Simulate data \label{dataSimulation}
 
-The first step in a simulation study is to simulate data under each of the candidate validation designs, which is accomplished with the `simulate_validatedData` function in `ValidationExplorer`. We begin by assigning values for the number of sites, visits, and species, as well as the parameter values in Table \@ref(tab:assemblage):
+The first step in a simulation study is to simulate data under each of the candidate validation designs, which is accomplished with the `simulate_validatedData` function in `ValidationExplorer`. We begin by assigning values for the number of sites, visits, and species, as well as the parameter values in Table \@ref(tab:assemblage), which are existing estimates obtained by @stratton22:
 
 ```{r pars}
-# Set the number of sites,species and visits
+# Set the number of sites, species and visits
 nsites <- 30
 nspecies <- 6
 nvisits <- 4
@@ -157,8 +161,6 @@ Additionally, `simulate_validatedData` requires that the user supply misclassifi
 # Simulate a hypothetical confusion matrix 
 set.seed(10092024) 
 Theta <- t(apply(diag(29, nspecies) + 1, 1, function(x) {nimble::rdirch(alpha = x)}))
-
-print(Theta)
 ```
 
 Note that the above definition of `Theta` places high values on the diagonal of the matrix, corresponding to a high probability of correct classification. To lower the diagonal values, change the specification of `diag(29, nspecies)` to a smaller value. For example:
@@ -167,7 +169,6 @@ Note that the above definition of `Theta` places high values on the diagonal of 
 another_Theta <- t(apply(diag(5, nspecies) + 1, 1, function(x) {
     nimble::rdirch(alpha = x)
   }))
-print(another_Theta)
 ```
 
 `another_Theta` has lower values on the diagonal, and greater off-diagonal values (i.e., higher probability of misclassification). If you have specific values you would like to use for the assumed classification probabilities (e.g., from an experiment), these can be supplied manually:
@@ -181,6 +182,7 @@ manual_Theta <- matrix(c(0.9, 0.05, 0.01, 0.01, 0.02, 0.01,
                        0.003, 0.007, 0.1, 0.04, 0.06, 0.79), 
                        byrow = TRUE, nrow = 6)
 
+print(manual_Theta)
 ```
 
 If you define the classifier manually, make sure the rows sum to 1 by running
@@ -192,16 +194,16 @@ all(rowSums(manual_Theta) == 1) # want this to return TRUE
 rowSums(manual_Theta)
 ```
 
-With the required inputs defined, we can simulate data using the following code:
+With the required inputs defined, we can simulate data:
 
 ```{r simData}
 sim_data <- simulate_validatedData(
-    n_datasets = 50,
+    n_datasets = 10, # For demonstration -- use 50+ for real simulation studies
     nsites = nsites, 
     nvisits = nvisits, 
     nspecies = nspecies, 
     design_type = "FixedPercent", 
-    scenarios = c(0.05, 0.1, 0.15, 0.3, 0.5),
+    scenarios = c(0.05, 0.1, 0.15, 0.3),
     psi = psi, 
     lambda = lambda,
     theta = Theta, 
@@ -211,24 +213,27 @@ sim_data <- simulate_validatedData(
 )
 ```
 
-Note that we specified the design type through the argument `design_type = "FixedPercent"`, with the possible scenarios defined as the vector `scenarios = c(0.05, 0.1, 0.15, 0.3, 0.5)`. These two arguments specify the set of alternative validation designs we will compare in our simulation study. Under the first validation design, 5% of recordings from the first visit to a site are validated, while in the second validation design 10% of recordings from the first visit to a site are validated, and so on.
-
-Note that when specifying a stratified-by-species design as in the main text, `simulate_validatedData` expects that the argument `scenarios` to be a list of proportions corresponding to the possible levels of effort for each species. Additionally, note that `simulate_validatedData` considers all possible combinations of the various levels of effort for each species, meaning that the number of simulated scenarios (and the computation time to run a full simulation study) can grow quickly.
+Note that we specified the design type through the argument `design_type = "FixedPercent"`, with the possible scenarios defined as the vector `scenarios = c(0.05, 0.1, 0.15, 0.3)`. These two arguments specify the set of alternative validation designs we will compare in our simulation study. Under the first validation design, 5% of recordings from each visit to a site are validated, while in the second validation design 10% of recordings from each visit to a site are validated, and so on.
 
 To understand the output from `simulate_validatedData`, we can investigate `sim_data`. The output is a list, containing three objects:
 
--   `full_datasets`: A list of length `n_datasets` with unmasked datasets (i.e., the datasets if all recordings were validated so that every recording has an autoID and a true species label). We opted to not save these datasets by setting `save_datasets = FALSE`. If we had specified `save_datasets = TRUE`, then these will be saved individually in `directory` as `dataset_n.rds`, where `n` is the dataset number.
--   `zeros`: A list of length `n_datasets` containing the true species-autoID combinations that were never observed at each site visit. For example, if, in dataset 10, no calls from species 1 were classified as species 3 on visit 4 to site 30, then the 10th entry of this list would contain a dataframe with a row corresponding to site = 30, visit = 4, true_spp = 1, id_spp = 3, with count = 0. These zeros are necessary for the model to identify occurrence probabilities and relative activity rates. If `save_datasets = TRUE`, the zeros for each dataset will also be saved in `directory` individually as `zeros_in_dataset_n.rds`, where `n` is the dataset number.
--   `masked_dfs`: A nested list containing each dataset masked under each scenario. For example, `masked_dfs[[9]][[27]]` contains dataset 27, assuming validation scenario 9. If `save_masked_datasets = TRUE`, then each dataset/scenario combination is saved individually in `directory` as `dataset_n_masked_under_scenario_s.rds`, where `n` is the dataset number and `s` is the scenario number.
+```{r}
+length(sim_data)
+names(sim_data)
+```
 
-Examples of each output are given below. First, we examine the third simulated full dataset. Notice that in addition to the site, vist, true species and autoID (`id_spp`) columns, the parameter values (`lambda`, `psi`, and `theta`) are given for each true species-autoID combination. In addition, the occupancy state `z` for the true species is given and the count of calls at that site visit with an true species-autoID pair. For example, at site 1, visit 1, there are four calls from species 1 that are assigned autoID 1, yielding 4 rows with `count = 4`. There is also one call from species 4 that was assigned a species 2 label with probability 0.02893559. Because this happened once, it is documented with `count = 1` and only occupies a single row. Next, we can see that there were 10 calls that were correctly identified as species 3; ten rows will have `true_spp = 3` and `autoID = 3`. Finally, the `Y.` column tells us how many observations were made from all species at that site visit; for visit 1 to site 1, the unique value is 24. That is, the 25th row of this dataset will contain the first observation from visit 2 to site 1.
+We examine each of these objects below:
+
+-   `full_datasets`: A list of length `n_datasets` with unmasked datasets. These are the datasets if all recordings were validated so that every recording has an autoID and a true species label. We opted to not save these datasets to the working directory by setting `save_datasets = FALSE`. If we had specified `save_datasets = TRUE`, then these will be saved individually in `directory` as `dataset_n.rds`, where `n` is the dataset number. As an example of one element in `sim_data$full_datasets`, we examine the third simulated full dataset:
 
 ```{r fullDfs}
 full_dfs <- sim_data$full_datasets
 head(full_dfs[[3]]) # Dataset number 3 if all recordings were validated
 ```
 
-The next object output from `simulate_validatedData` is the list of `zeros`. These are the potential true species-autoID combinations that were not observed at each site-visit. Notice that `count=0` for all observations; for instance, we never observed species 1 being classified as species 2 on visit 1 to site 1, despite species 1 being present.
+Notice that in addition to the site, visit, true species and autoID (`id_spp`) columns, the parameter values (`lambda`, `psi`, and `theta`) are given for each true species-autoID combination. In addition, the occupancy state `z` for the true species is given and the `count` of calls at that site visit with a specific true species-autoID label combination. For example, at site 1, visit 1, there are four calls from species 1 that are assigned autoID 1, yielding 4 rows with `count = 4`. There is also one call from species 4 that was assigned a species 2 label with probability 0.02893559. Because this happened once, it is documented with `count = 1` and only occupies a single row. Next, we can see that there were 10 calls that were correctly identified as species 3; ten rows will have `true_spp = 3` and `autoID = 3`. Finally, the `Y.` column tells us how many observations were made from all species at that site visit; for visit 1 to site 1, the unique value is 24. That is, the 25th row of this dataset will contain the first observation from visit 2 to site 1.
+
+-   `zeros`: A list of length `n_datasets` containing the true species-autoID combinations that were never observed at each site visit. The `count` column, which, again, contains the count of each site-visit-true_spp-id_spp combination, is zero for all entries. For example, in dataset 3 (below), species 2 was not present at site 1, so it could not be classified as species 1 (first row). Additionally, species 3 was present at site 1, but it was never classified as species 1 on visit 1 (second row). These zero counts are necessary for the model to identify occurrence probabilities and relative activity rates. If `save_datasets = TRUE`, the zeros for each dataset will also be saved in `directory` individually as `zeros_in_dataset_n.rds`, where `n` is the dataset number.
 
 ```{r zeros}
 zeros <- sim_data$zeros
@@ -238,7 +243,7 @@ zeros <- sim_data$zeros
 head(zeros[[3]]) 
 ```
 
-The final output object is the nested list of `masked_dfs`. The name of this nested list comes from the way that validation effort is simulated: recordings that are not selected for validation have their `true_spp` label masked with an `NA`. Notice that in the example below, we are considering the 3rd dataset under validation scenario 4. Further, all entries in the dataset are identical to the unmasked version output in `full_dfs` above, with the exception of the `true_spp` column. From this column we can see that calls 1, 3, 5 and 6 were not selected for validation (because `true_spp = NA`), while recordings 2 and 4 were (both calls came from species 1).
+-   `masked_dfs`: A nested list containing each dataset masked under each scenario. For example, `masked_dfs[[4]][[3]]` contains dataset 3, assuming that it was validated according to scenario 4 (30% of recordings randomly sampled from each site-visit for validation). If `save_masked_datasets = TRUE`, then each dataset/scenario combination is saved individually in `directory` as `dataset_n_masked_under_scenario_s.rds`, where `n` is the dataset number and `s` is the scenario number.
 
 ```{r mdfs}
 masked_dfs <- sim_data$masked_dfs
@@ -246,8 +251,12 @@ masked_dfs <- sim_data$masked_dfs
 # View dataset 3 subjected to the validation design in scenario 4: 
 # randomly select and validate 30% of recordings from the first visit 
 # to each site 
-head(masked_dfs[[4]][[3]])
+head(masked_dfs[[4]][[3]], 10)
 ```
+
+The name of this nested list comes from the way that validation effort is simulated: recordings that are not selected for validation have their `true_spp` label masked with an `NA`. Notice that in the example output, all entries in the dataset are identical to the unmasked version output in `full_dfs` above, with the exception of the `true_spp` column. From this column we can see that calls 1-5 and 9 were not selected for validation (because `true_spp = NA`), while recordings 6-8 and 10 were (because the true species label is not marked as `NA`).
+
+#### Summarize validation effort \label{summarizeEffort}
 
 For most simulations, it will be useful to summarize the number of recordings that are validated under a given validation design and scenario. This can be accomplished using the `summarize_n_validated` function:
 
@@ -255,37 +264,46 @@ For most simulations, it will be useful to summarize the number of recordings th
 summarize_n_validated(
   data_list = sim_data$masked_dfs, 
   theta_scenario = "1", 
-  scenario_numbers = 1:5
+  scenario_numbers = 1:4
 )
 ```
 
-## Step 4: MCMC tuning
+We can see here that any of the validation designs considered in our simulations will remain well within budget.
 
-Running a complete simulation study can be time consuming. In an effort to help users improve the efficiency of their simulations, we provide the `tune_mcmc` function, which provides the user with information about the warmup and number of iterations required for the MCMC to reach approximate convergence. This function takes in a masked dataset and the corresponding zeros, fits a model to these data, and outputs an estimated run time for 10,000 iterations, as well as the estimated number of required warmup and total iterations.
+## Step 4: MCMC tuning \label{tune}
 
-As in the main text, we use a dataset with the lowest number of validated recordings, for which we expect the greatest number of iterations. In our example, this is scenario 1, in which an average of $\approx 55$ recordings are validated per dataset. When we ran `tune_mcmc` with dataset 39 under scenario 1, we received a series of error messages, with the message that convergence was not reached in under 10,000 iterations. We have several options:
+Running a complete simulation study can be time consuming. In an effort to help users improve the efficiency of their simulations, we provide the `tune_mcmc` function, which provides the user with information about the warmup and number of iterations required for the MCMC to reach approximate convergence. This function takes in a masked dataset and the corresponding zeros, fits a model to these data, and outputs an estimated run time for 10,000 iterations, as well as the estimated number of required warmup and total iterations. These are intended to assist tuning of the MCMC algorithm, which is done by the user in the following steps, which we walk through in greater detail below:
 
-1.  We could increase the number of iterations above 10,000 -- perhaps to 20,000 and settle for a longer run time of the simulation study.
+1.  Use `tune_mcmc` to fit a model with multiple long chains.
 
-2.  We could take this as a sign that the level of effort ($55$ calls validated per dataset of size $\approx 3300$) is insufficient to identify model parameters. In this case, this scenario should not be considered.
+2.  Create trace plots for all model parameters.
 
-In our experience fitting these models, the second option seems to often be the case. We adopt this approach here and run `tune_mcmc` again under scenario 2, which has around 94 calls validated per dataset on average.
+3.  Examine effective sample sizes $n_\text{eff}$ and Gelman-Rubin statistics $\hat{R}$ for all parameters.
+
+4.   Choose values for the number of iterations and warmup that are slightly larger than what is needed based on steps 1-3. This may help ensure that a greater number of model fits are available to inform simulation study results.
+
+#### Fit a model
+
+As in the main text, we use a dataset from the scenario with the lowest number of validated recordings, as we expect the greatest number of iterations for this scenario. In our example, this is scenario 1 , in which an average of $\approx 218$ recordings are validated per dataset (Section \@ref(summarizeEffort)).
 
 ```{r tune, cache=TRUE}
+scenario_number <- 1
+dataset_number <- sample(1:length(masked_dfs[[scenario_number]]), 1)
+
 tune_list <- tune_mcmc(
-  dataset = sim_data$masked_dfs[[2]][[26]], 
-  zeros = sim_data$zeros[[26]]
+  dataset = sim_data$masked_dfs[[scenario_number]][[dataset_number]], 
+  zeros = sim_data$zeros[[dataset_number]], 
 )
 ```
 
-We can see from the output that minimum number of iterations is 2000 with a warmup of 1000:
+The output from `tune_mcmc` is a list:
 
 ```{r}
-tune_list$min_iter
-tune_list$min_warmup
+length(tune_list)
+names(tune_list)
 ```
 
-If we were to specify 10,000 iterations per dataset, each model fit would take approximately 2 minutes.
+The first element is the time required to fit a model with three chains of 10,000 iterations each:
 
 ```{r}
 tune_list$max_iter_time
@@ -293,17 +311,99 @@ tune_list$max_iter_time
 
 This may seem insignificant, but over the course of an entire simulations study with 5 scenarios $\times$ 50 datasets, that corresponds to around 8 hours of run time. Using fewer than 10,000 iterations will substantially reduce the time to run a simulation study.
 
-To understand the MCMC in greater detail, we examine the `convergence_matrix` output:
+#### Create trace plots
+
+To decide the number of iterations and warmup for use in a simulation study, we recommend beginning by creating trace plots, which show how the sampled values of a parameter evolve over the course of each Markov chain. To ensure that inferences based on MCMC are reliable, we need to ensure that chains stationary and are mixing well, and that effective sample sizes are sufficiently large to characterize the posterior. Trace plots are especially useful for assessing the first of these. To create a trace plot using the bayesplot package [@bayesplot] for a single parameter, by run the following: 
 
 ```{r}
-tune_list$convergence_matrix
+# Load bayesplot package specifically designed for visualizing 
+library(bayesplot)
+
+# extract the fitted model from tune_mcmc output
+fit <- tune_list$fit
+
+# create traceplot
+mcmc_trace(fit, pars = "lambda[5]")
 ```
 
-This matrix indicates whether, at given warmup and number of iterations, markov chains exhibited evidence of convergence. For example, our fitted model shows approximate convergence after running the MCMC for 3000 iterations, and discarding the first 2000 as warmup (`warmup = 2000`, `post-warmup iters = 1000` has an entry of 1 in the matrix).
+We can see that far fewer than 10,000 iterations are likely required because the chains are mixing well after a few hundred iterations. This is shown by strongly overlapping chains, with no one chain appearing by itself in a region of the parameter space. Chains also appear to be stationary because they do not wander vertically substantially after the first few hundred iterations. 
+
+We need to check that chains are stationary and mixing for all parameters. One way to accelerate visual inspection this is through the `regex_pars` argument, as in the following three code blocks. 
+
+```{r}
+mcmc_trace(fit, regex_pars = "lambda")
+```
+
+```{r}
+mcmc_trace(fit, regex_pars = "psi")
+```
+
+```{r fig.width=10, fig.height=10}
+# create a traceplot for all elements of the confusion matrix
+mcmc_trace(fit, regex_pars = "theta")
+```
+
+In all of the trace plots for all of the parameters, chains appear to mix quickly, meaning that it is possible a far smaller number of iterations will be required for a simulation study. A good place to start for reducing the number of iterations is from the output given by `tune_mcmc`. In our case, we can see that a guess for the minimum number of iterations is `r tune_list$min_iter` with a warmup of `r tune_list$min_warmup`:
+
+```{r}
+tune_list$min_iter
+tune_list$min_warmup
+```
+
+It is possible to use these values to zoom in on the trace plots by using the `window` argument: 
+
+```{r}
+mcmc_trace(fit, regex_pars = "lambda", window = c(0, tune_list$min_iter))
+```
+
+After making traceplots and zooming in for all parameters, it appears that the guessed warmup value of `r tune_list$min_warmup`output from `tune_mcmc` is reasonable. Even so, we increase our iterations and warmup beyond these minimum values in Section \@ref(runSims) as an extra safeguard against convergence issues. 
+
+#### Examine effective sample size and Gelman-Rubin statistics
+
+As a final step, we examine the effective sample size (out of 10,000 draws) and $\hat{R}$ values:
+
+```{r}
+tune_list$convergence_df
+```
+
+For all parameters, the bulk and tail effective sample sizes are fairly large, meaning that even with a smaller number of draws, we could expect to characterize both the center and tails of the posteriors for all parameters with these draws. Furthermore, the $\hat{R}$ values for all parameters is near 1. In general, we want values of $\hat{R} \leq 1.1$ for chains to be considered converged. We can double check this on the smaller values
+
+```{r}
+# for each chain, extract iterations 1001:2500 for all parameters
+shortened <- lapply(fit, function(x) x[1001:2500,])
+
+# summarize the shortened chains and select the effective sample 
+# size columns
+mcmc_sum(shortened, truth = rep(0, ncol(shortened[[1]]))) %>%
+  select(parameter, ess_bulk, ess_tail, Rhat) %>% 
+  print(n=48)
+```
+
+These results appear satisfactory, with effective sample sizes in both the tail and bulk of the posterior distributions of more than 250 and $\hat{R}$ near 1. Based on the results of MCMC exploration, it appears that using an MCMC with 2000 iterations with 500 discarded as warmup is likely to produce good results for our simulation study.
+
+#### Set iterations for simulation
+
+Based on our findings in the MCMC tuning step, we set the number of iterations for simulation to be slightly higher to guard against convergence issues that preclude using a fitted model for inference: 
+
+```{r}
+# to be used in the following section 
+iters_for_sims <- tune_list$min_iter + 1000
+warmup_for_sims <- tune_list$min_warmup + 500
+```
+
+#### A note about non-convergence while tuning
+
+In some instances, we have run `tune_mcmc` with a dataset and received a series of error messages that convergence was not reached in under 10,000 iterations. If this persists after trying to fit several other datasets, we have several options:
+
+1.  We could increase the number of iterations in the simulation study to be above 10,000 -- perhaps to 20,000 and settle for a longer run time of the simulation study.
+
+2.  We could take this as a sign that the level of effort is insufficient to identify model parameters. In this case, this scenario should not be considered.
+
+In our experience fitting these models, the second option seems to often be the case, and we encourage users to remove scenarios from consideration if models fit during the tuning step do not reach convergence within 10,000 iterations.
 
 We emphasize that the results from `tune_mcmc` are from a single model fit; they are supplied only as guidelines, and we encourage users to increase the number of iterations above the minimum values output from `tune_mcmc`. While each model fit will take slightly longer with an increased number of total iterations, this approach may save time in the long run by avoiding the need to re-run simulations.
 
-## Step 5: Fit models to simulated data
+## Step 5: Fit models to simulated data \label{runSims}
 
 With the simulated dataset and some informed choices about tuning of the MCMC, we use `run_sims` to run the simulations:
 
@@ -404,13 +504,130 @@ plot_width_vs_calls(
 
 We provide analogous functions `plot_coverage_vs_calls` and `plot_bias_vs_calls` taking identical arguments that show how coverage and estimation error change with the number of calls validated. Note that in all of our visualization functions, if no fitted models have $\hat{R} \leq c$ for all parameters, where $c$ is the specified convergence threshold under a given scenario, then the scenario will not appear on the x-axis.
 
+# Stratified-by-species example \label{stratEx}
+
+In Section \@ref(stratEx), we provide further details of the example in the main manuscript, which assumed a stratified-by-species design. In this scheme, the random mechanism is a stratified random sample, with strata formed by the species labels assigned by automated classification software responsible for classifiying each recording to a species. In a stratified-by-species design, the LOVE is the proportion of recordings selected to be validated for each species label.
+
+We repeat the simulation study conducted in the main text in this section, providing greater detail for some of the steps. We assume the same measurable objectives and cost constraints.
+
+## Simulate data
+
+Using the same values for `psi` and `lambda` as defined in Section \@ref(dataSimulation), we simulate data using `simulate_validatedData` with `design_type = "BySpecies"`.
+
+```{r message=FALSE}
+sim_data <- simulate_validatedData(
+  n_datasets = 10, 
+  design_type = "BySpecies",
+  scenarios = list(
+    spp1 = 0.15, 
+    spp2 = 0.15, 
+    spp3 = c(0.15, .5, 1),
+    spp4 = 0.1, 
+    spp5 = c(0.5, 1),
+    spp6 = 0.25
+  ),
+  nsites = nsites, 
+  nspecies = nspecies, 
+  nvisits = nvisits,
+  psi = psi, 
+  lambda = lambda, 
+  theta = Theta, 
+  directory = here::here("Vignette", "BySpecies")
+)
+```
+
+**Edit this:** [Note that when specifying a stratified-by-species design as in the main text, `simulate_validatedData` expects that the argument `scenarios` to be a list of proportions corresponding to the possible levels of effort for each species. Additionally, note that `simulate_validatedData` considers all possible combinations of the various levels of effort for each species, meaning that the number of simulated scenarios (and the computation time to run a full simulation study) can grow quickly.]
+
+We can combine the summary object output from `simulate_validatedData` when `design_type = "BySpecies"` with the output of `summarize_n_validated` to understand what the scenarios are and how many recordings are validated under each.
+
+```{r}
+summary1 <- sim_data$scenarios_df
+summary2 <- summarize_n_validated(sim_data$masked_dfs, scenario_numbers = 1:6)
+
+left_join(summary1, summary2, by = "scenario")
+```
+
+Based on these results output, we see that scenario 1 has the lowest overall level of validation effort: species 1-3 have 15% of their recordings validated, species 4 has 10% validated, species 5 has 50%, and species 6 has 25%, yielding around 604 recordings validated in an average dataset. We use one dataset simulated under this scenario to tune the MCMC.
+
+## Tune MCMC
+
+The MCMC tuning in this step is very similar to the procedures used in Section \@ref(tune). We begin by fitting a model to one dataset using the `tune_mcmc` function.
+
+```{r cache=TRUE}
+i <- sample(1:length(sim_data$full_datasets), 1)
+
+tune_list <- tune_mcmc(
+  dataset = sim_data$masked_dfs[[1]][[i]],
+  zeros = sim_data$zeros[[i]],
+  return_fit = TRUE
+)
+```
+
+Because we set `return_fit = TRUE`, we have draws for each parameter, which allows us to visually inspect the chains for convergence. We set trace plot windows to be wider than the suggested values from `tune_mcmc`, meaning a lower starting value and a higher ending value. Based on these plots, chains appear to be mixing well as no one chain stands out visually.
+
+```{r}
+library(bayesplot)
+
+tune_list$min_warmup
+tune_list$min_iter
+
+# increase iters to visualize beyond the warmup and 
+# iterations output from tune_mcmc 
+mcmc_trace(fit, regex_pars = "lambda", window = c(0, 2000))
+mcmc_trace(fit, regex_pars = "psi", window = c(0, 2000))
+mcmc_trace(fit, regex_pars = "theta", window = c(0, 1500))
+```
+
+In all trace plots, it appears that MCMC chains have reached approximate convergence well before the warmup value of 500 draws output from `tune_mcmc`.
+
+As a final step, we examine the effective sample size (out of 10,000 draws):
+
+```{r}
+tune_list$n_eff
+```
+
+For all parameters, the bulk and tail effective sample sizes are fairly large, meaning that even with a smaller number of draws, we could expect to characterize both the center and tails of the posteriors for all parameters with these draws. We can double check this:
+
+```{r}
+# for each chain, extract iterations 501:2000 for all parameters
+shortened <- lapply(fit, function(x) x[501:2000,])
+
+# summarize the shortened chains and select the effective sample 
+# size columns
+mcmc_sum(shortened, truth = rep(0, ncol(shortened[[1]]))) %>%
+  select(parameter, ess_bulk, ess_tail) %>% 
+  print(n=48)
+```
+
+These results appear satisfactory, with effective sample sizes in both the tail and bulk of the posterior distributions of more than 250. Based on the results of MCMC exploration, it appears that using an MCMC with 2000 iterations with 500 discarded as warmup is likely to produce good results for our simulation study.
+
+## Fit models
+
+```{r cache=TRUE}
+sims_out <- run_sims(
+  data_list = sim_data$masked_dfs,
+  zeros_list = sim_data$zeros,
+  DGVs = list(lambda = lambda, psi = psi, theta = Theta),
+  theta_scenario_id = "BySpecies", 
+  parallel = TRUE,
+  niter = tune_list$min_iter + 1000, 
+  nburn = tune_list$min_warmup + 500,
+  thin = 1, 
+  save_fits = FALSE,
+  save_individual_summaries_list = FALSE,
+  directory = here::here("Vignette", "BySpecies")
+)
+```
+
+## Visualize results
+
 # Discussion
 
 We have demonstrated the use of the `ValidationExplorer` package when the objective is to compare the merits of four competing LOVEs for a fixed-effort design. Specifically, we considered validating a random sample of 5%, 10%, 15%, 30% or 50% of the recordings obtained during the first visit to each site will allow us to estimate the relative activity parameters for each species, with estimation error less than 1 and 95% posterior interval width less than 3.
 
 While tuning the MCMC algorithm, we found that the first validation scenario - validating a random sample of 5% of recordings from the first visit to each site, required more than 10,000 MCMC iterations to converge. While this result was for one model fitted to one simulated dataset, in our experience, a failure to converge in less than 10,000 iterations is often an indication that insufficient information is available to estimate one or more model parameters. As a result, we dropped this scenario from consideration. Of the remaining scenarios, `visualize_parameter_group` indicated that scenario 2 -- validating a random sample of 10% of recordings from the first visit to each site -- often led to models that did not converge (Figures \@ref(fig:vizGroup) and \@ref(fig:vizOne)). Under this scenario, models that converged exhibited wide posterior intervals for the relative activity parameter $\lambda_5$ did not meet measurable objectives; average posterior interval widths were slightly larger than 3, with width decreasing as validation increased. The scenario that yielded the narrowest intervals for this parameter was scenario 5 (Figure \@ref(fig:plotWidth)), which assumed that 50% of recordings from the first site-visit are randomly selected for validation. Faced with results such as these, monitoring programs must consider whether the size of deviations from measurable objectives are acceptable, or whether a greater level of effort is required. In our case, we would advocate for an increased level of effort because the number of recordings validated under scenario 5 (around 540, according to output from `summarize_n_validated`) is substantially below the budget of 4000 recordings.
 
-As a final point, we emphasize that results from any simulation study -- including those produced using the `ValidationExplorer` package -- are conditional on the settings and assumptions. In the case of the count-detection model framework that is implemented in `ValidationExplorer`, the assumptions are
+As a final point, we emphasize that results from any simulation study -- including those produced using the `ValidationExplorer` package -- are conditional on the settings and assumptions of the study. In the case of the count-detection model framework that is implemented in `ValidationExplorer`, the assumptions are
 
 \begin{enumerate}
   \item  The occurrence of species within a site are independent; the presence of one species carries no information about the presence or absence of another. 
@@ -426,12 +643,9 @@ As a final point, we emphasize that results from any simulation study -- includi
 
 Our hope is that `ValidationExplorer` provides a useful set of tools that allow monitoring programs to make informed decisions prior to the manual review stage of the bioacoustic workflow. By assessing the merits of various validation designs through simulation, effort can be thoughtfully assigned based on program goals and monitoring objectives.
 
-# References 
-
-<div id="refs"></div>
-
 \newpage
-# Appendix: Table of Functions 
+
+# Table of Functions \label{BigTable}
 
 \singlespacing
 \begin{longtable}{p{0.27\linewidth}p{0.32\linewidth}p{0.33\linewidth}}
@@ -515,5 +729,5 @@ Our hope is that `ValidationExplorer` provides a useful set of tools that allow 
     \caption{Argument descriptions for each function in the \texttt{ValidationExplorer} software. My hope is that in the eventual final paper, this will be a scrollable html table}
     \label{tab:my_label}
 \end{longtable}
-\doublespacing
 
+# References

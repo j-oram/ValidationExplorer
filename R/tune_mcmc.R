@@ -10,10 +10,11 @@
 #'
 #' @export
 #'
-#' @returns A list containing the expected time to fit a single dataset, the
-#'   minimum number of iterations, minimum warmup and a matrix with value of 1 in
-#'   an entry if all model parameters had Rhat <= 1.1 after the corresponding
-#'   warmup and number of iterations. See the examples for more.
+#' @returns A list containing the expected time to fit a single dataset with 10,000 
+#'   iterations per chain, the draws for each chain, a guess for the minimum 
+#'   number of iterations and warmup required to to ensure Rhat <= 1.1 for 
+#'   all model parameters, and a dataframe containing effective sample sizes for
+#'   each parameter.  
 #'
 #' @examples
 #'
@@ -48,7 +49,7 @@
 #' tune_mcmc(dataset = fake_data$masked_dfs[[1]][[5]], zeros = fake_data$zeros[[5]])
 #' }
 #' @importFrom nimble getNimbleOption
-tune_mcmc <- function(dataset, zeros, return_fit = FALSE) {
+tune_mcmc <- function(dataset, zeros, return_fit = TRUE) {
 
   max_iters <- 10000
 
@@ -206,11 +207,8 @@ tune_mcmc <- function(dataset, zeros, return_fit = FALSE) {
     warmup_out <- warmups[min(which(M[iter, ] == 1,))]
     iter_out <- iters_to_check[iter]
     
-    n_eff_df <- data.frame(
-      parameter = colnames(fit[[1]]),
-      ess_bulk = ess_bulk(fit),
-      ess_tail = ess_tail(fit)
-    )
+    n_eff_df <- mcmc_sum(out = fit, truth = rep(0, ncol(fit[[1]]))) %>% 
+      select(parameter, ess_bulk, ess_tail, Rhat)
     
     if (all(M == 0)) {
       stop(message("Convergence was not reached in under 10,000 iterations. You must run chains for longer!"))
@@ -221,16 +219,14 @@ tune_mcmc <- function(dataset, zeros, return_fit = FALSE) {
         max_iter_time = end-start,
         min_warmup = warmup_out,
         min_iter = iter_out + warmup_out,
-        convergence_matrix = M,
         fit = fit,
-        n_eff = n_eff_df
+        convergence_df = n_eff_df
       )
     } else {
       out <- list(max_iter_time = end-start,
                   min_warmup = warmup_out,
                   min_iter = iter_out + warmup_out,
-                  convergence_matrix = M,
-                  n_eff = n_eff_df)
+                  convergence_df = n_eff_df)
     }
     
     return (out)

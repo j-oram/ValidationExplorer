@@ -4,7 +4,7 @@
 \alias{tune_mcmc}
 \title{Get suggested MCMC settings prior to starting your simulations}
 \usage{
-tune_mcmc(dataset, zeros, return_fit = FALSE)
+tune_mcmc(dataset, zeros, return_fit = TRUE)
 }
 \arguments{
 \item{dataset}{A dataframe containing the validated and ambiguous data to be fit.
@@ -17,10 +17,11 @@ that were never observed (count = 0). This will be one of the elements of the
 zeros object ouput from \link{simulate_validatedData}.}
 }
 \value{
-A list containing the expected time to fit a single dataset, the
-minimum number of iterations, minimum warmup and a matrix with value of 1 in
-an entry if all model parameters had Rhat <= 1.1 after the corresponding
-warmup and number of iterations. See the examples for more.
+A list containing the expected time to fit a single dataset with 10,000
+iterations per chain, the draws for each chain, a guess for the minimum
+number of iterations and warmup required to to ensure Rhat <= 1.1 for
+all model parameters, and a dataframe containing effective sample sizes for
+each parameter.
 }
 \description{
 Get suggested MCMC settings prior to starting your simulations
