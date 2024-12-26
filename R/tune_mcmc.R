@@ -220,13 +220,13 @@ tune_mcmc <- function(dataset, zeros, return_fit = TRUE) {
         min_warmup = warmup_out,
         min_iter = iter_out + warmup_out,
         fit = fit,
-        convergence_df = n_eff_df
+        MCMC_diagnostics = n_eff_df
       )
     } else {
       out <- list(max_iter_time = end-start,
                   min_warmup = warmup_out,
                   min_iter = iter_out + warmup_out,
-                  convergence_df = n_eff_df)
+                  MCMC_diagnostics = n_eff_df)
     }
     
     return (out)

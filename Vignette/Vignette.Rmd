@@ -296,10 +296,9 @@ tune_list <- tune_mcmc(
 )
 ```
 
-The output from `tune_mcmc` is a list:
+The output from `tune_mcmc` is a list containing draws from the fitted model, the time required to fit the model with 10,000 draws, MCMC diagnostics and guesses for the number of iterations and warmup required to reliably fit a model. If the guessed values for total iterations and/or warmup are greater than 10,000 draws, an error is issued. We can see the names for each object by running the following block:
 
 ```{r}
-length(tune_list)
 names(tune_list)
 ```
 
@@ -313,7 +312,7 @@ This may seem insignificant, but over the course of an entire simulations study 
 
 #### Create trace plots
 
-To decide the number of iterations and warmup for use in a simulation study, we recommend beginning by creating trace plots, which show how the sampled values of a parameter evolve over the course of each Markov chain. To ensure that inferences based on MCMC are reliable, we need to ensure that chains stationary and are mixing well, and that effective sample sizes are sufficiently large to characterize the posterior. Trace plots are especially useful for assessing the first of these. To create a trace plot using the bayesplot package [@bayesplot] for a single parameter, by run the following: 
+To decide the number of iterations and warmup for use in a simulation study, we recommend beginning by creating trace plots, which show how the sampled values of a parameter evolve over the course of each Markov chain. To ensure the MCMC algorithm will characterize the posterior distribution well, we need to check that chains are stationary and mixing well, and that effective sample sizes are sufficiently large to characterize the posterior. Trace plots are especially useful for assessing the first of these. To create a trace plot using the bayesplot package [@bayesplot] for a single parameter, run the following: 
 
 ```{r}
 # Load bayesplot package specifically designed for visualizing 
@@ -328,7 +327,7 @@ mcmc_trace(fit, pars = "lambda[5]")
 
 We can see that far fewer than 10,000 iterations are likely required because the chains are mixing well after a few hundred iterations. This is shown by strongly overlapping chains, with no one chain appearing by itself in a region of the parameter space. Chains also appear to be stationary because they do not wander vertically substantially after the first few hundred iterations. 
 
-We need to check that chains are stationary and mixing for all parameters. One way to accelerate visual inspection this is through the `regex_pars` argument, as in the following three code blocks. 
+We need to check that chains are stationary and mixing for all parameters. One way to accelerate visual inspection this is through the `regex_pars` argument, which shows relative activity parameters for all species as in the following three code blocks.
 
 ```{r}
 mcmc_trace(fit, regex_pars = "lambda")
@@ -343,7 +342,7 @@ mcmc_trace(fit, regex_pars = "psi")
 mcmc_trace(fit, regex_pars = "theta")
 ```
 
-In all of the trace plots for all of the parameters, chains appear to mix quickly, meaning that it is possible a far smaller number of iterations will be required for a simulation study. A good place to start for reducing the number of iterations is from the output given by `tune_mcmc`. In our case, we can see that a guess for the minimum number of iterations is `r tune_list$min_iter` with a warmup of `r tune_list$min_warmup`:
+In all of the trace plots for all of the parameters, chains appear to mix quickly, meaning that it is possible a far smaller number of iterations may be suitable for a simulation study. A good place to start for reducing the number of iterations is from the output given by `tune_mcmc`. In our case, we can see that a guess for the minimum number of iterations is `r tune_list$min_iter` with a warmup of `r tune_list$min_warmup`:
 
 ```{r}
 tune_list$min_iter
@@ -356,17 +355,19 @@ It is possible to use these values to zoom in on the trace plots by using the `w
 mcmc_trace(fit, regex_pars = "lambda", window = c(0, tune_list$min_iter))
 ```
 
-After making traceplots and zooming in for all parameters, it appears that the guessed warmup value of `r tune_list$min_warmup`output from `tune_mcmc` is reasonable. Even so, we increase our iterations and warmup beyond these minimum values in Section \@ref(runSims) as an extra safeguard against convergence issues. 
+Once again, we see the three chains overlap strongly after around 500 iterations and sample around a horizontal line. 
+
+After making traceplots and zooming in for all parameters (not all plots are shown here), it appears that the guessed warmup value of `r tune_list$min_warmup`output from `tune_mcmc` is a reasonable choice. Even so, we increase our iterations and warmup beyond these minimum values in Section \@ref(runSims) to avoid simulations failing due to convergence.
 
 #### Examine effective sample size and Gelman-Rubin statistics
 
-As a final step, we examine the effective sample size (out of 10,000 draws) and $\hat{R}$ values:
+As a final step, we examine the effective sample sizes (out of 10,000 draws) and $\hat{R}$ values. The effective sample size statistics `ess_bulk` and `ess_tail` are MCMC diagnostic statistics that summarizes the number of effectively independent draws from a parameter's posterior distribution the Markov chain contains. If a parameter has a large value in the `ess_bulk` column, then it is likely that inference based on sampled draws will characterize the center of the posterior distribution well. The `ess_tail` column, on the other hand, describes how much information is available about posterior tail probabilities. Once again, we want a large value for `ess_tail`, preferably `ess_tail`$\geq 250$. 
 
 ```{r}
-tune_list$convergence_df
+tune_list$MCMC_diagnostics
 ```
 
-For all parameters, the bulk and tail effective sample sizes are fairly large, meaning that even with a smaller number of draws, we could expect to characterize both the center and tails of the posteriors for all parameters with these draws. Furthermore, the $\hat{R}$ values for all parameters is near 1. In general, we want values of $\hat{R} \leq 1.1$ for chains to be considered converged. We can double check this on the smaller values
+For all parameters, the bulk and tail effective sample sizes are fairly large, meaning that even with fewer than 10,000 draws, we could expect $n_\text{eff} \geq 250,$ allowing us to characterize both the center and tails of the posteriors for all parameters with these draws. Furthermore, the $\hat{R}$ values for all parameters is near 1. In general, we want values of $\hat{R} \leq 1.1$ for chains to be considered converged. We can double check by recomputing these statistics on shortened chains: 
 
 ```{r}
 # for each chain, extract iterations 1001:2500 for all parameters
@@ -379,7 +380,7 @@ mcmc_sum(shortened, truth = rep(0, ncol(shortened[[1]]))) %>%
   print(n=48)
 ```
 
-These results appear satisfactory, with effective sample sizes in both the tail and bulk of the posterior distributions of more than 250 and $\hat{R}$ near 1. Based on the results of MCMC exploration, it appears that using an MCMC with 2000 iterations with 500 discarded as warmup is likely to produce good results for our simulation study.
+These results appear satisfactory, with effective sample sizes in both the tail and bulk of the posterior distributions of more than 250 and $\hat{R}$ near 1. Based on the results of MCMC tuning, it appears that using an MCMC with at least `r tune_list$min_iter` iterations with  at least `r tune_list$min_warmup` discarded as warmup should to produce good results for our simulation study.
 
 #### Set iterations for simulation
 
@@ -408,20 +409,14 @@ We emphasize that the results from `tune_mcmc` are from a single model fit; they
 With the simulated dataset and some informed choices about tuning of the MCMC, we use `run_sims` to run the simulations:
 
 ```{r run, cache=TRUE}
-# reduce the size of the list since validation scenario 1 is too low: 
-# we want scenarios 2-5 for fitting. 
-# Note that now scenario 1 in the output will correspond to validation scenario 2, 
-# scenario 2 in the output will correspond to validation scenario 3, and so on.
-masked_dfs_reduced <- masked_dfs[2:5]
-
 sims_output <- run_sims(
-         data_list = masked_dfs_reduced, 
+         data_list = sim_data$masked_dfs, 
          zeros_list = sim_data$zeros, 
          DGVs = list(lambda = lambda, psi = psi, theta = Theta), 
          theta_scenario_id = "FE", # for "fixed effort"
          parallel = TRUE, 
-         niter = 3500, 
-         nburn = 2500,  
+         niter = iters_for_sims, 
+         nburn = warmup_for_sims,  
          thin = 1,
          save_fits = TRUE, 
          save_individual_summaries_list = FALSE, 
@@ -453,20 +448,19 @@ The `visualize_parameter_group` function is useful for examining an entire set o
 ```{r}
 # correct the scenario numbers in the output to match the validation scenario 
 # numbers
-sims_output$scenario <- sims_output$scenario + 1
 ```
 
-```{r vizGroup, eval=TRUE, fig.cap=" Example output from the `visualize_parameter_group` function. Results are faceted by parameter, with the x-axis indicating the validation scenario number, and the y-axis showing the data generating value (black point). REd points show average posterior means, small grey intervals show 95% posterior intervals from converged model fits and colored intervals are average 95% posterior intervals. Coverage is shown by color, with blue corresponding to low coverage."}
+```{r vizGroup, eval=TRUE, fig.cap=" Example output from the `visualize_parameter_group` function. Results are faceted by parameter, with the x-axis indicating the validation scenario number, and the y-axis showing the data generating value (black point). Red points show average posterior means, small grey intervals show 95% posterior intervals from converged model fits and colored intervals are average 95% posterior intervals. Coverage is shown by color, with blue corresponding to low coverage."}
 visualize_parameter_group(
   sim_summary = sims_output, 
   pars = "lambda", 
   theta_scenario = 1, 
-  scenarios = 2:5,
+  scenarios = 1:4,
   convergence_threshold = 1.05
 )
 ```
 
-The output shown in Figure \@ref(fig:vizGroup) indicates that under all validation scenarios we considered (2-5), the expected inference for relative activity rates of species 1-4 and 6 meets our measurable objectives: the posterior interval width is less than three for these species and there is minimal estimation error. However, note that under validation scenario 2, fewer of the models converged within 3000 iterations of the MCMC, which is visible from smaller number of grey intervals. This suggests that a higher level of validation effort could be beneficial. Additionally, average interval width is never below 3 for species 5; none of the designs considered here meet the measurable for this species. We can see this more clearly by examining output through alternative visualization functions.
+The output shown in Figure \@ref(fig:vizGroup) indicates that under all validation scenarios we considered, the expected inference for relative activity rates of species 1-4 and 6 meets our measurable objectives: the posterior interval width is less than three for these species and there is minimal estimation error. However, note that under validation scenario 1 and 2, fewer of the models converged within `r iters_for_sims` iterations of the MCMC, which is visible from smaller number of grey intervals. This suggests that a higher level of validation effort could be beneficial. Additionally, average interval width is never below 3 for species 5; none of the designs considered here meet the measurable objective for this species. We can see this more clearly by examining output through alternative visualization functions.
 
 A first step would be to use `visualize_single_parameter`, which takes the same arguments as the previous visualization function:
 
@@ -474,12 +468,12 @@ A first step would be to use `visualize_single_parameter`, which takes the same 
 visualize_single_parameter(
   sims_output, par = "lambda[5]", 
   theta_scenario = 1, 
-  scenarios = 2:5, 
+  scenarios = 1:4, 
   convergence_threshold = 1.05
 )
 ```
 
-The greater detail of `visualize_single_parameter` in Figure \@ref(fig:vizOne) underscores the difference in the number of converged models, shown by the number grey 95% posterior interval for each converged model fit. The visualization also helps clarify that while average interval width is larger than 3, it is not substantially larger in validation scenario 4. This can also be seen using the `plot_width_vs_calls` function (Figure \@ref(fig:plotWidth)), which compares average interval widths (and the IQR for interval widths) across scenarios based on the number of recordings validated. An example is provided below:
+The greater detail of `visualize_single_parameter` in Figure \@ref(fig:vizOne) underscores the difference in the number of converged models, shown by the number grey 95% posterior interval for each converged model fit. The visualization also helps clarify that while average interval width is near 3 in scenario 2, it is still acceptable for our measurable objectives. Coverage for most relative activity parameters is also near-nominal under this validation scenario, which requires that around 375 recordings be validated in an average dataset. This can also be seen using the `plot_width_vs_calls` function (Figure \@ref(fig:plotWidth)), which compares average interval widths (and the IQR for interval widths) across scenarios based on the number of recordings validated. An example is provided below:
 
 ```{r}
 # obtain summary of validation effort as an object that can be used with 
@@ -487,7 +481,7 @@ The greater detail of `visualize_single_parameter` in Figure \@ref(fig:vizOne) u
 s <-  summarize_n_validated(
   data_list = sim_data$masked_dfs, 
   theta_scenario = "FE", 
-  scenario_numbers = 2:5
+  scenario_numbers = 1:4
 )
 ```
 
@@ -499,16 +493,47 @@ plot_width_vs_calls(
   regex_pars = "lambda", 
   theta_scenario = "FE", 
   scenarios = 2:5
+) + # add horizontal line at target 95% CI width 
+  geom_hline(yintercept = 3, linetype = "dotted") 
+```
+
+We provide analogous functions `plot_coverage_vs_calls` and `plot_bias_vs_calls` taking identical arguments that show how coverage and estimation error change with the number of calls validated. Note that in all of our visualization functions, if no fitted models have $\hat{R} \leq c$ for all parameters, where $c$ is the specified convergence threshold under a given scenario, then the scenario will not appear on the x-axis. In our example, we used $c = 1.1$. 
+
+To ensure that there aren't substantial problems with estimation of other model parameters, we can create plots for $\psi$ and $\Theta$: 
+
+```{r vizPsi, fig.cap="We encourage users to check inference for other model parameters, even if they are not explicitly of interest based on measurable objectives. Here, we examine $\\boldsymbol{\\psi}$. Note that coverage for several parameters is slightly low. For the purpose of exposition, we only fit 10 datasets and we expect that coverage would be near nominal levels if 50 or more datasets were used in simulation."}
+visualize_parameter_group(
+  sim_summary = sims_output, 
+  pars = "psi", 
+  theta_scenario = 1, 
+  scenarios = 1:4,
+  convergence_threshold = 1.05
 )
 ```
 
-We provide analogous functions `plot_coverage_vs_calls` and `plot_bias_vs_calls` taking identical arguments that show how coverage and estimation error change with the number of calls validated. Note that in all of our visualization functions, if no fitted models have $\hat{R} \leq c$ for all parameters, where $c$ is the specified convergence threshold under a given scenario, then the scenario will not appear on the x-axis.
+```{r plotTheta, fig.width=10, fig.height=10, fig.cap="Checking inference for the elements of the classification matrix $\\Theta$. For most parameters (facets), validation scenario 2 appears to lead to minimal estimation error and near-nominal coverage. "}
+visualize_parameter_group(
+  sim_summary = sims_output, 
+  pars = "theta", 
+  theta_scenario = 1, 
+  scenarios = 1:4,
+  convergence_threshold = 1.05
+)
+```
+
+The simulation results shown in Figure \@ref(fig:plotPsi) and \@ref(fig:plotTheta) don't immediately cause concern that inference for relative activity rates will be severely compromised for any of these validation designs. Some parameters have slightly low coverage, but we believe this is mostly due to the small number of datasets used in this example; users should increase the number of datasets to at least 50, which we expect would lead to coverage near nominal levels.
+
+## Take-aways from the Fixed-Effort Simulations
+
+Based on Figures \@ref(fig:vizGroup) - \@ref(fig:plotWidth), we can rule out validation scenario 1, because the expected width of 95% posterior intervals is greater than the threshold value of 3. Because of this, we might choose validation scenario 2 as one possible fixed effort validation design. This fixed effort design assumes that 10% of recordings from each site-night are randomly selected for validation, leading to around 375 recordings being validated per dataset. In our simulations, posterior means for each $\lambda_k$ appear to be nearly unbiased, with near-nominal coverage and average posterior interval widths less than or equal to 3 for this scenario. However, it is possible that for a given dataset, the interval width for $\lambda_5$ will be larger than 3, regardless of the number of validated calls; error bars in Figure \@ref(fig:plotWidth) overlap or exceed the dotted line in all scenarios. 
+
+In situations such as this one, a decision is required of the user. If a slightly larger interval width is acceptable, validating 10% percent of recordings from all site-visits is reasonable. If it is not, then the LOVE will need to be increased beyond that in scenario 4 (1021 recordings). The question is whether potentially tripling the number of validated recordings will be worth the benefit of ensuring the relative activity level for species 5 is less than 3. This is a question about measurable objectives that we leave to the practitioner and their monitoring priorities.
 
 # Stratified-by-species example \label{stratEx}
 
-In Section \@ref(stratEx), we provide further details of the example in the main manuscript, which assumed a stratified-by-species design. In this scheme, the random mechanism is a stratified random sample, with strata formed by the species labels assigned by automated classification software responsible for classifiying each recording to a species. In a stratified-by-species design, the LOVE is the proportion of recordings selected to be validated for each species label.
+In this section, we provide further details of the example in the main manuscript, which assumed a stratified-by-species design. In a stratified-by-species design, the random mechanism is a stratified random sample, with strata formed by the species labels assigned by automated classification software (i.e., by autoID). In this kind of design, the LOVE is the proportion of recordings selected to be validated for each species label.
 
-We repeat the simulation study conducted in the main text in this section, providing greater detail for some of the steps. We assume the same measurable objectives and cost constraints.
+We repeat the simulation study conducted in the main text in this section, providing greater detail for some of the steps. We assume the same measurable objectives and cost constraints as in Section \@ref(FEEx). 
 
 ## Simulate data
 
@@ -536,9 +561,13 @@ sim_data <- simulate_validatedData(
 )
 ```
 
-**Edit this:** [Note that when specifying a stratified-by-species design as in the main text, `simulate_validatedData` expects that the argument `scenarios` to be a list of proportions corresponding to the possible levels of effort for each species. Additionally, note that `simulate_validatedData` considers all possible combinations of the various levels of effort for each species, meaning that the number of simulated scenarios (and the computation time to run a full simulation study) can grow quickly.]
+Note that in contrast with Section \@ref(dataSimulation), `simulate_validatedData` expects the `scenarios` argument to be a list of proportions corresponding to the possible levels of effort for each species when specifying a stratified-by-species design.  Internally, `simulate_validatedData`  calls `base::expand.grid`, and considers all possible combinations of the various levels of effort for each species, meaning that the number of simulated scenarios grows extremely quickly. The biggest implication of having a larger number of simulation scenarios to consider is increased computation time. For example, in the previous code block we fixed the level of effort for species 1, 2, 4 and 6 at .15, .15, .1, and .25, respectively. This means that there are six possible scenarios, which are summarized in the additional output `sim_data$scenarios_df` that is available when `design_type = "BySpecies"` is specified: 
 
-We can combine the summary object output from `simulate_validatedData` when `design_type = "BySpecies"` with the output of `summarize_n_validated` to understand what the scenarios are and how many recordings are validated under each.
+```{r}
+sim_data$scenarios_df
+```
+
+We can combine the `scenarios_df` output ` with the output of `summarize_n_validated` to understand what the scenarios are and how many recordings are validated under each.
 
 ```{r}
 summary1 <- sim_data$scenarios_df
@@ -547,7 +576,7 @@ summary2 <- summarize_n_validated(sim_data$masked_dfs, scenario_numbers = 1:6)
 left_join(summary1, summary2, by = "scenario")
 ```
 
-Based on these results output, we see that scenario 1 has the lowest overall level of validation effort: species 1-3 have 15% of their recordings validated, species 4 has 10% validated, species 5 has 50%, and species 6 has 25%, yielding around 604 recordings validated in an average dataset. We use one dataset simulated under this scenario to tune the MCMC.
+In the resulting dataframe object, we see that scenario 1 has the lowest overall level of validation effort: species 1-3 have 15% of their recordings validated, species 4 has 10% validated, species 5 has 50%, and species 6 has 25%, yielding around 604 recordings validated in an average dataset. We use one dataset simulated under scenario 1 to tune the MCMC.
 
 ## Tune MCMC
 
@@ -558,39 +587,38 @@ i <- sample(1:length(sim_data$full_datasets), 1)
 
 tune_list <- tune_mcmc(
   dataset = sim_data$masked_dfs[[1]][[i]],
-  zeros = sim_data$zeros[[i]],
-  return_fit = TRUE
+  zeros = sim_data$zeros[[i]]
 )
 ```
 
-Because we set `return_fit = TRUE`, we have draws for each parameter, which allows us to visually inspect the chains for convergence. We set trace plot windows to be wider than the suggested values from `tune_mcmc`, meaning a lower starting value and a higher ending value. Based on these plots, chains appear to be mixing well as no one chain stands out visually.
+As in Section \@ref(tune), we visually inspect the chains for convergence using trace plots. We set trace plot windows to be wider than the suggested values from `tune_mcmc`, meaning a lower starting value and a higher ending value. Based on these plots, chains appear to be mixing well as no one chain stands out visually.  
 
 ```{r}
-library(bayesplot)
-
 tune_list$min_warmup
 tune_list$min_iter
 
 # increase iters to visualize beyond the warmup and 
 # iterations output from tune_mcmc 
+fit <- tune_list$fit
+
 mcmc_trace(fit, regex_pars = "lambda", window = c(0, 2000))
 mcmc_trace(fit, regex_pars = "psi", window = c(0, 2000))
 mcmc_trace(fit, regex_pars = "theta", window = c(0, 1500))
 ```
 
-In all trace plots, it appears that MCMC chains have reached approximate convergence well before the warmup value of 500 draws output from `tune_mcmc`.
+In all trace plots, it appears that MCMC chains have reached approximate convergence well before the warmup value of `r tune_list$min_warmup` draws output from `tune_mcmc`.
 
-As a final step, we examine the effective sample size (out of 10,000 draws):
+Next, we examine the effective sample sizes in the tails and bulk of the posteriors and the $\hat{R}$ values:
 
 ```{r}
-tune_list$n_eff
+tune_list$MCMC_diagnostics
 ```
 
-For all parameters, the bulk and tail effective sample sizes are fairly large, meaning that even with a smaller number of draws, we could expect to characterize both the center and tails of the posteriors for all parameters with these draws. We can double check this:
+For all parameters, the bulk and tail effective sample sizes are fairly large: if we sligthly decrease the number of post-warmup draws, we could expect to characterize both the center and tails of the posteriors well.  Additionally, $\hat{R} \approx 1.00$ for all parameters, indicating good mixing for chains. As before, we check this suspicion by computing MCMC diagnostic statistics for truncated chains:
 
 ```{r}
 # for each chain, extract iterations 501:2000 for all parameters
-shortened <- lapply(fit, function(x) x[501:2000,])
+shortened <- lapply(fit, function(x) x[(tune_list$min_warmup):tune_list$min_iter + 1000,])
 
 # summarize the shortened chains and select the effective sample 
 # size columns
@@ -599,7 +627,7 @@ mcmc_sum(shortened, truth = rep(0, ncol(shortened[[1]]))) %>%
   print(n=48)
 ```
 
-These results appear satisfactory, with effective sample sizes in both the tail and bulk of the posterior distributions of more than 250. Based on the results of MCMC exploration, it appears that using an MCMC with 2000 iterations with 500 discarded as warmup is likely to produce good results for our simulation study.
+The results appear satisfactory, with effective sample sizes of more than 250 in both the tail and bulk of the posterior distributions for each parameter. Based on the results of MCMC exploration, it appears that using an MCMC with `r tune_list$min_iter + 1000` iterations with `r tune_list$min_warmup` discarded as warmup is likely to produce good results for our simulation study.
 
 ## Fit models
 
@@ -621,11 +649,11 @@ sims_out <- run_sims(
 
 ## Visualize results
 
-# Discussion
+# Take-aways
 
 We have demonstrated the use of the `ValidationExplorer` package when the objective is to compare the merits of four competing LOVEs for a fixed-effort design. Specifically, we considered validating a random sample of 5%, 10%, 15%, 30% or 50% of the recordings obtained during the first visit to each site will allow us to estimate the relative activity parameters for each species, with estimation error less than 1 and 95% posterior interval width less than 3.
 
-While tuning the MCMC algorithm, we found that the first validation scenario - validating a random sample of 5% of recordings from the first visit to each site, required more than 10,000 MCMC iterations to converge. While this result was for one model fitted to one simulated dataset, in our experience, a failure to converge in less than 10,000 iterations is often an indication that insufficient information is available to estimate one or more model parameters. As a result, we dropped this scenario from consideration. Of the remaining scenarios, `visualize_parameter_group` indicated that scenario 2 -- validating a random sample of 10% of recordings from the first visit to each site -- often led to models that did not converge (Figures \@ref(fig:vizGroup) and \@ref(fig:vizOne)). Under this scenario, models that converged exhibited wide posterior intervals for the relative activity parameter $\lambda_5$ did not meet measurable objectives; average posterior interval widths were slightly larger than 3, with width decreasing as validation increased. The scenario that yielded the narrowest intervals for this parameter was scenario 5 (Figure \@ref(fig:plotWidth)), which assumed that 50% of recordings from the first site-visit are randomly selected for validation. Faced with results such as these, monitoring programs must consider whether the size of deviations from measurable objectives are acceptable, or whether a greater level of effort is required. In our case, we would advocate for an increased level of effort because the number of recordings validated under scenario 5 (around 540, according to output from `summarize_n_validated`) is substantially below the budget of 4000 recordings.
+Of the scenarios we considered, `visualize_parameter_group` indicated that scenario 2 -- validating a random sample of 10% of recordings from the first visit to each site -- often led to models that did not converge (Figures \@ref(fig:vizGroup) and \@ref(fig:vizOne)). Under this scenario, models that converged exhibited wide posterior intervals for the relative activity parameter $\lambda_5$ did not meet measurable objectives; average posterior interval widths were slightly larger than 3, with width decreasing as validation increased. The scenario that yielded the narrowest intervals for this parameter was scenario 5 (Figure \@ref(fig:plotWidth)), which assumed that 50% of recordings from the first site-visit are randomly selected for validation. Faced with results such as these, monitoring programs must consider whether the size of deviations from measurable objectives are acceptable, or whether a greater level of effort is required. In our case, we would advocate for an increased level of effort because the number of recordings validated under scenario 5 (around 540, according to output from `summarize_n_validated`) is substantially below the budget of 4000 recordings.
 
 As a final point, we emphasize that results from any simulation study -- including those produced using the `ValidationExplorer` package -- are conditional on the settings and assumptions of the study. In the case of the count-detection model framework that is implemented in `ValidationExplorer`, the assumptions are
 
