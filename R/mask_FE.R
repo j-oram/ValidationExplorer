@@ -55,7 +55,20 @@ mask_FE <- function (df, effort_prop, seed = NULL) {
   # bind the two back together and sort by recording
   masked_copy <- dplyr::bind_rows(masked, unmasked) %>%
     dplyr::arrange(call)
-
+  
+  # add unique call id based on site, visit, autoID label 
+  masked_copy <- masked_copy %>% 
+    dplyr::group_by(.data$site, .data$visit, .data$id_spp) %>% 
+    dplyr::mutate(
+      site_visit_idspp_number = 1:n(), 
+      unique_call_id = paste(
+        paste(.data$site, .data$visit, .data$id_spp, sep = "-"), 
+        site_visit_idspp_number, 
+        sep = "_")
+    ) %>% 
+    dplyr::select(-.data$site_visit_idspp_number) %>% 
+    dplyr::ungroup()
+  
   # check that the call columns match for both, and if they do, return a
   # masked copy of the OG df
   if (any(masked_copy$call != df$call)) {

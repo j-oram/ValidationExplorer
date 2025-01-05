@@ -60,6 +60,21 @@ mask_by_spp <- function(data, props_to_val){
     )
   ) %>%
     dplyr::arrange(call)
+  
+  # add a unique call id that combines the site, visit, autoID and 
+  # call number within the site-visit
+  final_df <- final_df %>% 
+    dplyr::group_by(.data$site, .data$visit, .data$id_spp) %>% 
+    dplyr::mutate(
+      site_visit_idspp_number = 1:n(), 
+      unique_call_id = paste(
+        paste(.data$site, .data$visit, .data$id_spp, sep = "-"), 
+        site_visit_idspp_number, 
+        sep = "_")
+      ) %>% 
+    dplyr::select(-.data$site_visit_idspp_number) %>% 
+    dplyr::ungroup()
+    
 
   # Compute a summary of the masked dataset (good check to make sure masking is
   # working as expected)

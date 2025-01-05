@@ -54,6 +54,19 @@ mask_FE_all_visits <- function (df, effort_prop, seed = NULL) {
     dplyr::arrange(call) %>% 
     dplyr::select(-call)
   
+  # add the unique call id based on call number, site, visit, and autoID label
+  out_df <- out_df %>% 
+    dplyr::group_by(.data$site, .data$visit, .data$id_spp) %>% 
+    dplyr::mutate(
+      site_visit_idspp_number = 1:n(), 
+      unique_call_id = paste(
+        paste(.data$site, .data$visit, .data$id_spp, sep = "-"), 
+        site_visit_idspp_number, 
+        sep = "_")
+    ) %>% 
+    dplyr::select(-.data$site_visit_idspp_number) %>% 
+    dplyr::ungroup()
+  
   return(out_df)
     
 }

@@ -58,6 +58,19 @@ mask_sampled_visit <- function (df, effort_prop, seed = NULL) {
       masked_version <- dplyr::bind_rows(masked_calls, unmasked, other_visits) %>% 
         dplyr::arrange(site, visit, true_spp, id_spp)
       
+      # add unique id based on site, visit, autoID index
+      masked_version <- masked_version %>% 
+        dplyr::group_by(.data$site, .data$visit, .data$id_spp) %>% 
+        dplyr::mutate(
+          site_visit_idspp_number = 1:n(), 
+          unique_call_id = paste(
+            paste(.data$site, .data$visit, .data$id_spp, sep = "-"), 
+            site_visit_idspp_number, 
+            sep = "_")
+        ) %>% 
+        dplyr::select(-.data$site_visit_idspp_number) %>% 
+        dplyr::ungroup()
+      
       return(masked_version)
     }) %>% 
     do.call(eval(parse(text = "dplyr::bind_rows")), .)
