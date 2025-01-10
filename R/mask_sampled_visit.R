@@ -62,7 +62,7 @@ mask_sampled_visit <- function (df, effort_prop, seed = NULL) {
       masked_version <- masked_version %>% 
         dplyr::group_by(.data$site, .data$visit, .data$id_spp) %>% 
         dplyr::mutate(
-          site_visit_idspp_number = 1:n(), 
+          site_visit_idspp_number = 1:dplyr::n(), 
           unique_call_id = paste(
             paste(.data$site, .data$visit, .data$id_spp, sep = "-"), 
             site_visit_idspp_number, 

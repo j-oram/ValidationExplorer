@@ -278,7 +278,7 @@ plot_coverage_vs_calls <- function(sim_summary,
     ggplot2::geom_point() +
     ggplot2::geom_line() +
     ggplot2::ylim(0,1) +
-    geom_hline(yintercept = 0.95, linetype = "dotted")+
+    ggplot2::geom_hline(yintercept = 0.95, linetype = "dotted")+
     ggplot2::labs(
       x = "Number of validated calls",
       y = "Coverage",

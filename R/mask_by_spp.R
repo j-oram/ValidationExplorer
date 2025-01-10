@@ -66,7 +66,7 @@ mask_by_spp <- function(data, props_to_val){
   final_df <- final_df %>% 
     dplyr::group_by(.data$site, .data$visit, .data$id_spp) %>% 
     dplyr::mutate(
-      site_visit_idspp_number = 1:n(), 
+      site_visit_idspp_number = 1:dplyr::n(), 
       unique_call_id = paste(
         paste(.data$site, .data$visit, .data$id_spp, sep = "-"), 
         site_visit_idspp_number, 

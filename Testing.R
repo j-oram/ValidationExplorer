@@ -46,7 +46,7 @@ fake_data$scenarios_df
 # investigate the number of recordings validated under each scenario
 validation_summary <- summarize_n_validated(
   data_list = fake_data$masked_dfs,
-  scenario_names = as.character(1:nrow(fake_data$scenarios_df)),
+  scenario_numbers = 1:nrow(fake_data$scenarios_df),
   theta_scenario = "1"
 )
 
@@ -97,15 +97,17 @@ head(masked_dfs[[1]][[1]])
 ## for these scenarios because it has the lowest average number of calls validated per
 ## dataset
 
-tuning_list <- tune_mcmc(dataset = masked_dfs[[1]][[5]], zeros = fake_data$zeros[[5]])
+tuning_list <- tune_mcmc(dataset = masked_dfs[[1]][[5]], zeros = fake_data$zeros[[5]], return_fit = TRUE)
 
 min_iters <- tuning_list$min_iter
 warmup <- tuning_list$min_warmup
 expected_time <- tuning_list$max_iter_time
 
-# This output shows a matrix. A value of 1 in a cell indicates that the combination
-# of warmup + iters yielded Rhat < 1.1 for all model parameters.
-tuning_list$convergence_matrix
+shortened_fit <- lapply(tuning_list$fit, function(x) {x[(warmup+1):min_iters,]})
+bayesplot::mcmc_trace(shortened_fit, regex_pars = "lambda")\
+
+mcmc_sum(shortened_fit, truth = rep(0, ncol(shortened_fit[[1]]))) %>% 
+  dplyr::select(parameter, Rhat, ess_tail, ess_bulk)
 
 ## -------------------------------------------------------------------------------------
 # Run time will vary: with 5 datasets, 30 sites, 5 visits, 2 species and the assigned
@@ -193,9 +195,13 @@ FE_data <- simulate_validatedData(
   theta = Theta_FE,
   save_datasets = FALSE,
   save_masked_datasets = FALSE,
-  directory = here("Testing", "FixedEffortExample")
+  directory = here::here("Testing", "FixedEffortExample")
 )
 
+# scenario 1 is lowest effort, not surprisingly
+summarize_n_validated(data_list = FE_data$masked_dfs, scenario_numbers = 1:3)
+
+FE_tune_list <- tune_mcmc(dataset = FE_data$masked_dfs[[1]][[3]], zeros = FE_data$zeros[[3]], return_fit = TRUE)
 
 ## ------------------------------------------------------------------------------------
 # Runtime: with the specified number of sites, visits, species, validation scenarios
@@ -207,6 +213,8 @@ FE_model_fits <- run_sims(
   data_list = FE_data$masked_dfs,
   zeros_list = FE_data$zeros,
   theta_scenario_id = "FE",
+  niter = 2000, # based on results from tune_mcmc
+  nburn = 1000, 
   save_fits = FALSE,
   DGVs = list(lambda = lambda, psi = psi, theta = Theta_FE),
   save_individual_summaries_list = FALSE,
@@ -225,12 +233,9 @@ visualize_parameter_group(FE_model_fits, pars = "theta", theta_scenario = 1, sce
 
 
 ## ------------------------------------------------------------------------------------
-summarize_n_validated(FE_data$masked_dfs, theta_scenario = "FE", scenario_names = as.character(1:3))
-
-## ------------------------------------------------------------------------------------
 plot_bias_vs_calls(
   FE_model_fits,
-  summarize_n_validated(FE_data$masked_dfs, theta_scenario = "FE", scenario_names = as.character(1:3)),
+  summarize_n_validated(FE_data$masked_dfs, theta_scenario = "FE", scenario_numbers = 1:3),
   theta_scenario = 1,
   scenarios = 1:4, convergence_threshold = 1.1
 )

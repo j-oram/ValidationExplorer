@@ -208,7 +208,7 @@ tune_mcmc <- function(dataset, zeros, return_fit = TRUE) {
     iter_out <- iters_to_check[iter]
     
     n_eff_df <- mcmc_sum(out = fit, truth = rep(0, ncol(fit[[1]]))) %>% 
-      select(parameter, ess_bulk, ess_tail, Rhat)
+      dplyr::select(parameter, ess_bulk, ess_tail, Rhat)
     
     if (all(M == 0)) {
       stop(message("Convergence was not reached in under 10,000 iterations. You must run chains for longer!"))
