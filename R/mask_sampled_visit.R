@@ -34,9 +34,12 @@ mask_sampled_visit <- function (df, effort_prop, seed = NULL) {
     set.seed(seed)
   }
   
+  # create housekeeping column and define number of visits
   df$call <- 1:nrow(df)
   nvisits <- max(df$visit)
   
+  # split to site-specific dataframes, select a randomly sampled visit, and 
+  # mask 1 - effort_prop from that visit
   out <- df %>% 
     dplyr::ungroup() %>% 
     dplyr::group_split(.data$site) %>% # split into list of dataframes one for each site
@@ -53,8 +56,12 @@ mask_sampled_visit <- function (df, effort_prop, seed = NULL) {
         dplyr::filter(.data$visit != visit_to_mask) %>% 
         mutate(true_spp = NA)
       
+      # the unambiguous recordings from the randomly selected visit
       unmasked <- x[which(x$call %notin% masked_calls$call & x$call %notin% other_visits$call), ]
       
+      # bind together the masked and unmasked calls from the random visit, and 
+      # masked calls from all other visits to the site; the result is a masked
+      # version of the original site-specific df
       masked_version <- dplyr::bind_rows(masked_calls, unmasked, other_visits) %>% 
         dplyr::arrange(site, visit, true_spp, id_spp)
       
@@ -73,7 +80,7 @@ mask_sampled_visit <- function (df, effort_prop, seed = NULL) {
       
       return(masked_version)
     }) %>% 
-    do.call(eval(parse(text = "dplyr::bind_rows")), .)
+    do.call(eval(parse(text = "dplyr::bind_rows")), .) # bind all site-specific dfs together again
   
   return(out)
 }

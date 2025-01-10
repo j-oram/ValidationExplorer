@@ -125,7 +125,7 @@ simulate_validatedData <- function(n_datasets,
                       seed = m,
                       theta = theta)$full_df
 
-      # Y. = total calls at each site-visit (L. in the notation of Spiers et el., 2022).
+      # Y. = total calls at each site-visit
       agg_CD_with_total <- aggregate_CD %>%
         dplyr::group_by(.data$site, .data$visit) %>%
         dplyr::mutate(Y. = sum(.data$count))
@@ -135,7 +135,7 @@ simulate_validatedData <- function(n_datasets,
       datasets_list[[m]] <- agg_CD_with_total %>%
         tidyr::uncount(weights = .data$count, .remove = FALSE)
 
-      # Store the zeros in a list for houskeeping
+      # Store the zeros in a list for housekeeping
       zeros[[m]] <- agg_CD_with_total %>% dplyr::filter(.data$count == 0)
 
       # If user wants individual rds files for each dataframe, save them and the zeros
@@ -155,7 +155,9 @@ simulate_validatedData <- function(n_datasets,
   masked_dataset_list <- list()
 
   if(design_type == "BySpecies"){
-
+    
+    # if user specified BySpecies, create a dataframe with a unique combination
+    # of validation efforts for each species
     scenarios <- expand.grid(scenarios)
 
     # loop over scenarios and datasets, saving each masked dataset

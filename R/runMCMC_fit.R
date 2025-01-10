@@ -1,7 +1,8 @@
 #' @importFrom nimble getNimbleOption
 runMCMC_fit <- function(seed = 1, code, data, constants,
                         nchains = 1, niter = 2000, nburn = 1200, thin = 1){
-
+  
+  # create initialization function that draws starting values for each chain
   inits_fun <- function(){
 
     out <- list(
@@ -12,7 +13,9 @@ runMCMC_fit <- function(seed = 1, code, data, constants,
     )
     return(out)
   }
-
+  
+  # specify the custom NIMBLE function that is used to compute the probabilities
+  # for each ambiguous recording
   dmarginal_autoID <- nimble::nimbleFunction(
     run = function(x = integer(0), theta_mat = double(2),
                    pi = double(1), log= integer(0, default = 0)){
@@ -46,19 +49,19 @@ runMCMC_fit <- function(seed = 1, code, data, constants,
 
   # Register the distribution, which will yield an informational warning because we are
   # "overwriting" the user-specified distribution that NIMBLE detects when it
-  # compiles the code
+  # compiles the code. 
   assign('dmarginal_autoID', dmarginal_autoID, envir = .GlobalEnv)
   assign('rmarginal_autoID', rmarginal_autoID, envir = .GlobalEnv)
   nimble::registerDistributions("dmarginal_autoID")
 
-
+  # Steps to compile the NIMBLE model and MCMC
   disag_model <- nimble::nimbleModel(code = code, constants = constants, data = data, inits = inits_fun())
   model_c <- nimble::compileNimble(disag_model)
   model_conf <- nimble::configureMCMC(disag_model)
   mcmc <- nimble::buildMCMC(model_conf)
   mcmc_c <- nimble::compileNimble(mcmc, project = model_c)
 
-
+  # obtain samples from the posterior 
   out <- nimble::runMCMC(
     mcmc_c,
     niter = niter,
@@ -68,6 +71,7 @@ runMCMC_fit <- function(seed = 1, code, data, constants,
     init = inits_fun(),
     setSeed = seed
   )
-
+  
+  # return samples from the posterior
   return(out)
 }

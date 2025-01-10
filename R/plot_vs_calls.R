@@ -34,8 +34,15 @@ plot_bias_vs_calls <- function(sim_summary,
                                theta_scenario,
                                scenarios,
                                convergence_threshold = 1.1) {
+  # set themes
   ggplot2::theme_set(ggplot2::theme_bw())
-
+  
+  # create the dataframe for plotting that filters to models where all parameters
+  # met the convergence threshold, and that contains information about estimation
+  # error and 50% intervals for estimation error for each parameter.
+  # This is joined with the user-supplied summary of validation effort into the 
+  # final df for plotting.
+  
   plt_df <- sim_summary %>%
     dplyr::mutate(
       below_threshold = ifelse(round(.data$Rhat, 4) <= convergence_threshold, 1, 0)
@@ -65,14 +72,17 @@ plot_bias_vs_calls <- function(sim_summary,
     dplyr::mutate(theta_scenario = as.character(.data$theta_scenario),
            scenario = as.character(.data$scenario)) %>%
     dplyr::left_join(calls_summary, by = c("scenario", "theta_scenario"))
-
+  
+  # if pars is not null, plot only those parameters specified by the user; 
+  # otherwise, use check regex pars and use those if specified. If everything
+  # is null, go ahead and plot all parameters.
   if(!is.null(pars)) {
     plt_df <- plt_df %>% dplyr::filter(.data$parameter %in% pars)
   } else if(!is.null(regex_pars)) {
     plt_df <- plt_df %>% dplyr::filter(stringr::str_detect(.data$parameter, regex_pars))
   }
 
-
+  # create the ggplot object to be returned
   plt <- plt_df %>%
     ggplot2::ggplot(
       ggplot2::aes(
@@ -132,8 +142,14 @@ plot_width_vs_calls <- function(sim_summary,
                                 theta_scenario,
                                 scenarios,
                                 convergence_threshold = 1.1) {
+  # set theme
   ggplot2::theme_set(ggplot2::theme_bw())
-
+  
+  # create the dataframe for plotting that filters to models where all parameters
+  # met the convergence threshold, and that contains information about means and
+  # 50% intervals for the width of 95% posterior intervals for each parameter.
+  # This is joined with the user-supplied summary of validation effort into the 
+  # final df for plotting.
   plt_df <- sim_summary %>%
     dplyr::mutate(
       below_threshold = ifelse(round(.data$Rhat, 4) <= convergence_threshold, 1, 0)
@@ -164,6 +180,9 @@ plot_width_vs_calls <- function(sim_summary,
                   scenario = as.character(.data$scenario)) %>%
     dplyr::left_join(calls_summary, by = c("scenario", "theta_scenario"))
 
+  # if pars is not null, plot only those parameters specified by the user; 
+  # otherwise, use check regex pars and use those if specified. If everything
+  # is null, go ahead and plot all parameters.
   if(!is.null(pars)) {
     plt_df <- plt_df %>% dplyr::filter(.data$parameter %in% pars)
   } else if(!is.null(regex_pars)) {
@@ -172,7 +191,7 @@ plot_width_vs_calls <- function(sim_summary,
     plt_df <- plt_df
   }
 
-
+  # create ggplot object
   plt <- plt_df %>%
     ggplot2::ggplot(
       ggplot2::aes(
@@ -232,8 +251,13 @@ plot_coverage_vs_calls <- function(sim_summary,
                                    theta_scenario,
                                    scenarios,
                                    convergence_threshold = 1.1) {
+  # set the ggplot theme
   ggplot2::theme_set(ggplot2::theme_bw())
-
+  
+  # create the dataframe for plotting that filters to models where all parameters
+  # met the convergence threshold, and that contains information about coverage. 
+  # this is joined with the user-supplied summary of validation effort into the 
+  # final df for plotting.
   plt_df <- sim_summary %>%
     dplyr::mutate(
       below_threshold = ifelse(round(.data$Rhat, 4) <= convergence_threshold, 1, 0)
@@ -258,14 +282,16 @@ plot_coverage_vs_calls <- function(sim_summary,
     dplyr::mutate(theta_scenario = as.character(.data$theta_scenario),
                   scenario = as.character(.data$scenario)) %>%
     dplyr::left_join(calls_summary, by = c("scenario", "theta_scenario"))
-
+  
+  # if pars is not null, plot only those parameters specified by the user; 
+  # otherwise, use check regex pars and use those if specified.
   if(!is.null(pars)) {
     plt_df <- plt_df %>% dplyr::filter(.data$parameter %in% pars)
   } else if(!is.null(regex_pars)) {
     plt_df <- plt_df %>% dplyr::filter(stringr::str_detect(.data$parameter, regex_pars))
   }
 
-
+  # create plots
   plt <- plt_df %>%
     ggplot2::ggplot(
       ggplot2::aes(

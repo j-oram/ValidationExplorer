@@ -42,8 +42,8 @@ mask_by_spp <- function(data, props_to_val){
       dplyr::group_by(.data$id_spp) %>%
       dplyr::group_split() %>% # split into separate dfs for each group
       purrr::map2_dfr(props_to_mask, ~ dplyr::slice_sample(.x, prop = .y)) %>% # apply slice_sample with
-      dplyr::mutate(true_spp = NA)                                      # designated proportion to each
-                                                                 # separate df, then mask
+      dplyr::mutate(true_spp = NA)                                             # designated proportion to each
+                                                                               # separate df, then mask
 
   # Once masking is completed, bind the rows that weren't masked (anti_join)
   # with those that *were* (inner_join) and arrange to make it look good

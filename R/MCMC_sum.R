@@ -24,6 +24,7 @@
 
 mcmc_sum <- function(out, thin = 1, truth){
 
+# Convert to mcmc list
 mcmc.list <- coda::as.mcmc.list(
   lapply(out,
          function(x) coda::as.mcmc(
@@ -35,22 +36,30 @@ mcmc.list <- coda::as.mcmc.list(
   )
 )
 
+# Compute summary of the mcmc list, define parameters and create a matrix with
+# values from these
 sum <- summary(mcmc.list)
 params <- dimnames(sum$statistics)[[1]]
 tmp_sum <- cbind(sum$statistics, sum$quantiles)
 
+# Create a matrix to hold the MCMC diagnostic statistics
 m <- matrix(nrow = nrow(tmp_sum), ncol = length(out))
 colnames(m) <- c("Rhat", "ess_bulk", "ess_tail")
 
+# For each parameter, compute the Rhat, ess_bulk and ess_tail
 for(i in 1:nrow(tmp_sum)){
   tmp <- sapply(out, function(x) x[,i])
   m[i,] <- c(rstan::Rhat(tmp), rstan::ess_bulk(tmp), rstan::ess_tail(tmp))
 }
 
+# Create the dataframe with statistics, quantiles and MCMC diagnostics
 mcmc_summary <- cbind(tmp_sum, m) %>%
   as.data.frame() %>%
   tibble::rownames_to_column(var = "parameter")
 
+# Add the true values that are specified by the user and summarize whether each 
+# 95% interval captures the true value and whether the model coverged based on 
+# Rhat criteria
 mcmc_summary$truth <- truth
 mcmc_summary$capture <- ifelse(mcmc_summary$`2.5%` <= mcmc_summary$truth &
                                  mcmc_summary$`97.5%` >= mcmc_summary$truth,

@@ -99,8 +99,10 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
     # progress
     pb <- txtProgressBar(min = 0, max = ndatasets, style = 3, width = 50, char = "=")
     for(dataset in 1:ndatasets){
-      observed_df <- data_list[[scenario]][[dataset]] # was df7
+      # select the dataset and zeros
+      observed_df <- data_list[[scenario]][[dataset]]
       zeros <- zeros_list[[dataset]]
+      # bind these together
       all_sites_and_visits <- dplyr::bind_rows(observed_df, zeros) %>%
         dplyr::arrange(.data$site, .data$visit, .data$true_spp, .data$id_spp) # was df8
 
@@ -119,7 +121,6 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
 
           ##  --- Likelihood --- ##
 
-          ## Nothing changed here
           for(i in 1:nsites){
             for(species in 1:nspecies){
 
@@ -156,7 +157,7 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
 
             pi2[row, 1:nspecies] <- z[site2[row], 1:nspecies] * lambda[1:nspecies] /
               sum(z[site2[row], 1:nspecies] * lambda[1:nspecies])
-            y2[row] ~ dmarginal_autoID(theta_mat = theta[1:nspecies, 1:nspecies], # may need to switch this to dmultinom (slower, but works better from a dependencies perspective?)
+            y2[row] ~ dmarginal_autoID(theta_mat = theta[1:nspecies, 1:nspecies], 
                                        pi = pi2[row, 1:nspecies])
 
           }
@@ -171,11 +172,11 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
 
         # values passed to Nimble for indexing.
         constants <- list(
-          site1 = uamb$site, # Only sites where at least one call was made
-          site2 = amb$site,
+          site1 = uamb$site, # site indices for each recording that has both labels
+          site2 = amb$site, # site indices for each recording with only autoID
           nspecies = dplyr::n_distinct(observed_df$id_spp),
           nvisits = dplyr::n_distinct(observed_df$visit),
-          nsites = dplyr::n_distinct(all_sites_and_visits$site), # we want to have a value for all possible site, even if that val is 0
+          nsites = dplyr::n_distinct(all_sites_and_visits$site),
           n_confirmed_calls = nrow(uamb),
           n_ambiguous_calls = nrow(amb)
         )
@@ -242,7 +243,8 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
         if(!dir.exists(file.path(directory, paste0("Theta", theta_scenario_id), "fits"))) {
           dir.create(file.path(directory, paste0("Theta", theta_scenario_id), "fits"), recursive = TRUE)
         }
-
+        
+        # save the fit in standardized format
         saveRDS(
           fit,
           file=file.path(directory, paste0("Theta", theta_scenario_id),"fits", paste0("fit_", scenario, "_", dataset, ".rds"))
@@ -265,10 +267,12 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
       individual_summaries_list[[dataset]] <- fit_summary
 
       if (save_individual_summaries_list == TRUE){
-        # if directory/ThetaScenarioID/individual_summaries does not exist, create it
+        
+        # if directory/ThetaScenarioID/individual_summaries does not exist, create it and save individual summary there
         if(!dir.exists(file.path(directory, paste0("Theta", theta_scenario_id), "individual_summaries"))) {
           dir.create(file.path(directory, paste0("Theta", theta_scenario_id), "individual_summaries"), recursive = TRUE)
         }
+        
         saveRDS(
           individual_summaries_list,
           file=file.path(directory, paste0("Theta", theta_scenario_id),"individual_summaries", paste0("list_", scenario, ".rds"))
@@ -278,7 +282,7 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
 
       # increment progress bar
       setTxtProgressBar(pb, dataset)
-    }
+    } # closes the loop over datasets within a scenario
     close(pb)
 
     # summary df for the entire scenario after all datasets have been fit and summarized
@@ -299,6 +303,7 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
     big_list[[scenario]] <- individual_summary_df
   }
 
-  out <- do.call(eval(parse(text="dplyr::bind_rows")), big_list) # bind summary dfs for all scenarios into big df (all scenarios, all datasets)
+  # bind summary dfs for all scenarios into big df (all scenarios, all datasets) and return this
+  out <- do.call(eval(parse(text="dplyr::bind_rows")), big_list) 
   return(out)
 }

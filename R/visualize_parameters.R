@@ -27,7 +27,13 @@ visualize_single_parameter <- function(sim_summary,
                                        theta_scenario,
                                        scenarios,
                                        convergence_threshold = 1.1){
+  # Set theme to black and white
   ggplot2::theme_set(ggplot2::theme_bw())
+  
+  # create the dataframe for plotting by filtering to model fits where all 
+  # parameters had Rhat <= convergence threshold, then summarizing the 
+  # average posterior means and bounds of average 95% posterior intervals, as well
+  # as the frequentist coverage.
   results <- sim_summary %>%
     dplyr::mutate(
       below_threshold = ifelse(round(.data$Rhat, 4) <= convergence_threshold, 1, 0)
@@ -45,7 +51,8 @@ visualize_single_parameter <- function(sim_summary,
       coverage = mean(.data$capture),
       av_post_mean = mean(.data$Mean)
     )
-
+  
+  # create plot to be returned
   plt <- results %>%
     dplyr::mutate(scenario = factor(.data$scenario)) %>%
     dplyr::filter(
@@ -119,8 +126,13 @@ visualize_parameter_group <- function(sim_summary,
                                       theta_scenario,
                                       scenarios,
                                       convergence_threshold = 1.1){
+  # set the ggplot theme
   ggplot2::theme_set(ggplot2::theme_bw())
-
+  
+  # create the dataframe for plotting by filtering to model fits where all 
+  # parameters had Rhat <= convergence threshold, then summarizing the 
+  # average posterior means and bounds of average 95% posterior intervals, as well
+  # as the frequentist coverage.
   results <- sim_summary %>%
     dplyr::mutate(
       below_threshold = ifelse(round(.data$Rhat, 4) <= convergence_threshold, 1, 0)
@@ -138,7 +150,8 @@ visualize_parameter_group <- function(sim_summary,
       coverage = mean(.data$capture),
       av_post_mean = mean(.data$Mean)
     )
-
+  
+  # create the ggplot object to be returned
   plt <- results %>%
     dplyr::mutate(scenario = factor(.data$scenario)) %>%
     dplyr::filter(

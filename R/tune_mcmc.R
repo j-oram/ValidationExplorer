@@ -180,7 +180,8 @@ tune_mcmc <- function(dataset, zeros, return_fit = TRUE) {
     parallel::stopCluster(this_cluster)
 
     ## :::::: Check whether all R-hat values are less than 1.1 ::::: ##
-
+    
+    # possible burnin values and numbers of iterations
     warmups <- c(500, 1000, 2000, 5000)
     iters_to_check <- 1:5*1000
 
@@ -202,18 +203,21 @@ tune_mcmc <- function(dataset, zeros, return_fit = TRUE) {
 
     colnames(M) <- paste0("warmup = ", as.character(warmups))
     rownames(M) <- paste0("post-warmup iters = ", as.character(iters_to_check))
-
+    
+    # obtain the suggested minimm number of iterations and warmup
     iter <- min(which(M == 1, arr.ind = TRUE)[, "row"])
     warmup_out <- warmups[min(which(M[iter, ] == 1,))]
     iter_out <- iters_to_check[iter]
     
+    # obtain the MCMC diagnostics from the fit
     n_eff_df <- mcmc_sum(out = fit, truth = rep(0, ncol(fit[[1]]))) %>% 
       dplyr::select(parameter, ess_bulk, ess_tail, Rhat)
     
     if (all(M == 0)) {
-      stop(message("Convergence was not reached in under 10,000 iterations. You must run chains for longer!"))
+      stop(message("Convergence was not reached in under 10,000 iterations. You must run chains for longer or increase validation effort!"))
     }
     
+    # if user specified that they want the fit, return this
     if (return_fit) {
       out <- list(
         max_iter_time = end-start,
