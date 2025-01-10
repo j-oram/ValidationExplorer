@@ -155,9 +155,9 @@ devtools::install_github(repo = "j-oram/ValidationExplorer")
 library(ValidationExplorer)
 ```
 
-With `ValidationExplorer` installed, users have access to all the functions outlined in the table of functions found in Section \ref(BigTable).
+With `ValidationExplorer` installed, users have access to all the functions outlined in the table of functions found in Section \@ref(BigTable).
 
-## Step 3: Simulate data \label{dataSimulation}
+## Step 2: Simulate data \label{dataSimulation}
 
 The first step in a simulation study is to simulate data under each of the candidate validation designs, which is accomplished with the `simulate_validatedData` function in `ValidationExplorer`. We begin by assigning values for the number of sites, visits, and species, as well as the parameter values in Table \@ref(tab:assemblage), which are existing estimates obtained by @stratton22:
 
@@ -272,7 +272,7 @@ head(masked_dfs[[4]][[3]], 10)
 
 The name of this nested list comes from the way that validation effort is simulated: recordings that are not selected for validation have their `true_spp` label masked with an `NA`. Notice that in the example output, all entries in the dataset are identical to the unmasked version output in `full_dfs` above, with the exception of the `true_spp` column. From this column we can see that calls 1-5 and 9 were not selected for validation (because `true_spp = NA`), while recordings 6-8 and 10 were (because the true species label is not marked as `NA`).
 
-#### Summarize validation effort \label{summarizeEffort}
+### Summarize validation effort \label{summarizeEffort}
 
 For most simulations, it will be useful to summarize the number of recordings that are validated under a given validation design and scenario. This can be accomplished using the `summarize_n_validated` function:
 
@@ -286,7 +286,7 @@ summarize_n_validated(
 
 We can see here that any of the validation designs considered in our simulations will remain well within budget.
 
-## Step 4: MCMC tuning \label{tune}
+## Step 3: MCMC tuning \label{tune}
 
 Running a complete simulation study can be time consuming. In an effort to help users improve the efficiency of their simulations, we provide the `tune_mcmc` function, which provides the user with information about the warmup and number of iterations required for the MCMC to reach approximate convergence. This function takes in a masked dataset and the corresponding zeros, fits a model to these data, and outputs an estimated run time for 10,000 iterations, as well as the estimated number of required warmup and total iterations. These are intended to assist tuning of the MCMC algorithm, which is done by the user in the following steps, which we walk through in greater detail below:
 
@@ -298,7 +298,7 @@ Running a complete simulation study can be time consuming. In an effort to help 
 
 4.   Choose values for the number of iterations and warmup that are slightly larger than what is needed based on steps 1-3. This may help ensure that a greater number of model fits are available to inform simulation study results.
 
-#### Fit a model
+### Fit a model
 
 As in the main text, we use a dataset from the scenario with the lowest number of validated recordings, as we expect the greatest number of iterations for this scenario. In our example, this is scenario 1 , in which an average of $\approx 218$ recordings are validated per dataset (Section \@ref(summarizeEffort)).
 
@@ -326,7 +326,7 @@ tune_list$max_iter_time
 
 This may seem insignificant, but over the course of an entire simulations study with 5 scenarios $\times$ 50 datasets, that corresponds to around 8 hours of run time. Using fewer than 10,000 iterations will substantially reduce the time to run a simulation study.
 
-#### Create trace plots
+### Create trace plots
 
 To decide the number of iterations and warmup for use in a simulation study, we recommend beginning by creating trace plots, which show how the sampled values of a parameter evolve over the course of each Markov chain. To ensure the MCMC algorithm will characterize the posterior distribution well, we need to check that chains are stationary and mixing well, and that effective sample sizes are sufficiently large to characterize the posterior. Trace plots are especially useful for assessing the first of these. To create a trace plot using the bayesplot package [@bayesplot] for a single parameter, run the following: 
 
@@ -375,7 +375,7 @@ Once again, we see the three chains overlap strongly after around 500 iterations
 
 After making traceplots and zooming in for all parameters (not all plots are shown here), it appears that the guessed warmup value of `r tune_list$min_warmup`output from `tune_mcmc` is a reasonable choice. Even so, we increase our iterations and warmup beyond these minimum values in Section \@ref(runSims) to avoid simulations failing due to convergence.
 
-#### Examine effective sample size and Gelman-Rubin statistics
+### Examine effective sample size and Gelman-Rubin statistics
 
 As a final step, we examine the effective sample sizes (out of 10,000 draws) and $\hat{R}$ values. The effective sample size statistics `ess_bulk` and `ess_tail` are MCMC diagnostic statistics that summarizes the number of effectively independent draws from a parameter's posterior distribution the Markov chain contains. If a parameter has a large value in the `ess_bulk` column, then it is likely that inference based on sampled draws will characterize the center of the posterior distribution well. The `ess_tail` column, on the other hand, describes how much information is available about posterior tail probabilities. Once again, we want a large value for `ess_tail`, preferably `ess_tail`$\geq 250$. 
 
@@ -398,7 +398,7 @@ mcmc_sum(shortened, truth = rep(0, ncol(shortened[[1]]))) %>%
 
 These results appear satisfactory, with effective sample sizes in both the tail and bulk of the posterior distributions of more than 250 and $\hat{R}$ near 1. Based on the results of MCMC tuning, it appears that using an MCMC with at least `r tune_list$min_iter` iterations with  at least `r tune_list$min_warmup` discarded as warmup should to produce good results for our simulation study.
 
-#### Set iterations for simulation
+### Set iterations for simulation
 
 Based on our findings in the MCMC tuning step, we set the number of iterations for simulation to be slightly higher to guard against convergence issues that preclude using a fitted model for inference: 
 
@@ -408,7 +408,7 @@ iters_for_sims <- tune_list$min_iter + 1000
 warmup_for_sims <- tune_list$min_warmup + 500
 ```
 
-#### A note about non-convergence while tuning
+### A note about non-convergence while tuning
 
 In some instances, we have run `tune_mcmc` with a dataset and received a series of error messages that convergence was not reached in under 10,000 iterations. If this persists after trying to fit several other datasets, we have several options:
 
@@ -420,7 +420,7 @@ In our experience fitting these models, the second option seems to often be the 
 
 We emphasize that the results from `tune_mcmc` are from a single model fit; they are supplied only as guidelines, and we encourage users to increase the number of iterations above the minimum values output from `tune_mcmc`. While each model fit will take slightly longer with an increased number of total iterations, this approach may save time in the long run by avoiding the need to re-run simulations.
 
-## Step 5: Fit models to simulated data \label{runSims}
+## Step 4: Fit models to simulated data \label{runSims}
 
 With the simulated dataset and some informed choices about tuning of the MCMC, we use `run_sims` to run the simulations:
 
@@ -446,7 +446,9 @@ The output object, `sims_output` is a dataframe with summaries of the MCMC draws
 str(sims_output)
 ```
 
-## Step 6: Visualize simulations \label{viz}
+Note that we fit all models in parallel to reduce simulation time; we encourage users to do the same. However, note that if you fit models with `parallel = FALSE` in `run_sims`, the console will display the messages NIMBLE prints as it compiles code for each model. Internally, we specify a custom distribution to compute the marginal probabilities for ambiguous autoID labels, and you will see a warning about overwriting a custom user-specified distribution if `parallel = FALSE`. These warnings can be safely ignored. 
+
+## Step 5: Visualize simulations \label{viz}
 
 Once models have been fit to all simulated datasets, you can visualize results using several functions. We recommend beginning with the most detailed functions, which are `visualize_parameter_group` and `visualize_single_parameter`. The plots output from these functions show many following features of the simulation study. These are
 
@@ -532,7 +534,7 @@ visualize_parameter_group(
 )
 ```
 
-The simulation results shown in Figure \@ref(fig:plotPsi) and \@ref(fig:plotTheta) don't immediately cause concern that inference for relative activity rates will be severely compromised for any of these validation designs. Some parameters have slightly low coverage, but we believe this is mostly due to the small number of datasets used in this example; users should increase the number of datasets to at least 50, which we expect would lead to coverage near nominal levels.
+The simulation results shown in Figure \@ref(fig:vizPsi) and \@ref(fig:plotTheta) don't immediately cause concern that inference for relative activity rates will be severely compromised for any of these validation designs. Some parameters have slightly low coverage, but we believe this is mostly due to the small number of datasets used in this example; users should increase the number of datasets to at least 50, which we expect would lead to coverage near nominal levels.
 
 ## Take-aways from the Fixed-Effort Simulations \label{takeaway-FE}
 
@@ -544,15 +546,13 @@ In situations such as this one, a decision is required of the user. If a slightl
 
 # Stratified-by-species example \label{stratEx}
 
-__[Katie, should I go as in depth as in the previous example? It feels a bit strange to show all of the output twice, since they are essentially the same, but maybe we want the sections to stand alone..? Sometimes that can be nice, but I could also imagine it being overly cumbersome.]__
-
 In this section, we provide further details of the example in the main manuscript, which assumed a stratified-by-species design. In a stratified-by-species design, the random mechanism is a stratified random sample, with strata formed by the species labels assigned by automated classification software (i.e., by autoID). In this kind of design, the LOVE is the proportion of recordings selected to be validated for each species label.
 
 We repeat the simulation study conducted in the main text in this section, providing greater detail for some of the steps. We assume the same measurable objectives and cost constraints as in Section \@ref(FEEx). 
 
 ## Simulate data \label{simBySpp}
 
-Using the same values for `psi`, `lambda` and `Theta` as in Section \@ref(dataSimulation), we simulate data using `simulate_validatedData` with `design_type = "BySpecies"`.
+Using the same values for `psi`, `lambda` and `Theta` as in Section \@ref(dataSimulation), we simulate data using `simulate_validatedData` with `design_type = "BySpecies"`. This will yield simulated data in the format described in Section \@ref(dataSimulation).
 
 ```{r message=FALSE}
 sim_data <- simulate_validatedData(
@@ -602,7 +602,7 @@ In the resulting dataframe, we see that scenario 1 has the lowest overall level 
 
 ## Tune the MCMC
 
-The MCMC tuning in this step is very similar to the procedures used in Section \@ref(tune). We begin by fitting a model to one dataset using the `tune_mcmc` function.
+The MCMC tuning in this step is very similar to the procedures used in Section \@ref(tune). We begin by fitting a model to one dataset using the `tune_mcmc` function. 
 
 ```{r cache=TRUE}
 i <- sample(1:length(sim_data$full_datasets), 1)
@@ -673,6 +673,7 @@ sims_out <- run_sims(
   directory = here::here("Vignette", "BySpecies")
 )
 ```
+The output, `sims_out` will have the same structure as described in Section \@ref(runSims).
 
 ## Visualize results \label{vizbyspp}
 
