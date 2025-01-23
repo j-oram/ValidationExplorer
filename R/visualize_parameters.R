@@ -82,7 +82,7 @@ visualize_single_parameter <- function(sim_summary,
         color = .data$coverage
       )
     ) +
-    viridis::scale_color_viridis(limits = c(0,1)) +
+    viridis::scale_color_viridis_b(option = "B") +
     ggplot2::geom_point(color = "red") +
     ggplot2::geom_point(
       inherit.aes = FALSE,
@@ -181,7 +181,7 @@ visualize_parameter_group <- function(sim_summary,
         color = .data$coverage
       )
     ) +
-    viridis::scale_color_viridis(limits = c(0,1)) +
+    viridis::scale_color_viridis(option = "B") +
     ggplot2::geom_point(color = "red") +
     ggplot2::geom_point(
       inherit.aes = FALSE,
