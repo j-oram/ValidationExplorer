@@ -14,6 +14,8 @@ simulate_validatedData(
   psi,
   lambda,
   theta,
+  scen_expand = TRUE,
+  scen_df = NULL,
   save_datasets = FALSE,
   save_masked_datasets = FALSE,
   directory = here::here()
@@ -44,6 +46,13 @@ Make sure the order is correct and matches psi.}
 
 \item{theta}{a matrix containing the (mis)classification probabilities. The rows of this matrix must sum
 to 1. See vignette for an example.}
+
+\item{scen_expand}{If \code{design_type = "BySpecies"}, should \code{simulate_validatedData} expand the list of \code{scenarios}?
+If TRUE (the default value), then \code{scenarios} must be a list; if FALSE, then \code{simulate_validatedData} expects a
+user-supplied dataframe object through the \code{scen_df} argument.}
+
+\item{scen_df}{If \code{scen_expand = FALSE}, a user-supplied dataframe object with each row corresponding to
+the validation scenario and each column to the species. Default value is NULL.}
 
 \item{save_datasets}{logical. If TRUE, the datasets without any masking of true species labels (i.e.,
 corresponding to complete validation of all recordings) will be saved. Default value is FALSE.}

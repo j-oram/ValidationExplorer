@@ -16,6 +16,11 @@
 #'   Make sure the order is correct and matches psi.
 #' @param theta a matrix containing the (mis)classification probabilities. The rows of this matrix must sum
 #'   to 1. See vignette for an example.
+#' @param scen_expand If `design_type = "BySpecies"`, should `simulate_validatedData` expand the list of `scenarios`?
+#'   If TRUE (the default value), then `scenarios` must be a list; if FALSE, then `simulate_validatedData` expects a
+#'   user-supplied dataframe object through the `scen_df` argument. 
+#' @param scen_df If `scen_expand = FALSE`, a user-supplied dataframe object with each row corresponding to 
+#'   the validation scenario and each column to the species. Default value is NULL. 
 #' @param save_datasets logical. If TRUE, the datasets without any masking of true species labels (i.e.,
 #'   corresponding to complete validation of all recordings) will be saved. Default value is FALSE.
 #' @param save_masked_datasets logical. If TRUE, the masked datasets (i.e., the simulated datasets with
@@ -79,6 +84,8 @@ simulate_validatedData <- function(n_datasets,
                                    psi,
                                    lambda,
                                    theta,
+                                   scen_expand = TRUE,
+                                   scen_df = NULL,
                                    save_datasets = FALSE,
                                    save_masked_datasets = FALSE,
                                    directory = here::here()){
@@ -156,34 +163,73 @@ simulate_validatedData <- function(n_datasets,
 
   if(design_type == "BySpecies"){
     
-    # if user specified BySpecies, create a dataframe with a unique combination
-    # of validation efforts for each species
-    scenarios <- expand.grid(scenarios)
-
-    # loop over scenarios and datasets, saving each masked dataset
-    # Note that for this design, `scenarios` is a dataframe object
-    for(s in 1:nrow(scenarios)){
-      masked_dataset_list[[s]] <- list()
-      for(d in 1:length(datasets_list)){
-
-        masked_df <- mask_by_spp(datasets_list[[d]], scenarios[s,])$final_df
-        masked_df$scenario <- s
-
-        if(save_masked_datasets == TRUE){
-         
-          saveRDS(masked_df,
-                  file = file.path(directory, "masked_datasets", paste0("dataset_", d, "_masked_under_BSV_scenario_", s, ".rds")))
+    if(scen_expand) {
+      # if user specified BySpecies, create a dataframe with a unique combination
+      # of validation efforts for each species
+      scenarios <- expand.grid(scenarios)
+      
+      # loop over scenarios and datasets, saving each masked dataset
+      # Note that for this design, `scenarios` is a dataframe object
+      for(s in 1:nrow(scenarios)){
+        masked_dataset_list[[s]] <- list()
+        for(d in 1:length(datasets_list)){
+          
+          masked_df <- mask_by_spp(datasets_list[[d]], scenarios[s,])$final_df
+          masked_df$scenario <- s
+          
+          if(save_masked_datasets == TRUE){
+            
+            saveRDS(masked_df,
+                    file = file.path(directory, "masked_datasets", paste0("dataset_", d, "_masked_under_BSV_scenario_", s, ".rds")))
+          }
+          
+          masked_dataset_list[[s]][[d]] <- masked_df
+          
         }
-
-        masked_dataset_list[[s]][[d]] <- masked_df
-
       }
+      
+      # add a column for the scenario number to make it easy to see which
+      # LOVE for each species goes with which number on x-axis of plots
+      scenarios <- scenarios %>%
+        tibble::rownames_to_column(var = "scenario")
+      
+    } else { # User specifies they don't want to use expand.grid
+      
+      if(is.null(scen_df)) {
+        print("`scen_df` must not be NULL if `scen_expand = FALSE`.\nPlease supply a scenario x species dataframe.")
+      } else {
+        
+        # create the summary df to output
+        scenarios <- scen_df
+        
+        # Do the masking in the same way as if expand.grid was called on the spp list
+        for(s in 1:nrow(scenarios)){
+          masked_dataset_list[[s]] <- list()
+          for(d in 1:length(datasets_list)){
+            
+            masked_df <- mask_by_spp(datasets_list[[d]], scenarios[s,])$final_df
+            masked_df$scenario <- s
+            
+            if(save_masked_datasets == TRUE){
+              
+              saveRDS(masked_df,
+                      file = file.path(directory, "masked_datasets", paste0("dataset_", d, "_masked_under_BSV_scenario_", s, ".rds")))
+            }
+            
+            masked_dataset_list[[s]][[d]] <- masked_df
+            
+          }
+        }
+        
+        # create scenario column for joining later
+        scenarios <- scenarios %>%
+          mutate(scenario = 1:nrow(scenarios)) %>% 
+          relocate(scenario)
+        
+      }
+      
     }
 
-    # add a column for the scenario number to make it easy to see which
-    # LOVE for each species goes with which number on x-axis of plots
-    scenarios <- scenarios %>%
-      tibble::rownames_to_column(var = "scenario")
 
   } else if (design_type == "FixedPercent") { # user specified a fixed effort design
 

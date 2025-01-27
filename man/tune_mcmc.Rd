@@ -15,6 +15,10 @@ lowest-effort validation scenario.}
 \item{zeros}{A dataframe containing the site/visit/true_spp/id_spp combinations
 that were never observed (count = 0). This will be one of the elements of the
 zeros object ouput from \link{simulate_validatedData}.}
+
+\item{return_fit}{A logical indicating whether the draws from the posterior should
+be returned. Default value is set to TRUE to encourage visual inspection of
+chains during the tuning process.}
 }
 \value{
 A list containing the expected time to fit a single dataset with 10,000

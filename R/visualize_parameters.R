@@ -82,7 +82,7 @@ visualize_single_parameter <- function(sim_summary,
         color = .data$coverage
       )
     ) +
-    viridis::scale_color_viridis_b(option = "B") +
+    viridis::scale_color_viridis(option = "B") +
     ggplot2::geom_point(color = "red") +
     ggplot2::geom_point(
       inherit.aes = FALSE,
@@ -189,7 +189,6 @@ visualize_parameter_group <- function(sim_summary,
     ) +
     ggplot2::facet_wrap(
       ~.data$parameter,
-      #scales = "free_y"
       labeller = L
     ) +
     ggplot2::labs(
