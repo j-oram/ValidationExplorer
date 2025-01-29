@@ -77,7 +77,7 @@
 #'
 simulate_validatedData <- function(n_datasets,
                                    design_type = c("BySpecies", "FixedPercent"),
-                                   scenarios,
+                                   scenarios = NULL,
                                    nsites,
                                    nspecies,
                                    nvisits,
@@ -96,7 +96,7 @@ simulate_validatedData <- function(n_datasets,
   }
   
   # check the length of scenarios under BySpecies validation design
-  if(design_type == "BySpecies" & length(scenarios) != nspecies) {
+  if(design_type == "BySpecies" & !is.null(scenarios) & length(scenarios) != nspecies) {
     stop("Scenarios must be a list with length = nspecies.")
   }
   

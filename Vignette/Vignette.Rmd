@@ -583,6 +583,39 @@ names(sim_data)
 sim_data$scenarios_df
 ```
 
+If users would like to supply a tailored set of validation scenarios, this can be done through the `scen_expand` and `scen_df` arguments as follows: 
+
+```{r}
+# Define the scenarios dataframe. Each row is a scenario, each column is a spp
+my_scenarios <- data.frame(
+  spp1 = c(0.05, 0.05, 0.1), 
+  spp2 = c(0.1, 0.2, 0.3),
+  spp3 = c(0.2, 0.2, 0.25), 
+  spp4 = c(0.4, 0.5, 0.6), 
+  spp5 = rep(1, 3), 
+  spp6 = rep(0.5, 3)
+)
+
+sim_data2 <- simulate_validatedData(
+  n_datasets = 10, 
+  design_type = "BySpecies",
+  scen_expand = FALSE, 
+  scen_df = my_scenarios,
+  scenarios = NULL,
+  nsites = nsites, 
+  nspecies = nspecies, 
+  nvisits = nvisits,
+  psi = psi, 
+  lambda = lambda, 
+  theta = Theta, 
+  directory = here::here("Vignette", "BySpecies")
+)
+
+sim_data2$scenarios_df # the same as my_scenarios above
+
+```
+
+In the remainder of this example, we use the `sim_data` object. 
 We can combine the `scenarios_df` output with the output of `summarize_n_validated` to understand what the scenarios are and how many recordings are validated under each.
 
 ```{r}
@@ -673,7 +706,7 @@ sims_out <- run_sims(
   directory = here::here("Vignette", "BySpecies")
 )
 ```
-The output, `sims_out` will have the same structure as described in Section \@ref(runSims).
+The output, `sims_out`, will have the same structure as described in Section \@ref(runSims).
 
 ## Visualize results \label{vizbyspp}
 
