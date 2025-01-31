@@ -196,7 +196,7 @@ simulate_validatedData <- function(n_datasets,
     } else { # User specifies they don't want to use expand.grid
       
       if(is.null(scen_df)) {
-        print("`scen_df` must not be NULL if `scen_expand = FALSE`.\nPlease supply a scenario x species dataframe.")
+        stop("`scen_df` must not be NULL if `scen_expand = FALSE`.\nPlease supply a scenario x species dataframe.")
       } else {
         
         # create the summary df to output
@@ -258,7 +258,7 @@ simulate_validatedData <- function(n_datasets,
     }
 
   } else {
-    stop(message("design_type must be one of c('BySpecies', 'FixedPercent')"))
+    stop("design_type must be one of c('BySpecies', 'FixedPercent')")
   }
 
   # If the validation design is by-species, also return the scenarios dataframe
