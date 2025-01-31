@@ -7,7 +7,7 @@
 simulate_validatedData(
   n_datasets,
   design_type = c("BySpecies", "FixedPercent"),
-  scenarios,
+  scenarios = NULL,
   nsites,
   nspecies,
   nvisits,

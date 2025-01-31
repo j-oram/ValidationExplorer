@@ -43,7 +43,7 @@ params <- dimnames(sum$statistics)[[1]]
 tmp_sum <- cbind(sum$statistics, sum$quantiles)
 
 # Create a matrix to hold the MCMC diagnostic statistics
-m <- matrix(nrow = nrow(tmp_sum), ncol = length(out))
+m <- matrix(nrow = nrow(tmp_sum), ncol = 3)
 colnames(m) <- c("Rhat", "ess_bulk", "ess_tail")
 
 # For each parameter, compute the Rhat, ess_bulk and ess_tail

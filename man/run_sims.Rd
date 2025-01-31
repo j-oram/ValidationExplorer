@@ -13,6 +13,7 @@ run_sims(
   niter = 2000,
   nburn = floor(niter/2),
   thin = 1,
+  nchains = 3,
   save_fits = FALSE,
   save_individual_summaries_list = FALSE,
   directory = here::here()
@@ -37,6 +38,8 @@ the true values of the respective parameters.}
 \item{nburn}{Number of warmup iterations.}
 
 \item{thin}{Thinning interval for the MCMC chains.}
+
+\item{nchains}{The number of chains.}
 
 \item{save_fits}{Should individual model fits be saved? This could require large
 amounts of disk space if you are fitting many large models to big datasets.

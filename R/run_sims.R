@@ -12,6 +12,7 @@
 #' @param niter Number of iterations per MCMC chain.
 #' @param nburn Number of warmup iterations.
 #' @param thin Thinning interval for the MCMC chains.
+#' @param nchains The number of chains.
 #' @param save_fits Should individual model fits be saved? This could require large
 #'   amounts of disk space if you are fitting many large models to big datasets.
 #'   Default value is FALSE.
@@ -75,7 +76,7 @@
 
 run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
                      parallel = TRUE,
-                     niter = 2000, nburn = floor(niter/2), thin = 1,
+                     niter = 2000, nburn = floor(niter/2), thin = 1, nchains = 3,
                      save_fits = FALSE,
                      save_individual_summaries_list = FALSE,
                      directory = here::here()) {
@@ -211,10 +212,10 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
 
       if(parallel){
 
-        this_cluster <- parallel::makeCluster(3)
+        this_cluster <- parallel::makeCluster(nchains)
         parallel::clusterEvalQ(cl = this_cluster, library(nimble))
         fit <- parallel::parLapply(cl = this_cluster,
-                         X = 1:3,
+                         X = 1:nchains,
                          fun = runMCMC_fit,
                          code = code,
                          data = nimble_data,
@@ -230,11 +231,11 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
         fit <- runMCMC_fit(code = code,
                            data = nimble_data,
                            constants = constants,
-                           nchains = 3,
+                           nchains = nchains,
                            niter = niter,
                            nburn = nburn,
                            thin = thin,
-                           seed = 1:3)
+                           seed = 1:nchains)
 
       }
 
