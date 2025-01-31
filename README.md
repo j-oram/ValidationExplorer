@@ -1,6 +1,6 @@
 # ValidationExplorer
 
-This repository contains supplementary files to accompany the manuscript "`ValidationExplorer`:  Streamlined simulations to aid informed management decisions using bioacoustic data in the presence of misclassification," submitted to Methods in Ecology and Evolution Applications. 
+This repository contains supplementary files to accompany the manuscript "`ValidationExplorer`:  Streamlined simulations to provide bioacoustic study design guidance in the presence of misclassification," submitted to Methods in Ecology and Evolution Applications. 
 
 **Disclaimer:**  This information is preliminary and is subject to revision. It is being provided to meet the need for timely best science.
 The information is provided on the condition that neither the U.S. Geological Survey nor the U.S. Government shall be
