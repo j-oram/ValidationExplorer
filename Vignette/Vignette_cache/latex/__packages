@@ -16,3 +16,4 @@ here
 kableExtra
 ValidationExplorer
 bayesplot
+testthat

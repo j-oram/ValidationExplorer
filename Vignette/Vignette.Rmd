@@ -8,7 +8,7 @@ author:
   - name: Katharine Banner
     email: katharine.banner@montana.edu
     institute: msu
-    correspondence: false
+    correspondence: true
   - name: Christian Stratton
     email: cstratton@middlebur.edu
     institute: middlebury
@@ -16,7 +16,7 @@ author:
   - name: Kathryn M. Irvine
     email: kirvine@usgs.gov
     institute: norock
-    correspondence: true
+    correspondence: false
 institute:
     - msu: Department of Mathematical Sciences, Montana State University, Bozeman, MT, USA
     - middlebury: Department of Mathematics and Statistics, Middlebury College, Middlebury, VT, USA
@@ -36,8 +36,8 @@ header-includes:
   - \usepackage{amsmath}
   - \usepackage{underscore}
 bibliography: Vignette.bib
-abstract: "Our vignette demonstrates the use of the `ValidationExplorer` package to conduct statistical simulation studies that explore the costs and inferential properties (e.g., near nominal coverage and/or minimal estimation error) of alternative validation designs in the context of the count detection model framework. 
-Our functions allow the user to specify a suite of candidate validation designs using either a stratified sampling procedure or a fixed-effort design type. An example of the former is provided in the manuscript entitled '`ValidationExplorer`: Streamlined simulations to aid informed management decisions using bioacoustic data in the presence of misclassification', which was submitted to the Applications series of *Methods in Ecology and Evolution*. In this vignette, we provide further details not covered in the manuscript and an additional example of data simulation, model fitting, and visualization of simulation results when using a fixed-effort design type. Our demonstration here is intended to aid researchers and others to tailor a validation design that provides useful inference while also ensuring that the level of effort meets cost constraints. \\vfill"
+abstract: "Our vignette demonstrates the use of the `ValidationExplorer` package to conduct statistical simulation studies that can aid in the design phase of bioacoustic studies. In particular, our package facilitates explorion of the costs and inferential properties (e.g., coverage and interval widths) of alternative validation designs in the context of the count detection model framework. 
+Our functions allow the user to specify a suite of candidate validation designs using either a stratified sampling procedure or a fixed-effort design type. An example of the former is provided in the manuscript entitled '`ValidationExplorer`: Streamlined simulations to provide bioacoustic study design guidance in the presence of misclassification', which was submitted to the Applications series of *Methods in Ecology and Evolution*. In this vignette, we provide further details not covered in the manuscript and an additional example of data simulation, model fitting, and visualization of simulation results when using a fixed-effort design type. Our demonstration here is intended to aid researchers and others to tailor a validation design that provides useful inference while also ensuring that the level of effort meets cost constraints. \\vfill"
 ---
 
 ```{r setup, include=FALSE, message=FALSE}
@@ -77,9 +77,9 @@ devtools::load_all(path = "..")
 
 # Introduction
 
-Automated recording units (ARUs) provide one of the main data sources for many contemporary monitoring programs that aim to provide inference about status and trends for assemblages of species [@loeb15]. As described in the main text, entitled, "`ValidationExplorer`: Streamlined simulations to inform management decisions using bioacoustic data in the presence of misclassification," substantial practical interest lies in identifying cost-effective validation designs that will allow a monitoring program to obtain its measurable objectives. We believe that statistical simulation studies are a valuable tool for evaluating the relative merits of candidate validation designs prior to gathering and validating ARU data, and it is our goal for `ValidationExplorer` to provide those tools in an approachable package.
+Automated recording units (ARUs) provide one of the main data sources for many contemporary ecological studies that aim to provide inference about status and trends for assemblages of species [@loeb15]. As described in the main text, entitled, "`ValidationExplorer`: Streamlined simulations to provide bioacoustic study design guidance in the presence of misclassification," substantial practical interest lies in identifying cost-effective validation designs that will allow a study to obtain its measurable objectives. We believe that statistical simulation studies are a valuable tool for informing study design -- including the validation step -- prior to gathering ARU data, and it is our goal for `ValidationExplorer` to provide those tools in an approachable package.
 
-This vignette aids exploration of possible validation designs within a count-detection framework using the `ValidationExplorer` package. As described in the main text, a validation design is composed of two parts: a random mechanism for selecting observations to be manually reviewed by experts ("validated"), and a percentage or proportion that controls the sample size. We refer to the random mechanism as the *design type* and the proportion as the level of validation effort (LOVE). In the following section we consider five possible LOVEs and show an example of a fixed effort design.
+This vignette aids exploration of possible validation designs within a count-detection framework using the `ValidationExplorer` package. As described in the main text, a validation design is composed of two parts: a random mechanism for selecting observations to be manually reviewed by experts ("validated"), and a percentage or proportion that controls the number of validated recordings. We refer to the random mechanism as the *design type* and the proportion as the level of validation effort (LOVE). In the following section we consider five possible LOVEs and show an example of a fixed effort design.
 
 We emphasize that results from any simulation study -- including those produced using the `ValidationExplorer` package -- are conditional on the settings and assumptions of the study. In the case of the count-detection model framework that is implemented in `ValidationExplorer`, the assumptions are
 
@@ -88,28 +88,29 @@ We emphasize that results from any simulation study -- including those produced 
   \item For any one species, its occurrence at one location is independent of its occurrence at any other location (independence across sites).
   \item Visits to a site (i.e., detector nights) are independent. 
   \item Recordings within the same site-visit are independent.
-  \item Validation of one recording does not influence the probability that another will be validated
-  \item At sites where at least one species is present, the count of recordings generated by each species per night is a Poisson random variable. 
+  \item Each recording is assigned a single species autoID.
+  \item Validation of one recording does not influence the probability that another will be validated.
+  \item At sites where at least one species is present, the count of recordings generated by each species per night is a Poisson random variable.
   \item All species in the assemblage can co-occur and are capable of being confused (no structural zeros in the classification matrix). 
-  \item The configuration of visits to sites is balanced. Note that this is not required to use our method but it is assumed in the simulation studies. For example, the data used by Oram et al. (in submission) had a varying number of detector nights at each site. To model these data, Oram et al. (in submission) made the additional assumption that the number of visits to a site is independent of the presence/absence and expected relative activity of species there. That is, locations where detectors were deployed for more nights were not more or less likely than other sites to be occupied by species of interest and were not more or less likely than other sites to have high levels of activity.  
+  \item The configuration of visits to sites is balanced. Note that this is not required to use our method but it is assumed in the simulation studies. For example, the data used by Oram et al. (in submission) had a varying number of detector nights at each site. To model these data, Oram et al. (in submission) made the additional assumption that the number of visits to a site is independent of the presence/absence and expected relative activity of species there. That is, locations where detectors were deployed for more nights were not more or less likely than other sites to be occupied by species of interest and were not more or less likely than other sites to have high levels of activity. 
+  \item The fitted model is the same as the model that generated the data.
 \end{enumerate}
 
-In addition, the simulations produced by `ValidationExplorer` are unbiased, meaning that the model that is fit is the same as the data-generating model.
-
+\noindent Under these assumptions, we outline the step-by-step use of `ValidationExplorer` in the following section.
 
 # Conducting a simulation study with a fixed effort design type \label{FEEx}
 
 ## What is a fixed effort design?
 
-In this section, we assume a fixed-effort (the design type) validation design, under which $x\%$ of recordings obtained from each visit to a site are validated by experts. The level of validation effort is controlled by the value of $x.$ We begin the process of simulating under this design by defining the real-world objectives and constraints we anticipate.
+In this section, we assume a fixed-effort design type, under which $x\%$ of recordings obtained from each visit to a site are validated by experts. The level of validation effort is controlled by the value of $x.$ We begin the process of simulating under this design by defining the real-world objectives and constraints we anticipate.
 
 ## Step 0: Define measurable objectives and constraints \label{MO}
 
-Recall from the main text that the first step -- before opening R and loading `ValidationExplorer` -- is to identify and write down the set of measurable objectives that the data will be used for. Suppose that, for this example, the measurable objectives and cost constraints are the same as those in Section 3 of the main text:
+Recall from the main text that the first step -- before opening R and loading `ValidationExplorer` -- is to identify and write down the set of measurable objectives that the data will be used for. Suppose that, for this example, the measurable objectives and cost constraints are the same as those in Section 3 of the main text. That is, 
 
 \begin{itemize}
-  \item The measurable objective is to estimate relative activity parameters (denoted as $\lambda_k$) for each species with estimation error less than 1 call per night and with the expected width of 95\% posterior intervals less than 3 calls per night.
-  \item The monitoring program can pay their expert bat biologists to validate at most 4000 recordings. WE make the assumption that all recordings are approximately the same cost to validate (i.e., rare species autoIDs are not necessarily more expensive or time consuming than extremely common ones). 
+  \item The measurable objective is to estimate relative activity parameters (denoted as $\lambda_k$) for each species with 95% coverage and expected posterior interval width less than 3 calls per night.
+\item The monitoring program can pay their expert bat biologists to validate at most 4000 recordings. We make the assumption that all recordings are approximately the same cost to validate (i.e., rare species autoIDs are not necessarily more expensive or time consuming than extremely common ones). 
 \end{itemize}
 
 Suppose further that the species assemblage is the same as in the main text. That is, we have six species of interest that co-occur. The existing prior knowledge (perhaps from another study) about the relative activity rates and occurrence probabilities for each species are summarized in Table \@ref(tab:assemblage).
@@ -171,7 +172,7 @@ psi <- c(0.6331, 0.6122, 0.8490, 0.6972, 0.2365, 0.7036)
 lambda <- c(5.9347, 4.1603, 14.2532, 6.1985, 11.8649, 2.4050)
 ```
 
-Additionally, `simulate_validatedData` requires that the user supply misclassification probabilities in the form of a matrix, subject to the constraint that rows in the matrix sum to one. An easy way to simulate a matrix of probabilities that meet these criteria is to leverage the `rdirch` function from the `nimble` package:
+Note that by running multiple simulation studies with varying numbers of sites and balanced visits, `ValidationExplorer` allows users to investigate all elements of the study design prior to data collection. In addition to specifying the numnber of sites and visits and parameter values, `simulate_validatedData` requires that the user supply misclassification probabilities in the form of a matrix, subject to the constraint that rows in the matrix sum to one. An easy way to simulate a matrix of probabilities that meet these criteria is to leverage the `rdirch` function from the `nimble` package:
 
 ```{r Theta}
 # Simulate a hypothetical confusion matrix 
@@ -234,13 +235,12 @@ Note that we specified the design type through the argument `design_type = "Fixe
 To understand the output from `simulate_validatedData`, we can investigate `sim_data`. The output is a list, containing three objects:
 
 ```{r}
-length(sim_data)
 names(sim_data)
 ```
 
 We examine each of these objects below:
 
--   `full_datasets`: A list of length `n_datasets` with unmasked datasets. These are the datasets if all recordings were validated so that every recording has an autoID and a true species label. We opted to not save these datasets to the working directory by setting `save_datasets = FALSE`. If we had specified `save_datasets = TRUE`, then these will be saved individually in `directory` as `dataset_n.rds`, where `n` is the dataset number. As an example of one element in `sim_data$full_datasets`, we examine the third simulated full dataset:
+-   `full_datasets`: A list of length `n_datasets` with unmasked datasets. These are the datasets under complete validation so that every recording has an autoID and a true species label. We opted to not save these datasets to the working directory by setting `save_datasets = FALSE`. If we had specified `save_datasets = TRUE`, then these will be saved individually in `directory` as `dataset_n.rds`, where `n` is the dataset number. As an example of one element in `sim_data$full_datasets`, we examine the third simulated full dataset:
 
 ```{r fullDfs}
 full_dfs <- sim_data$full_datasets
@@ -249,7 +249,7 @@ head(full_dfs[[3]]) # Dataset number 3 if all recordings were validated
 
 Notice that in addition to the site, visit, true species and autoID (`id_spp`) columns, the parameter values (`lambda`, `psi`, and `theta`) are given for each true species-autoID combination. In addition, the occupancy state `z` for the true species is given and the `count` of calls at that site visit with a specific true species-autoID label combination. For example, at site 1, visit 1, there are four calls from species 1 that are assigned autoID 1, yielding 4 rows with `count = 4`. There is also one call from species 4 that was assigned a species 2 label with probability 0.02893559. Because this happened once, it is documented with `count = 1` and only occupies a single row. Next, we can see that there were 10 calls that were correctly identified as species 3; ten rows will have `true_spp = 3` and `autoID = 3`. Finally, the `Y.` column tells us how many observations were made from all species at that site visit; for visit 1 to site 1, the unique value is 24. That is, the 25th row of this dataset will contain the first observation from visit 2 to site 1.
 
--   `zeros`: A list of length `n_datasets` containing the true species-autoID combinations that were never observed at each site visit. The `count` column, which, again, contains the count of each site-visit-true_spp-id_spp combination, is zero for all entries. For example, in dataset 3 (below), species 2 was not present at site 1, so it could not be classified as species 1 (first row). Additionally, species 3 was present at site 1, but it was never classified as species 1 on visit 1 (second row). These zero counts are necessary for the model to identify occurrence probabilities and relative activity rates. If `save_datasets = TRUE`, the zeros for each dataset will also be saved in `directory` individually as `zeros_in_dataset_n.rds`, where `n` is the dataset number.
+-   `zeros`: A list of length `n_datasets` containing the true species-autoID combinations that were never observed at each site visit. These zero counts are necessary for the model to identify occurrence probabilities and relative activity rates. The `count` column, which, again, contains the count of each site-visit-true_spp-id_spp combination, is zero for all entries. For example, in dataset 3 (below), species 2 was not present at site 1, so it could not be classified as species 1 (first row). Additionally, species 3 was present at site 1, but it was never classified as species 1 on visit 1 (second row). If `save_datasets = TRUE`, the zeros for each dataset will also be saved in `directory` individually as `zeros_in_dataset_n.rds`, where `n` is the dataset number.
 
 ```{r zeros}
 zeros <- sim_data$zeros
@@ -288,7 +288,7 @@ We can see here that any of the validation designs considered in our simulations
 
 ## Step 3: MCMC tuning \label{tune}
 
-Running a complete simulation study can be time consuming. In an effort to help users improve the efficiency of their simulations, we provide the `tune_mcmc` function, which provides the user with information about the warmup and number of iterations required for the MCMC to reach approximate convergence. This function takes in a masked dataset and the corresponding zeros, fits a model to these data, and outputs an estimated run time for 10,000 iterations, as well as the estimated number of required warmup and total iterations. These are intended to assist tuning of the MCMC algorithm, which is done by the user in the following steps, which we walk through in greater detail below:
+Running a complete simulation study can be time consuming. In an effort to help users improve the efficiency of their simulations, we provide the `tune_mcmc` function, which outputs information about possible values for the warmup and total number of iterations required for the MCMC to reach approximate convergence. This function takes in a masked dataset and the corresponding zeros, fits a model to these data, and outputs an estimated run time for 10,000 iterations, as well as the estimated number of required warmup and total iterations. These are intended to assist tuning of the MCMC algorithm, which is done by the user in the following steps, which we walk through in greater detail below:
 
 1.  Use `tune_mcmc` to fit a model with multiple long chains.
 
@@ -308,7 +308,7 @@ dataset_number <- sample(1:length(masked_dfs[[scenario_number]]), 1)
 
 tune_list <- tune_mcmc(
   dataset = sim_data$masked_dfs[[scenario_number]][[dataset_number]], 
-  zeros = sim_data$zeros[[dataset_number]], 
+  zeros = sim_data$zeros[[dataset_number]] 
 )
 ```
 
@@ -416,7 +416,7 @@ In some instances, we have run `tune_mcmc` with a dataset and received a series 
 
 2.  We could take this as a sign that the level of effort is insufficient to identify model parameters. In this case, this scenario should not be considered.
 
-In our experience fitting these models, the second option seems to often be the case, and we encourage users to remove scenarios from consideration if models fit during the tuning step do not reach convergence within 10,000 iterations.
+In our experience fitting these models, the second option seems to often be the case, and we encourage users to remove scenarios from consideration if models fit during the tuning step do not reach convergence within 10,000 iterations. It is possible that all validation scenarios -- including ones with very large levels of validation effort -- will lead to a lack of convergence if the number of sites and visits are very low, in which case the number of sites and visits should be re-evaluated. 
 
 We emphasize that the results from `tune_mcmc` are from a single model fit; they are supplied only as guidelines, and we encourage users to increase the number of iterations above the minimum values output from `tune_mcmc`. While each model fit will take slightly longer with an increased number of total iterations, this approach may save time in the long run by avoiding the need to re-run simulations.
 
@@ -446,7 +446,7 @@ The output object, `sims_output` is a dataframe with summaries of the MCMC draws
 str(sims_output)
 ```
 
-Note that we fit all models in parallel to reduce simulation time; we encourage users to do the same. However, note that if you fit models with `parallel = FALSE` in `run_sims`, the console will display the messages NIMBLE prints as it compiles code for each model. Internally, we specify a custom distribution to compute the marginal probabilities for ambiguous autoID labels, and you will see a warning about overwriting a custom user-specified distribution if `parallel = FALSE`. These warnings can be safely ignored. 
+Note that we fit all models in parallel to reduce simulation time; we encourage users to do the same. However, if you fit models with `parallel = FALSE` in `run_sims`, the console will display the messages NIMBLE prints as it compiles code for each model. Internally, we specify a custom distribution to compute the marginal probabilities for ambiguous autoID labels, and you will see a warning about overwriting a custom user-specified distribution if `parallel = FALSE`. These warnings can be safely ignored. 
 
 ## Step 5: Visualize simulations \label{viz}
 
@@ -540,13 +540,13 @@ The simulation results shown in Figure \@ref(fig:vizPsi) and \@ref(fig:plotTheta
 
 Based on Figures \@ref(fig:vizGroup) - \@ref(fig:plotWidth), we can rule out validation scenario 1, because the expected width of 95% posterior intervals is greater than the threshold value of 3. Because of this, we might choose validation scenario 2 as one possible fixed effort validation design. This fixed effort design assumes that 10% of recordings from each site-night are randomly selected for validation, leading to around 375 recordings being validated per dataset. In our simulations, posterior means for each $\lambda_k$ appear to be nearly unbiased, with near-nominal coverage and average posterior interval widths less than or equal to 3 for this scenario. However, it is possible that for a given dataset, the interval width for $\lambda_5$ will be larger than 3, regardless of the number of validated calls; error bars in Figure \@ref(fig:plotWidth) overlap or exceed the dotted line in all scenarios. 
 
-In situations such as this one, a decision is required of the user. If a slightly larger interval width is acceptable, validating 10% percent of recordings from all site-visits is reasonable. If it is not, then the LOVE will need to be increased beyond that in scenario 4 (1021 recordings). The question is whether potentially tripling the number of validated recordings will be worth the benefit of ensuring the relative activity level for species 5 is less than 3. This is a question about measurable objectives that we leave to the practitioner and their monitoring priorities.
+In situations such as this one, a decision is required of the user. If a slightly larger interval width is acceptable, validating 10% percent of recordings from all site-visits is reasonable. If it is not, then the LOVE will need to be increased beyond that in scenario 4 (1021 recordings). The question is whether potentially tripling the number of validated recordings will be worth the benefit of ensuring the relative activity level for species 5 is less than 3. This is a question about measurable objectives that we leave to the practitioner and their study priorities.
 
 \newpage
 
 # Stratified-by-species example \label{stratEx}
 
-In this section, we provide further details of the example in the main manuscript, which assumed a stratified-by-species design. In a stratified-by-species design, the random mechanism is a stratified random sample, with strata formed by the species labels assigned by automated classification software (i.e., by autoID). In this kind of design, the LOVE is the proportion of recordings selected to be validated for each species label.
+In this section, we provide further details of the example in the main manuscript, which assumed a stratified-by-species design. In a stratified-by-species design, the random mechanism is a stratified random sample, with strata formed by the species labels assigned during automated classification (i.e., by autoID). In this type of design, the LOVE is the proportion of recordings selected to be validated for each species label.
 
 We repeat the simulation study conducted in the main text in this section, providing greater detail for some of the steps. We assume the same measurable objectives and cost constraints as in Section \@ref(FEEx). 
 
@@ -691,7 +691,7 @@ The results appear satisfactory, with effective sample sizes of more than 250 in
 
 ## Fit models
 
-```{r cache=TRUE}
+```{r fitBySpecies, cache=TRUE }
 sims_out <- run_sims(
   data_list = sim_data$masked_dfs,
   zeros_list = sim_data$zeros,
@@ -769,7 +769,7 @@ To keep the number of scenarios in this example small, we fixed the LOVE for sev
 
 # Conclusion 
 
-We have demonstrated the use of the `ValidationExplorer` package when the objective is to compare the merits of four competing LOVEs for fixed-effort and stratified-by-species designs. Specifically, in the fixed-effort design we considered validating a random sample of 5%, 10%, 15% or 30% of the recordings obtained during each visit to each site. In the stratified-by-species designs, we considered a suite of validation designs, fixing effort for species 1,2, 4, and 6 at less than or equal to 25%, and varied the level of effort for species 3 and 6. The exact simulations considered are summarized in the `call_sum` object in Section \@ref(simBySpp). The measurable objectives outlined in Section \@ref(MO) were to estimate the relative activity parameters for each species, with estimation error less than 1 call per night and 95% posterior interval width less than 3 calls per night. Results, and their implications for these measurable objectives were summarized in Sections \@ref(takeaway-FE) and \@ref(takeaway-bySpp). 
+We have demonstrated the use of the `ValidationExplorer` package when the objective is to compare the merits of four competing LOVEs for fixed-effort and stratified-by-species designs. Specifically, in the fixed-effort design we considered validating a random sample of 5%, 10%, 15% or 30% of the recordings obtained during each visit to each site. In the stratified-by-species designs, we considered a suite of validation designs, fixing effort for species 1,2, 4, and 6 at less than or equal to 25%, and varied the level of effort for species 3 and 5. The exact simulations considered are summarized in the `call_sum` object in Section \@ref(simBySpp). The measurable objectives outlined in Section \@ref(MO) were to estimate the relative activity parameters for each species, with near-nominal coverage and width less than 3 calls per night for 95% posterior intervals. Results, and their implications for these measurable objectives were summarized in Sections \@ref(takeaway-FE) and \@ref(takeaway-bySpp). Practitioners who would like to inform study design prior to data collection can repeat multiple simulation studies to see how inferences change with the number of sites and balanced visits, in addition to the validation design.
 
 
 \newpage
