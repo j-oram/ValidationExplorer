@@ -7,5 +7,8 @@
 - [X] Tidy up
 - [X] Update/rework vignette 
 - [X] Finish writing MEE apps draft
-- [ ] Obtain new code review from Patrick
-- [ ] Submit for USGS code release
+- [ ] Update license
+- [ ] Submit materials for approval to Kathi
+- [ ] Obtain review of code and MS from Kevin
+- [ ] Revise MS, code and documentation
+- [ ] Submit with Katie's supervision
