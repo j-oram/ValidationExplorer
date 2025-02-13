@@ -1,6 +1,6 @@
 # ValidationExplorer
 
-This repository contains supplementary files to accompany the manuscript "`ValidationExplorer`:  Streamlined simulations to provide bioacoustic study design guidance in the presence of misclassification," submitted to Methods in Ecology and Evolution Applications. 
+This repository contains the `ValidationExplorer` package, as described in the manuscript "`ValidationExplorer`:  Streamlined simulations to provide bioacoustic study design guidance in the presence of misclassification," submitted to Methods in Ecology and Evolution Applications. 
 
 **Disclaimer:**  This information is preliminary and is subject to revision. It is being provided to meet the need for timely best science.
 The information is provided on the condition that neither the U.S. Geological Survey nor the U.S. Government shall be
@@ -20,7 +20,7 @@ Note that this package depends on [NIMBLE](https://r-nimble.org/) for model fitt
 
 - R: Directory containing scripts for package functions. 
 - man: Documentation for package functions. 
-- data: package data. 
-- Testing: A small directory containing output from running small test cases. 
-- Vignette: A detailed vignette, using a fixed-effort validation design. 
+- data: package data. Includes example output from fitting a model, summarizing simulated data and summarizing a simulation study.
+- Testing: A small directory containing a script and output from running small manual test cases. 
+- Vignette: A detailed vignette and associated files, using a fixed-effort validation design. This vignette also includes greater detail on the example provided in the main manuscript. 
 
