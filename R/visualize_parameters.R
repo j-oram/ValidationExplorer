@@ -4,7 +4,7 @@
 #'
 #' @param sim_summary Summary output in the format of \link{run_sims}.
 #' @param par The parameter to be visualized.
-#' @param theta_scenario The theta scenario IDs.
+#' @param theta_scenario The theta scenario IDs. This should match the `theta_scenario_id` argument of`run_sims()`.
 #' @param scenarios Scenarios to be visualized.
 #' @param convergence_threshold If the Gelman-Rubin statistic is below this value,
 #'   consider an MCMC to have converged. Default value is 1.1, but we recommend 1.05.
@@ -104,7 +104,7 @@ visualize_single_parameter <- function(sim_summary,
 #'
 #' @param sim_summary Summary output in the format of `run_sims()`.
 #' @param pars The parameters to be visualized.
-#' @param theta_scenario The theta scenario IDs.
+#' @param theta_scenario The theta scenario IDs. This should match the `theta_scenario_id` argument of`run_sims()`.
 #' @param scenarios Scenarios to be visualized.
 #' @param convergence_threshold If the Gelman-Rubin statistic is below this value,
 #'   consider an MCMC to have converged. Default value is 1.1, but we recommend 1.05.

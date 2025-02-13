@@ -17,7 +17,7 @@ visualize_parameter_group(
 
 \item{pars}{The parameters to be visualized.}
 
-\item{theta_scenario}{The theta scenario IDs.}
+\item{theta_scenario}{The theta scenario IDs. This should match the \code{theta_scenario_id} argument of\code{run_sims()}.}
 
 \item{scenarios}{Scenarios to be visualized.}
 
