@@ -7,7 +7,7 @@
 #'   where no calls were observed.
 #' @param DGVs A named list with entries psi, lambda and theta containing
 #'   the true values of the respective parameters.
-#' @param theta_scenario_id The classifier ID as an integer or string
+#' @param theta_scenario_id A character string ID for the simulations being run.
 #' @param parallel Should models be fit in parallel? Default value is TRUE.
 #' @param niter Number of iterations per MCMC chain.
 #' @param nburn Number of warmup iterations.
@@ -58,12 +58,12 @@
 #'
 #' # ::::::::::::: run simulations on sim'd data ::::::::::: #
 #'
-#' \dontrun{ # turn off during check() to speed it up
+#' \dontrun{
 #' out <- run_sims(
 #'   data_list = fake_data$masked_dfs,
 #'   zeros_list = fake_data$zeros,
 #'   DGVs = list(lambda = lambda, psi = psi, theta = test_theta1),
-#'   theta_scenario_id = 1,
+#'   theta_scenario_id = 'StratBySpecies_1',
 #'   parallel = TRUE,
 #'   niter = 1000,
 #'   nburn = 500,

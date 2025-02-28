@@ -27,8 +27,9 @@ from \link{summarize_n_validated}}
 \item{regex_pars}{String containing the name of a group of parameters to
 visualize. Must be one of "lambda", "psi", or "theta".}
 
-\item{theta_scenario}{String or integer containing the theta scenario ID that
-was used to simulate data in \link{simulate_validatedData}}
+\item{theta_scenario}{String containing the theta scenario ID that
+was used to run simulations in \link{run_sims}. This string must match
+between \code{calls_summary} and \code{sim_summary}.}
 
 \item{scenarios}{A vector of integers corresponding to the validation designs
 you would like to visualize.}

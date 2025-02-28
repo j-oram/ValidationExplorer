@@ -4,7 +4,7 @@
 \alias{summarize_n_validated}
 \title{Summarize the number of validated recordings}
 \usage{
-summarize_n_validated(data_list, scenario_numbers, theta_scenario = NULL)
+summarize_n_validated(data_list, scenario_numbers, theta_scenario)
 }
 \arguments{
 \item{data_list}{A list of masked datasets in the format output from
@@ -51,6 +51,7 @@ fake_data <- simulate_validatedData(
 summarize_n_validated(
   data_list = fake_data$masked_dfs,
   scenario_numbers = 1:nrow(fake_data$scenarios_df),
+  theta_scenario = '1'
 )
 
 }

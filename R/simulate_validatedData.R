@@ -174,7 +174,7 @@ simulate_validatedData <- function(n_datasets,
         masked_dataset_list[[s]] <- list()
         for(d in 1:length(datasets_list)){
           
-          masked_df <- mask_by_spp(datasets_list[[d]], scenarios[s,])$final_df
+          masked_df <- suppressMessages(mask_by_spp(datasets_list[[d]], scenarios[s,])$final_df)
           masked_df$scenario <- s
           
           if(save_masked_datasets == TRUE){
@@ -207,7 +207,9 @@ simulate_validatedData <- function(n_datasets,
           masked_dataset_list[[s]] <- list()
           for(d in 1:length(datasets_list)){
             
-            masked_df <- mask_by_spp(datasets_list[[d]], scenarios[s,])$final_df
+            masked_df <- suppressMessages(
+              mask_by_spp(datasets_list[[d]], scenarios[s,])$final_df
+            ) 
             masked_df$scenario <- s
             
             if(save_masked_datasets == TRUE){
@@ -239,10 +241,10 @@ simulate_validatedData <- function(n_datasets,
       masked_dataset_list[[s]] <- list() # initiate interior storage for each scenario (i.e., for each distinct percentage)
       for(d in 1:length(datasets_list)) { # loop over the datasets list, masking each according to the scenario
 
-        masked_df <- mask_FE_all_visits(
+        masked_df <- suppressMessages(mask_FE_all_visits(
           df = datasets_list[[d]],
           effort_prop = scenarios[s]
-        ) %>% dplyr::mutate(scenario = s)
+        )) %>% dplyr::mutate(scenario = s)
 
         if(save_masked_datasets == TRUE) {
     

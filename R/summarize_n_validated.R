@@ -39,9 +39,10 @@
 #' summarize_n_validated(
 #'   data_list = fake_data$masked_dfs,
 #'   scenario_numbers = 1:nrow(fake_data$scenarios_df),
+#'   theta_scenario = '1'
 #' )
 #'
-summarize_n_validated <- function(data_list, scenario_numbers, theta_scenario=NULL) {
+summarize_n_validated <- function(data_list, scenario_numbers, theta_scenario) {
   
   # if the user only wants to see a subset of scenarios, pull those from the data_list
   data_list <- data_list[scenario_numbers]
@@ -56,17 +57,9 @@ summarize_n_validated <- function(data_list, scenario_numbers, theta_scenario=NU
     unlist() %>% # turn the list of averages into a vector
     return() # return the vector
   
-  # If the user specifies the additional scenario id, create a column in the final df 
-  # with this ID for all entries. This is useful for housekeeping when many different
-  # simulations are being run under different classifiers. 
-  if(is.null(theta_scenario)){
-    return(dplyr::tibble(scenario = as.character(scenario_numbers), 
-                         n_validated = n_validated))
-  } else {
-    return(dplyr::tibble(theta_scenario = as.character(theta_scenario), 
-                         scenario = as.character(scenario_numbers), 
-                         n_validated = n_validated))
-  }
+  return(dplyr::tibble(theta_scenario = as.character(theta_scenario), 
+                       scenario = as.character(scenario_numbers), 
+                       n_validated = n_validated))
   
   
 
