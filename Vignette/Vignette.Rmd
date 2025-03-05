@@ -1,26 +1,5 @@
 ---
 title: "Vignette: Simulation studies with `ValidationExplorer` "
-author:
-  - name: Jacob Oram
-    email: jacoboram@montana.edu
-    institute: msu
-    correspondence: false
-  - name: Katharine Banner
-    email: katharine.banner@montana.edu
-    institute: msu
-    correspondence: true
-  - name: Christian Stratton
-    email: cstratton@middlebur.edu
-    institute: middlebury
-    correspondence: false
-  - name: Kathryn M. Irvine
-    email: kirvine@usgs.gov
-    institute: norock
-    correspondence: false
-institute:
-    - msu: Department of Mathematical Sciences, Montana State University, Bozeman, MT, USA
-    - middlebury: Department of Mathematics and Statistics, Middlebury College, Middlebury, VT, USA
-    - norock: U.S. Geological Survey, Northern Rocky Mountain Science Center, Bozeman, MT, USA
 date: "`r Sys.Date()`"
 output: 
   bookdown::pdf_document2: 
