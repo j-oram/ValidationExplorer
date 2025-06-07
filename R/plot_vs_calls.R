@@ -90,7 +90,8 @@ plot_bias_vs_calls <- function(sim_summary,
         x = .data$n_validated,
         y = .data$av_est_err,
         group = .data$parameter,
-        color = .data$parameter
+        color = .data$parameter,
+        shape = .data$parameter
       )
     ) +
     ggplot2::geom_point() +
@@ -200,7 +201,8 @@ plot_width_vs_calls <- function(sim_summary,
         x = .data$n_validated,
         y = .data$mean_width,
         group = .data$parameter,
-        color = .data$parameter
+        color = .data$parameter,
+        shape = .data$parameter
       )
     ) +
     ggplot2::geom_point() +
@@ -301,7 +303,8 @@ plot_coverage_vs_calls <- function(sim_summary,
         x = .data$n_validated,
         y = .data$coverage,
         group = .data$parameter,
-        color = .data$parameter
+        color = .data$parameter,
+        shape = .data$parameter
       )
     ) +
     ggplot2::geom_point() +
