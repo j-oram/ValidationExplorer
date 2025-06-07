@@ -90,13 +90,13 @@ plot_bias_vs_calls <- function(sim_summary,
         x = .data$n_validated,
         y = .data$av_est_err,
         group = .data$parameter,
-        color = .data$parameter,
-        shape = .data$parameter
+        color = .data$parameter
       )
     ) +
-    ggplot2::geom_point() +
     ggplot2::geom_linerange(ggplot2::aes(ymin=.data$low50, ymax=.data$up50))+
-    ggplot2::geom_line() +
+    ggplot2::geom_line() + 
+    ggplot2::geom_label(ggplot2::aes(label = .data$scenario)) +
+    ggplot2::scale_color_viridis_d() +
     ggplot2::geom_hline(yintercept = 0, linetype = "dotted")+
     ggplot2::labs(
       x = "Number of validated calls",
@@ -201,13 +201,13 @@ plot_width_vs_calls <- function(sim_summary,
         x = .data$n_validated,
         y = .data$mean_width,
         group = .data$parameter,
-        color = .data$parameter,
-        shape = .data$parameter
+        color = .data$parameter
       )
     ) +
-    ggplot2::geom_point() +
     ggplot2::geom_linerange(ggplot2::aes(ymin=.data$low50_width, ymax=.data$up50_width))+
     ggplot2::geom_line() +
+    ggplot2::geom_label(ggplot2::aes(label = .data$scenario)) +
+    ggplot2::scale_color_viridis_d() +
     ggplot2::labs(
       x = "Number of validated calls",
       y = "Average 95% credible interval width",
@@ -303,18 +303,18 @@ plot_coverage_vs_calls <- function(sim_summary,
         x = .data$n_validated,
         y = .data$coverage,
         group = .data$parameter,
-        color = .data$parameter,
-        shape = .data$parameter
+        color = .data$parameter
       )
     ) +
-    ggplot2::geom_point() +
     ggplot2::geom_line() +
+    ggplot2::geom_label(ggplot2::aes(label = .data$scenario)) +
     ggplot2::ylim(0,1) +
-    ggplot2::geom_hline(yintercept = 0.95, linetype = "dotted")+
+    ggplot2::scale_color_viridis_d() +
+    ggplot2::geom_hline(yintercept = 0.95, linetype = "dotted") +
     ggplot2::labs(
       x = "Number of validated calls",
       y = "Coverage",
-      color = "Parameter"
+      Shape = "Parameter"
     )
 
   return(plt)
