@@ -4,6 +4,7 @@ date: "`r Sys.Date()`"
 output: 
   bookdown::pdf_document2: 
     number_sections: yes
+    extra_dependencies: ['float']
     keep_tex: no
     toc: no
     pandoc_args:
@@ -20,7 +21,7 @@ Our functions allow the user to specify a suite of candidate validation designs 
 ---
 
 ```{r setup, include=FALSE, message=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, fig.pos = "H")
 library(tidyverse)
 library(nimble)
 library(coda)
@@ -352,7 +353,7 @@ mcmc_trace(fit, regex_pars = "lambda", window = c(0, tune_list$min_iter))
 
 Once again, we see the three chains overlap strongly after around 500 iterations and sample around a horizontal line. 
 
-After making traceplots and zooming in for all parameters (not all plots are shown here), it appears that the guessed warmup value of `r tune_list$min_warmup`output from `tune_mcmc` is a reasonable choice. Even so, we increase our iterations and warmup beyond these minimum values in Section \@ref(runSims) to avoid simulations failing due to convergence.
+After making traceplots and zooming in for all parameters (not all plots are shown here), it appears that the guessed warmup value of `r tune_list$min_warmup` output from `tune_mcmc` is a reasonable choice. Even so, we increase our iterations and warmup beyond these minimum values in Section \@ref(runSims) to avoid simulations failing due to convergence.
 
 ### Examine effective sample size and Gelman-Rubin statistics
 
