@@ -36,7 +36,7 @@ plot_bias_vs_calls <- function(sim_summary,
                                scenarios,
                                convergence_threshold = 1.1) {
   # set themes
-  ggplot2::theme_set(ggplot2::theme_bw())
+  ggplot2::theme_set(ggplot2::theme_grey())
   
   # create the dataframe for plotting that filters to models where all parameters
   # met the convergence threshold, and that contains information about estimation
@@ -146,7 +146,7 @@ plot_width_vs_calls <- function(sim_summary,
                                 scenarios,
                                 convergence_threshold = 1.1) {
   # set theme
-  ggplot2::theme_set(ggplot2::theme_bw())
+  ggplot2::theme_set(ggplot2::theme_grey())
   
   # create the dataframe for plotting that filters to models where all parameters
   # met the convergence threshold, and that contains information about means and
@@ -257,7 +257,7 @@ plot_coverage_vs_calls <- function(sim_summary,
                                    scenarios,
                                    convergence_threshold = 1.1) {
   # set the ggplot theme
-  ggplot2::theme_set(ggplot2::theme_bw())
+  ggplot2::theme_set(ggplot2::theme_grey())
   
   # create the dataframe for plotting that filters to models where all parameters
   # met the convergence threshold, and that contains information about coverage. 
