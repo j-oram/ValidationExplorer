@@ -95,7 +95,8 @@ plot_bias_vs_calls <- function(sim_summary,
     ) +
     ggplot2::geom_linerange(ggplot2::aes(ymin=.data$low50, ymax=.data$up50))+
     ggplot2::geom_line() + 
-    ggplot2::geom_label(ggplot2::aes(label = .data$scenario)) +
+    ggplot2::geom_label(ggplot2::aes(label = .data$scenario), 
+                        show.legend = FALSE) +
     ggplot2::scale_color_viridis_d() +
     ggplot2::geom_hline(yintercept = 0, linetype = "dotted")+
     ggplot2::labs(
@@ -206,7 +207,7 @@ plot_width_vs_calls <- function(sim_summary,
     ) +
     ggplot2::geom_linerange(ggplot2::aes(ymin=.data$low50_width, ymax=.data$up50_width))+
     ggplot2::geom_line() +
-    ggplot2::geom_label(ggplot2::aes(label = .data$scenario)) +
+    ggplot2::geom_label(ggplot2::aes(label = .data$scenario), show.legend = FALSE) +
     ggplot2::scale_color_viridis_d() +
     ggplot2::labs(
       x = "Number of validated calls",
@@ -307,7 +308,8 @@ plot_coverage_vs_calls <- function(sim_summary,
       )
     ) +
     ggplot2::geom_line() +
-    ggplot2::geom_label(ggplot2::aes(label = .data$scenario)) +
+    ggplot2::geom_label(ggplot2::aes(label = .data$scenario), 
+                        show.legend = FALSE) +
     ggplot2::ylim(0,1) +
     ggplot2::scale_color_viridis_d() +
     ggplot2::geom_hline(yintercept = 0.95, linetype = "dotted") +
