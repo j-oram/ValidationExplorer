@@ -81,6 +81,7 @@ simulate_validatedData <- function(n_datasets,
                                    nsites = 100,
                                    nspecies = 8,
                                    nvisits = 3,
+                                   confirmable_limits = NULL,
                                    psi = runif(nspecies, 0.1, 0.9),
                                    lambda = abs(rnorm(nspecies, 0, 5)),
                                    theta = t(apply(diag(18, nrow = nspecies)+2, 1, function(x) {nimble::rdirch(alpha = x)})),
@@ -178,7 +179,6 @@ simulate_validatedData <- function(n_datasets,
           masked_df$scenario <- s
           
           if(save_masked_datasets == TRUE){
-            
             saveRDS(masked_df,
                     file = file.path(directory, "masked_datasets", paste0("dataset_", d, "_masked_under_BSV_scenario_", s, ".rds")))
           }
@@ -246,7 +246,47 @@ simulate_validatedData <- function(n_datasets,
           effort_prop = scenarios[s]
         )) %>% dplyr::mutate(scenario = s)
 
-        if(save_masked_datasets == TRUE) {
+        if (!is.null(confirmable_limits)) {
+          masked_df$selected <- ifelse(!is.na(masked_df$true_spp), "Y", "N")
+          masked_df <- masked_df %>% 
+            group_by(site, visit) %>% 
+            mutate(
+              prop_confirmable = runif(
+                1, 
+                min = confirmable_limits[1], 
+                max = confirmable_limits[2]
+              )
+            ) %>% 
+            ungroup()
+          
+          # split df into the selected and not selected components
+          selected <- masked_df %>% filter(selected == "Y")
+          not_selected <- setdiff(masked_df, selected)
+          
+          # If selected: Pull off the calls that were selected and can be confirmed
+          confirmable <- selected %>% 
+            group_by(site, visit) %>% 
+            group_split() %>% 
+            lapply(., function(x) {
+              p <- unique(x$prop_confirmable)
+              return(slice_sample(x, prop = p))
+            }) %>% 
+            do.call('bind_rows', .)
+          
+          # If not confirmable, then the true spp label remains ambiguous (has value NA)
+          not_confirmable <- setdiff(selected, confirmable)
+          not_confirmable$true_spp <- NA
+          
+          # Bind together a copy of selected subset that has confirmed and non-
+          # confirmable recordings in it
+          selected_out <- bind_rows(confirmable, not_confirmable) %>% 
+            arrange(unique_call_id)
+          
+          # Bind copy of selected subset with the not selected recordings
+          masked_df_new <- bind_rows(selected_out, not_selected)
+        }
+        
+        if (save_masked_datasets == TRUE) {
     
           saveRDS(
             masked_df,
