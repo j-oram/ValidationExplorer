@@ -247,43 +247,7 @@ simulate_validatedData <- function(n_datasets,
         )) %>% dplyr::mutate(scenario = s)
 
         if (!is.null(confirmable_limits)) {
-          masked_df$selected <- ifelse(!is.na(masked_df$true_spp), "Y", "N")
-          masked_df <- masked_df %>% 
-            group_by(site, visit) %>% 
-            mutate(
-              prop_confirmable = runif(
-                1, 
-                min = confirmable_limits[1], 
-                max = confirmable_limits[2]
-              )
-            ) %>% 
-            ungroup()
-          
-          # split df into the selected and not selected components
-          selected <- masked_df %>% filter(selected == "Y")
-          not_selected <- setdiff(masked_df, selected)
-          
-          # If selected: Pull off the calls that were selected and can be confirmed
-          confirmable <- selected %>% 
-            group_by(site, visit) %>% 
-            group_split() %>% 
-            lapply(., function(x) {
-              p <- unique(x$prop_confirmable)
-              return(slice_sample(x, prop = p))
-            }) %>% 
-            do.call('bind_rows', .)
-          
-          # If not confirmable, then the true spp label remains ambiguous (has value NA)
-          not_confirmable <- setdiff(selected, confirmable)
-          not_confirmable$true_spp <- NA
-          
-          # Bind together a copy of selected subset that has confirmed and non-
-          # confirmable recordings in it
-          selected_out <- bind_rows(confirmable, not_confirmable) %>% 
-            arrange(unique_call_id)
-          
-          # Bind copy of selected subset with the not selected recordings
-          masked_df_new <- bind_rows(selected_out, not_selected)
+          masked_df <- make_not_confirmable(masked_df, confirmable_limits)
         }
         
         if (save_masked_datasets == TRUE) {

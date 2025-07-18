@@ -30,3 +30,50 @@ class(L) <- "labeller"
 #' 1 %notin% c(2, 3, 4)   # TRUE
 #' 2 %notin% c(2, 3, 4)   # FALSE
 `%notin%` <- Negate(`%in%`)
+
+
+#' Further masking of true species labels to mimic 
+#' whether a recording is confirmable
+#' 
+#' @export
+#' @return A copy of the original dataframe, with some selected observations masked
+#' because they could not be confirmed. 
+#' @keywords internal
+make_not_confirmable <- function(masked_df, confirmable_limits) {
+  masked_df$selected <- ifelse(!is.na(masked_df$true_spp), "Y", "N")
+  masked_df <- masked_df %>% 
+    dplyr::group_by(site, visit) %>% 
+    dplyr::mutate(
+      prop_confirmable = runif(
+        1, 
+        min = confirmable_limits[1], 
+        max = confirmable_limits[2]
+      )
+    ) %>% 
+    dplyr::ungroup()
+  
+  # split df into the selected and not selected components
+  selected <- masked_df %>% 
+    dplyr::filter(selected == "Y")
+  not_selected <- dplyr::setdiff(masked_df, selected)
+  
+  # If selected: Pull off the calls that were selected and can be confirmed
+  confirmable <- selected %>% 
+    dplyr::group_split(site, visit, .keep = TRUE) %>% 
+    purrr::map(\(x) slice_sample(x, prop = unique(x$prop_confirmable))) %>% 
+    purrr::list_rbind()
+  
+  # If not confirmable, then the true spp label remains ambiguous (has value NA)
+  not_confirmable <- dplyr::setdiff(selected, confirmable)
+  not_confirmable$true_spp <- NA
+  
+  # Bind together a copy of selected subset that has confirmed and non-
+  # confirmable recordings in it
+  selected_out <- dplyr::bind_rows(confirmable, not_confirmable) %>% 
+    arrange(unique_call_id)
+  
+  # Bind copy of selected subset with the not selected recordings
+  masked_df_new <- dplyr::bind_rows(selected_out, not_selected)
+  
+  return(masked_df_new)
+}
