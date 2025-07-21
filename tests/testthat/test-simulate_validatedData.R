@@ -146,3 +146,41 @@ test_that("error when incorrect design type specified", {
     regexp = "design_type must be one of"
   )
 })
+
+test_that("adding confirmation process with user-specified by-species validation does not produce errors", {
+  
+  expect_no_error(
+    simulate_validatedData(
+      n_datasets = D, 
+      design_type = "BySpecies",
+      scen_expand = FALSE,
+      scen_df = my_scenarios,
+      nsites = n,
+      nspecies = K, 
+      nvisits = J,
+      psi = psi, 
+      lambda = lambda, 
+      theta = theta,
+      phi_vec = c(.5, .7),
+      directory = here::here("Testing")
+    )
+  )
+  
+  expect_no_error(
+    simulate_validatedData(
+      n_datasets = D, 
+      design_type = "BySpecies",
+      scen_expand = FALSE,
+      scen_df = my_scenarios,
+      nsites = n,
+      nspecies = K, 
+      nvisits = J,
+      psi = psi, 
+      lambda = lambda, 
+      theta = theta,
+      confirmable_limits = c(.5, 1),
+      directory = here::here("Testing")
+    )
+  )
+})
+
