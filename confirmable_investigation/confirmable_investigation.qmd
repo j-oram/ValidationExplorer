@@ -1,0 +1,330 @@
+---
+title: "Exploring confirmation process on model fitting"
+format: 
+  html:
+    embed-resources: true
+editor: visual
+---
+
+## Background 
+
+This investigation into confirmability is motivated by the Oregon/Washington dataset, where we found that many randomly selected recordings could not be assigned a true-species label by reviewers. I use the term "confirmable" to make the distinction from whether it was selected for validation.
+
+## Site-night level probability of confirmation
+
+This section fits the standard ODL model to data simulated assuming that a random proportion of recordings from each site-night cannot be assigned true species labels. However, there is no relationship between the true species generating the call and whether, after attempting to validate the recording, we observe the true species label.
+
+```{r}
+library(tidyverse)
+load_all()
+
+psi <- runif(3, min = 0.4, max = 0.9)
+lambda <- c(3, 8, 15)
+theta <- t(apply(diag(18, 3)+2, 1, function(x){rdirch(alpha = x)}))
+
+site_night_confirmable_data <- simulate_validatedData(
+  n_datasets = 20,
+  design_type = 'FixedPercent',
+  scenarios = c(.2, .5), 
+  confirmable_limits = c(.4, 1), # anywhere between 40% and 100% of calls can be confirmed
+  nsites = 100,
+  nspecies = 3,
+  nvisits = 4,
+  psi = psi,
+  lambda = lambda, 
+  theta = theta, 
+  save_datasets = FALSE, 
+  save_masked_datasets = FALSE, 
+  directory = here::here()
+)
+
+site_night_confirmable_sims <- run_sims(
+  data_list = site_night_confirmable_data$masked_dfs,
+  zeros_list = site_night_confirmable_data$zeros,
+  DGVs = list(
+    lambda = lambda, 
+    psi = psi, 
+    theta = theta
+  ),
+  theta_scenario_id = 'site_night_conf', 
+  niter = 2500,
+  nburn = 1500, 
+  nchains = 4, 
+  directory = here::here("site_night_confirmation")
+)
+```
+
+```{r}
+#| label: fig-siteNightConfLambda
+visualize_parameter_group(
+  site_night_confirmable_sims, 
+  pars = "lambda", 
+  theta_scenario = 'site_night_conf', 
+  scenarios = 1:2
+)
+```
+
+The estimation error is minimal and coverage is near nominal for $\lambda_k$ (@fig-siteNightConfLambda) for both validation scenarios when there is no relationship between the parameters and confirmability.
+
+## Confirmability varying by species
+
+This section introduces a species specific probability that a selected recording can be confirmed: $\phi_k$. My expectation is that even the ODL will produced biased estimates with low coverage because now the missingness mechanism is not ignorable with respect to the model: the probability we observe a species label depends on the label itself, which violates the missingness at random assumption.
+
+Begin by simulating data:
+
+```{r}
+phi <- c(.6, .8, .4)
+psi <- runif(3, min = 0.4, max = 0.9)
+lambda <- c(3, 8, 15)
+theta <- t(apply(diag(18, 3)+2, 1, function(x){rdirch(alpha = x)}))
+
+
+bySpp_confirmable_data <- simulate_validatedData(
+  n_datasets = 20,
+  design_type = 'FixedPercent',
+  scenarios = c(.2, .5), 
+  phi_vec = phi,
+  nsites = 100,
+  nspecies = 3,
+  nvisits = 4,
+  psi = psi,
+  lambda = lambda, 
+  theta = theta, 
+  save_datasets = FALSE, 
+  save_masked_datasets = FALSE, 
+  directory = here::here()
+)
+```
+
+There are no functions in ValidationExplorer to support fitting a model to data with this property, so they are defined in the following code blocks:
+
+```{r}
+observed_df <- bySpp_confirmable_data$masked_dfs[[2]][[10]]
+zeros <- bySpp_confirmable_data$zeros[[10]]
+
+# bind these together
+all_sites_and_visits <- bind_rows(observed_df, zeros) %>%
+  arrange(site, visit, true_spp, id_spp)
+
+
+code <- nimble::nimbleCode({
+  ## --- Priors --- ## 
+  for(species in 1:nspecies){
+    phi[species] ~ dbeta(1,1)
+    psi[species] ~ dbeta(1,1)
+    lambda[species] ~ T(dnorm(0, sd = 10), 0, Inf)
+    theta[species, 1:nspecies] ~ ddirch(alpha = alpha0[species, 1:nspecies])
+  }
+  
+  ##  --- Likelihood --- ##
+  for(i in 1:nsites){
+    for(species in 1:nspecies){
+      z[i, species] ~ dbern(psi[species])
+    }
+  }
+  
+  for(i in 1:nsites){
+    for(j in 1:nvisits){
+      Y.[i,j] ~ dpois(sum(z[i,1:nspecies] * lambda[1:nspecies]))
+    }
+  }
+  
+  # for (row in 1:n_calls) {
+  #   pi[row, 1:nspecies] <- z[site[row], 1:nspecies] * lambda[1:nspecies] /
+  #      sum(z[site[row], 1:nspecies] * lambda[1:nspecies])
+  #   k[row] ~ dcat(pi[row, 1:nspecies])
+  #   y[row] ~ dcat(theta[k[row], 1:nspecies])
+  #   I_vec[row] ~ dbern(0.2 * phi[k[row]])
+  # }
+  
+  for(row in 1:n_confirmed_calls){
+    pi[row, 1:nspecies] <- z[site1[row], 1:nspecies] * lambda[1:nspecies] /
+      sum(z[site1[row], 1:nspecies] * lambda[1:nspecies])
+    k[row] ~ dcat(pi[row, 1:nspecies])
+    y[row] ~ dcat(theta[k[row], 1:nspecies])
+    I_conf[row] ~ dbern(0.5 * phi[k[row]])
+  }
+  
+  for(row in 1:n_ambiguous_calls){
+    pi2[row, 1:nspecies] <- z[site2[row], 1:nspecies] * lambda[1:nspecies] /
+      sum(z[site2[row], 1:nspecies] * lambda[1:nspecies])
+    # p[row, 1:nspecies] <- pi2[row, 1:nspecies] * (1 - 0.5 * phi[1:nspecies])
+    prob[row, 1:nspecies] <- pi2[row, 1:nspecies] %*% theta[1:nspecies, 1:nspecies]
+
+    y2[row] ~ dcat(prob[row, 1:nspecies])
+    I_amb[row] ~ dbern(0.5 * sum(phi[1:nspecies]))
+  }
+})
+
+# Define the ambiguous and unambiguous datasets
+amb <- observed_df[is.na(observed_df$true_spp), ]
+uamb <- observed_df[!is.na(observed_df$true_spp), ]
+
+
+constants <- list(
+  # site = observed_df$site,
+  # n_calls = nrow(observed_df),
+  nspecies = dplyr::n_distinct(observed_df$id_spp),
+  nvisits = dplyr::n_distinct(observed_df$visit),
+  nsites = dplyr::n_distinct(all_sites_and_visits$site),
+  site1 = uamb$site, # site indices for each recording that has both labels
+  site2 = amb$site, # site indices for each recording with only autoID
+  n_confirmed_calls = nrow(uamb),
+  n_ambiguous_calls = nrow(amb)
+)
+
+nimble_data <- list(
+  y = uamb$id_spp,
+  k = uamb$true_spp,
+  y2 = amb$id_spp,
+  alpha0 = matrix(1/(constants$nspecies),
+                  nrow = dplyr::n_distinct(all_sites_and_visits$id_spp),
+                  ncol = dplyr::n_distinct(all_sites_and_visits$id_spp)),
+  
+  # Define Y. based on all site-visits, even if it had no calls
+  Y. = all_sites_and_visits %>%
+    dplyr::group_by(.data$site, .data$visit) %>%
+    dplyr::summarize(total = unique(.data$Y.)) %>%
+    tidyr::pivot_wider(
+      names_from = .data$visit,
+      names_prefix = "visit",
+      values_from = .data$total,
+      values_fill = 0 # if NA, turn into a 0, since the NA is due to no calls being detected at that site-visit
+    ) %>%
+    dplyr::ungroup() %>%
+    dplyr::select(-.data$site) %>%
+    as.matrix(),
+  I_conf = rep(1, nrow(uamb)),
+  I_amb = rep(1, nrow(amb))
+  #I_vec = ifelse(!is.na(observed_df$true_spp), 1, 0)#,
+)
+
+compile_and_sample <- function(seed = 1, nchains = 1, niter, nburn, thin,
+                               code, constants, data) {
+  library(nimble)
+  inits_fun <- function(){
+    out <- list(
+        psi = stats::runif(constants$nspecies),
+        lambda = abs(stats::rnorm(constants$nspecies, sd = 10)),
+        theta = t(apply(data$alpha0, 1, function(x) nimble::rdirch(1,x))),
+        z = matrix(1, nrow = constants$nsites, ncol = constants$nspecies),
+        phi = runif(constants$nspecies)#,
+        # k2 = data$y2
+    )
+    return(out)
+  }
+  # Steps to compile the NIMBLE model and MCMC
+  model_r <- nimble::nimbleModel(
+    code = code, 
+    constants = constants, 
+    data = data, 
+    inits = inits_fun()
+  )
+  model_c <- nimble::compileNimble(model_r)
+  model_conf <- nimble::configureMCMC(model_r)
+  mcmc <- nimble::buildMCMC(model_conf)
+  mcmc_c <- nimble::compileNimble(mcmc, project = model_c)
+
+  # obtain samples from the posterior 
+  out <- nimble::runMCMC(
+    mcmc_c,
+    niter = niter,
+    nburnin = nburn,
+    thin = thin,
+    init = inits_fun(),
+    setSeed = seed
+  )
+  
+  return(out)
+  
+}
+
+clust <- parallel::makeCluster(4)
+fit <- parallel::parLapply(
+  cl = clust, 
+  X = sample(1:100, 4),
+  fun = compile_and_sample,
+  code = code, 
+  constants = constants,
+  data = nimble_data,
+  niter = 10000,
+  nburn = 5000,
+  thin = 1
+)
+parallel::stopCluster(clust)
+
+
+# For testing:
+# Steps to compile the NIMBLE model and MCMC
+
+# inits_fun <- function(){
+#     out <- list(
+#         psi = stats::runif(constants$nspecies),
+#         lambda = abs(stats::rnorm(constants$nspecies, sd = 10)),
+#         theta = t(apply(nimble_data$alpha0, 1, function(x) nimble::rdirch(1,x))),
+#         z = matrix(1, nrow = constants$nsites, ncol = constants$nspecies),
+#         phi = runif(constants$nspecies),
+#         k2 = nimble_data$y2
+#     )
+#     return(out)
+# }
+# 
+# model_r <- nimble::nimbleModel(
+#   code = code, 
+#   constants = constants, 
+#   data = nimble_data, 
+#   inits = inits_fun()
+# )
+# model_c <- nimble::compileNimble(model_r)
+# model_conf <- nimble::configureMCMC(model_r)
+# mcmc <- nimble::buildMCMC(model_conf)
+# mcmc_c <- nimble::compileNimble(mcmc, project = model_c)
+# 
+# # obtain samples from the posterior 
+# out <- nimble::runMCMC(
+#   mcmc_c,
+#   niter = 8000,
+#   nburnin = 4000,
+#   nchains = 3, # Just 1 chain by default: parallelization gives multiple chains
+#   thin = 4,
+#   init = inits_fun(),
+#   setSeed = sample(1:100, 3)
+# )
+```
+
+```{r}
+mcmc_sum(fit, truth = c(lambda, phi, psi, c(theta))) %>% 
+  select(parameter, Mean, truth, Rhat, ess_bulk, ess_tail, capture)
+```
+
+```{r}
+bayesplot::mcmc_intervals(fit, regex_pars = 'lambda') + 
+  geom_point(
+    inherit.aes = FALSE,
+    data = tibble(
+      parameter = paste0('lambda[', 1:3, ']'),
+      true_value = lambda 
+    ),
+    aes(x = true_value, y = parameter),
+    shape = 25
+  ) + 
+  xlim(0, 15)
+```
+
+```{r}
+bayesplot::mcmc_intervals(fit, regex_pars = 'psi') + 
+  geom_point(
+    inherit.aes = FALSE,
+    data = tibble(
+      parameter = paste0('psi[', 1:3, ']'),
+      true_value = psi 
+    ),
+    aes(x = true_value, y = parameter),
+    shape = 25
+  ) +
+  xlim(0, 1)
+```
+
+```{r}
+bayesplot::mcmc_trace(fit, regex_pars = "phi")
+```

@@ -179,6 +179,10 @@ simulate_validatedData <- function(n_datasets,
           masked_df <- suppressMessages(mask_by_spp(datasets_list[[d]], scenarios[s,])$final_df)
           masked_df$scenario <- s
           
+          if (!is.null(confirmable_limits) | !is.null(phi_vec)) {
+            masked_df <- make_not_confirmable(masked_df, confirmable_limits, phi_vec)
+          }
+          
           if(save_masked_datasets == TRUE){
             saveRDS(masked_df,
                     file = file.path(directory, "masked_datasets", paste0("dataset_", d, "_masked_under_BSV_scenario_", s, ".rds")))
@@ -213,6 +217,10 @@ simulate_validatedData <- function(n_datasets,
             ) 
             masked_df$scenario <- s
             
+            if (!is.null(confirmable_limits) | !is.null(phi_vec)) {
+              masked_df <- make_not_confirmable(masked_df, confirmable_limits, phi_vec)
+            }
+            
             if(save_masked_datasets == TRUE){
               
               saveRDS(masked_df,
@@ -226,8 +234,8 @@ simulate_validatedData <- function(n_datasets,
         
         # create scenario column for joining later
         scenarios <- scenarios %>%
-          mutate(scenario = 1:nrow(scenarios)) %>% 
-          relocate(scenario)
+          dplyr::mutate(scenario = 1:nrow(scenarios)) %>% 
+          dplyr::relocate(scenario)
         
       }
       

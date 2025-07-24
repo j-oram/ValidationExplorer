@@ -51,10 +51,12 @@ make_not_confirmable <- function(masked_df, confirmable_limits, phi_vec) {
   # or it is a random proportion for each site visit. 
   if (!is.null(phi_vec)) { # the 'confirmable by species case'
 
-    spp_conf_props_df <- tibble(true_spp = unique(masked_df$true_spp[!is.na(masked_df$true_spp)]), 
-                                phi = phi_vec)
+    spp_conf_probs_df <- dplyr::tibble(
+      true_spp = unique(masked_df$true_spp[!is.na(masked_df$true_spp)]), 
+      phi = phi_vec
+    )
     
-    masked_df <- dplyr::left_join(masked_df, spp_conf_props_df, by = "true_spp")
+    masked_df <- dplyr::left_join(masked_df, spp_conf_probs_df, by = "true_spp")
   } else { # the 'random proportion of each site-visit' case
     masked_df <- masked_df %>% 
       dplyr::group_by(site, visit) %>% 
@@ -84,7 +86,7 @@ make_not_confirmable <- function(masked_df, confirmable_limits, phi_vec) {
   } else {
     confirmable <- selected %>% 
       dplyr::group_split(site, visit, .keep = TRUE) %>% 
-      purrr::map(\(x) slice_sample(x, prop = unique(x$prop_confirmable))) %>% 
+      purrr::map(\(x) dplyr::slice_sample(x, prop = unique(x$prop_confirmable))) %>% 
       purrr::list_rbind()
   }
   
