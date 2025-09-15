@@ -85,7 +85,6 @@ simulate_validatedData <- function(n_datasets,
                                    lambda = abs(rnorm(nspecies, 0, 5)),
                                    theta = t(apply(diag(18, nrow = nspecies)+2, 1, function(x) {nimble::rdirch(alpha = x)})),
                                    confirmable_limits = NULL,
-                                   phi_vec = NULL,
                                    scen_expand = TRUE,
                                    scen_df = NULL,
                                    save_datasets = FALSE,
@@ -179,8 +178,8 @@ simulate_validatedData <- function(n_datasets,
           masked_df <- suppressMessages(mask_by_spp(datasets_list[[d]], scenarios[s,])$final_df)
           masked_df$scenario <- s
           
-          if (!is.null(confirmable_limits) | !is.null(phi_vec)) {
-            masked_df <- make_not_confirmable(masked_df, confirmable_limits, phi_vec)
+          if (!is.null(confirmable_limits)) {
+            masked_df <- make_not_confirmable(masked_df, confirmable_limits)
           }
           
           if(save_masked_datasets == TRUE){
@@ -217,8 +216,8 @@ simulate_validatedData <- function(n_datasets,
             ) 
             masked_df$scenario <- s
             
-            if (!is.null(confirmable_limits) | !is.null(phi_vec)) {
-              masked_df <- make_not_confirmable(masked_df, confirmable_limits, phi_vec)
+            if (!is.null(confirmable_limits)) {
+              masked_df <- make_not_confirmable(masked_df, confirmable_limits)
             }
             
             if(save_masked_datasets == TRUE){
@@ -255,8 +254,8 @@ simulate_validatedData <- function(n_datasets,
           effort_prop = scenarios[s]
         )) %>% dplyr::mutate(scenario = s)
 
-        if (!is.null(confirmable_limits) | !is.null(phi_vec)) {
-          masked_df <- make_not_confirmable(masked_df, confirmable_limits, phi_vec)
+        if (!is.null(confirmable_limits)) {
+          masked_df <- make_not_confirmable(masked_df, confirmable_limits)
         }
         
         if (save_masked_datasets == TRUE) {
