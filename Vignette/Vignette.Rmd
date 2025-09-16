@@ -211,6 +211,37 @@ sim_data <- simulate_validatedData(
 ```
 
 Note that we specified the design type through the argument `design_type = "FixedPercent"`, with the possible scenarios defined as the vector `scenarios = c(0.05, 0.1, 0.15, 0.3)`. These two arguments specify the set of alternative validation designs we will compare in our simulation study. Under the first validation design, 5% of recordings from each visit to a site are validated, while in the second validation design 10% of recordings from each visit to a site are validated, and so on.
+Additionally, we have assumed that all selected recordings are successfully validated because we have not specified the `confirmable_limits` argument, which is `NULL` by default. If we believed that the probability a randomly selected recording from detector-night $(i,j)$ lies between 0.4 and 0.6, for example, we would simulate data as follows: 
+
+```{r}
+sim_data_with_conf_limits <- simulate_validatedData(
+    n_datasets = 10,
+    nsites = nsites, 
+    nvisits = nvisits, 
+    nspecies = nspecies, 
+    design_type = "FixedPercent", 
+    scenarios = c(0.05, 0.1, 0.15, 0.3),
+    psi = psi, 
+    lambda = lambda,
+    theta = Theta, 
+    confirmable_limits = c(0.4, 0.6), # specify the range for the confirmability
+    save_datasets = FALSE, 
+    save_masked_datasets = FALSE, 
+    directory = here::here("Vignette", "Fixed_Effort")
+)
+```
+
+This argument makes it so that the probability a call can be confirmed varies across site-visits, falling within the specified range; we can see this in the first 10 site-visits from the first dataset simulated under validation scenario 1: 
+
+```{r}
+# validation scenario 1, dataset 1
+sim_data_with_conf_limits$masked_dfs[[1]][[1]] %>% 
+  group_by(site, visit) %>% 
+  summarize(prop_confirmable = unique(prop_confirmable)) %>% 
+  print(n = 10)
+```
+
+We continue our demonstration using the `sim_data` object, which assumes that all selected recordings can be confirmed. 
 
 To understand the output from `simulate_validatedData`, we can investigate `sim_data`. The output is a list, containing three objects:
 
