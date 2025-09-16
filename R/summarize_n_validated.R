@@ -57,10 +57,18 @@ summarize_n_validated <- function(data_list, scenario_numbers, theta_scenario) {
     unlist() %>% # turn the list of averages into a vector
     return() # return the vector
   
+  n_selected <- lapply(data_list, function(x) { # x is the scenario
+    lapply(x, function(y) { # y is an individual dataset
+      sum(y$selected) # find the number of validated calls in y
+    }) %>% # output is a list.
+      unlist() %>% # Take this, make it a vector and
+      mean() # take the average (over datasets within the scenario) -- this is the expected number of selected recordings under scenario x
+  }) %>%
+    unlist() %>% # turn the list of averages into a vector
+    return() # return the vector
+  
   return(dplyr::tibble(theta_scenario = as.character(theta_scenario), 
                        scenario = as.character(scenario_numbers), 
+                       n_selected = n_selected,
                        n_validated = n_validated))
-  
-  
-
 }

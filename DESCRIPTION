@@ -11,7 +11,7 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Depends: 
     nimble,
-    R (>= 2.10)
+    R (>= 3.5)
 Imports: 
     coda,
     dplyr,

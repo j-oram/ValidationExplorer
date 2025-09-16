@@ -29,6 +29,7 @@ mask_by_spp <- function(data, props_to_val){
 
   n <- nrow(data)
   data$call <- 1:n # For housekeeping to make sure that the anti_join call works properly
+  data$selected <- 1 # At the start, when all none of the true spp labels are masked, all calls are "selected"
 
     # Otherwise, specify that the proportion to mask is 1 - proportion to validate
     # and do the masking using slice_sample
@@ -42,7 +43,8 @@ mask_by_spp <- function(data, props_to_val){
       dplyr::group_by(.data$id_spp) %>%
       dplyr::group_split() %>% # split into separate dfs for each group
       purrr::map2_dfr(props_to_mask, ~ dplyr::slice_sample(.x, prop = .y)) %>% # apply slice_sample with
-      dplyr::mutate(true_spp = NA)                                             # designated proportion to each
+      dplyr::mutate(true_spp = NA,
+                    selected = 0)                                         # designated proportion to each
                                                                                # separate df, then mask
 
   # Once masking is completed, bind the rows that weren't masked (anti_join)
@@ -55,7 +57,7 @@ mask_by_spp <- function(data, props_to_val){
       by = "call" # this is necessary to ensure the number of rows after masking is the same as OG df
     ),
     dplyr::inner_join( # returns rows of data[,-true_spp] that have a match in masked_df
-      data %>% dplyr::select(-.data$true_spp),
+      data %>% dplyr::select(-c(true_spp, selected)),
       masked_df
     )
   ) %>%
@@ -72,7 +74,7 @@ mask_by_spp <- function(data, props_to_val){
         site_visit_idspp_number, 
         sep = "_")
       ) %>% 
-    dplyr::select(-.data$site_visit_idspp_number) %>% 
+    dplyr::select(-site_visit_idspp_number) %>% 
     dplyr::ungroup()
     
 

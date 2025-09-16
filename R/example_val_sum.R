@@ -10,7 +10,7 @@
 #'
 #' @docType data
 #' @name example_val_sum
-#' @format A dataframe with 2 rows and 3 columns
+#' @format A dataframe with 2 rows and 4 columns
 #' @source Data was simulated using \link{simulate_validatedData} and summarized
 #'   using \link{summarize_n_validated}.
 #'

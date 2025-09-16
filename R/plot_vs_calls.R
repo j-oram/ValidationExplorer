@@ -13,6 +13,8 @@
 #'   between `calls_summary` and `sim_summary`.
 #' @param scenarios A vector of integers corresponding to the validation designs
 #'   you would like to visualize.
+#' @param validated_only Logical: should the x-axis show just the number of successfully 
+#'   validated recordings? Default is FALSE, in which case the number of selected recordings are shown. 
 #' @param convergence_threshold A threshold for the Gelman-Rubin statistic; values
 #'   below this threshold indicate that a parameter has converged.
 #'
@@ -34,6 +36,7 @@ plot_bias_vs_calls <- function(sim_summary,
                                regex_pars = NULL,
                                theta_scenario,
                                scenarios,
+                               validated_only = FALSE,
                                convergence_threshold = 1.1) {
   # set themes
   ggplot2::theme_set(ggplot2::theme_grey())
@@ -84,15 +87,33 @@ plot_bias_vs_calls <- function(sim_summary,
   }
 
   # create the ggplot object to be returned
-  plt <- plt_df %>%
-    ggplot2::ggplot(
-      ggplot2::aes(
-        x = .data$n_validated,
-        y = .data$av_est_err,
-        group = .data$parameter,
-        color = .data$parameter
+  # create ggplot object
+  if(validated_only) {
+    plt <- plt_df %>%
+      ggplot2::ggplot(
+        ggplot2::aes(
+          x = .data$n_validated,
+          y = .data$av_est_err,
+          group = .data$parameter,
+          color = .data$parameter
+        )
       )
-    ) +
+    x_label <- 'Number of validated calls'
+  } else {
+    plt <- plt_df %>%
+      ggplot2::ggplot(
+        ggplot2::aes(
+          x = .data$n_selected,
+          y = .data$av_est_err,
+          group = .data$parameter,
+          color = .data$parameter
+        )
+      ) 
+    x_label <- 'Number of selected calls'
+  }
+  
+  
+  plt_out <- plt +
     ggplot2::geom_linerange(ggplot2::aes(ymin=.data$low50, ymax=.data$up50))+
     ggplot2::geom_line() + 
     ggplot2::geom_label(ggplot2::aes(label = .data$scenario), 
@@ -100,12 +121,12 @@ plot_bias_vs_calls <- function(sim_summary,
     ggplot2::scale_color_viridis_d() +
     ggplot2::geom_hline(yintercept = 0, linetype = "dotted")+
     ggplot2::labs(
-      x = "Number of validated calls",
+      x = x_label,
       y = "Average Estimation Error (50% intervals)",
       color = "Parameter"
     )
 
-  return(plt)
+  return(plt_out)
 
 }
 
@@ -124,6 +145,8 @@ plot_bias_vs_calls <- function(sim_summary,
 #'   between `calls_summary` and `sim_summary`.
 #' @param scenarios A vector of integers corresponding to the validation designs
 #'   you would like to visualize.
+#' @param validated_only Logical: should the x-axis show just the number of successfully 
+#'   validated recordings? Default is FALSE, in which case the number of selected recordings are shown. 
 #' @param convergence_threshold A threshold for the Gelman-Rubin statistic; values
 #'   below this threshold indicate that a parameter has converged.
 #'
@@ -145,6 +168,7 @@ plot_width_vs_calls <- function(sim_summary,
                                 regex_pars = NULL,
                                 theta_scenario,
                                 scenarios,
+                                validated_only = FALSE,
                                 convergence_threshold = 1.1) {
   # set theme
   ggplot2::theme_set(ggplot2::theme_grey())
@@ -196,26 +220,43 @@ plot_width_vs_calls <- function(sim_summary,
   }
 
   # create ggplot object
-  plt <- plt_df %>%
-    ggplot2::ggplot(
-      ggplot2::aes(
-        x = .data$n_validated,
-        y = .data$mean_width,
-        group = .data$parameter,
-        color = .data$parameter
+  if(validated_only) {
+    plt <- plt_df %>%
+      ggplot2::ggplot(
+        ggplot2::aes(
+          x = .data$n_validated,
+          y = .data$mean_width,
+          group = .data$parameter,
+          color = .data$parameter
+        )
+      ) 
+    x_label <- 'Number of validated calls'
+  } else {
+    plt <- plt_df %>%
+      ggplot2::ggplot(
+        ggplot2::aes(
+          x = .data$n_selected,
+          y = .data$mean_width,
+          group = .data$parameter,
+          color = .data$parameter
+        )
       )
-    ) +
+    x_label <- 'Number of selected calls'
+  }
+  
+  
+  plt_out <- plt +
     ggplot2::geom_linerange(ggplot2::aes(ymin=.data$low50_width, ymax=.data$up50_width))+
     ggplot2::geom_line() +
     ggplot2::geom_label(ggplot2::aes(label = .data$scenario), show.legend = FALSE) +
     ggplot2::scale_color_viridis_d() +
     ggplot2::labs(
-      x = "Number of validated calls",
+      x = x_label,
       y = "Average 95% credible interval width",
       color = "Parameter"
     )
 
-  return(plt)
+  return(plt_out)
 
 }
 
@@ -234,6 +275,8 @@ plot_width_vs_calls <- function(sim_summary,
 #'   between `calls_summary` and `sim_summary`.
 #' @param scenarios A vector of integers corresponding to the validation designs
 #'   you would like to visualize.
+#' @param validated_only Logical: should the x-axis show just the number of successfully 
+#'   validated recordings? Default is FALSE, in which case the number of selected recordings are shown. 
 #' @param convergence_threshold A threshold for the Gelman-Rubin statistic; values
 #'   below this threshold (and near 1) indicate that a parameter has converged.
 #'
@@ -256,6 +299,7 @@ plot_coverage_vs_calls <- function(sim_summary,
                                    regex_pars = NULL,
                                    theta_scenario,
                                    scenarios,
+                                   validated_only = FALSE,
                                    convergence_threshold = 1.1) {
   # set the ggplot theme
   ggplot2::theme_set(ggplot2::theme_grey())
@@ -298,15 +342,32 @@ plot_coverage_vs_calls <- function(sim_summary,
   }
 
   # create plots
-  plt <- plt_df %>%
-    ggplot2::ggplot(
-      ggplot2::aes(
-        x = .data$n_validated,
-        y = .data$coverage,
-        group = .data$parameter,
-        color = .data$parameter
+  # create ggplot object
+  if(validated_only) {
+    plt <- plt_df %>%
+      ggplot2::ggplot(
+        ggplot2::aes(
+          x = .data$n_validated,
+          y = .data$coverage,
+          group = .data$parameter,
+          color = .data$parameter
+        )
       )
-    ) +
+    x_label <- 'Number of validated calls'
+  } else {
+    plt <- plt_df %>%
+      ggplot2::ggplot(
+        ggplot2::aes(
+          x = .data$n_selected,
+          y = .data$coverage,
+          group = .data$parameter,
+          color = .data$parameter
+        )
+      ) 
+    x_label <- 'Number of selected calls'
+  }
+  
+  plt_out <- plt +
     ggplot2::geom_line() +
     ggplot2::geom_label(ggplot2::aes(label = .data$scenario), 
                         show.legend = FALSE) +
@@ -314,10 +375,10 @@ plot_coverage_vs_calls <- function(sim_summary,
     ggplot2::scale_color_viridis_d() +
     ggplot2::geom_hline(yintercept = 0.95, linetype = "dotted") +
     ggplot2::labs(
-      x = "Number of validated calls",
+      x = x_label,
       y = "Coverage",
       Shape = "Parameter"
     )
 
-  return(plt)
+  return(plt_out)
 }

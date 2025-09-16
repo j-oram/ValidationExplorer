@@ -40,7 +40,6 @@ class(L) <- "labeller"
 #' because they could not be confirmed. 
 #' @keywords internal
 make_not_confirmable <- function(masked_df, confirmable_limits) {
-  masked_df$selected <- ifelse(!is.na(masked_df$true_spp), "Y", "N")
   
   if (any(confirmable_limits < 0) | any(confirmable_limits > 1)) {
     stop(message("`confirmable_limits` must be in the range [0,1]."))
@@ -60,22 +59,22 @@ make_not_confirmable <- function(masked_df, confirmable_limits) {
       dplyr::ungroup()
   
   # split df into the selected and not selected components
-  selected <- masked_df %>% 
-    dplyr::filter(selected == "Y")
-  not_selected <- dplyr::setdiff(masked_df, selected)
+  selected_df <- masked_df %>% 
+    dplyr::filter(selected == 1)
+  not_selected <- dplyr::setdiff(masked_df, selected_df)
   
-  confirmable <- selected %>% 
+  confirmable_df <- selected_df %>% 
     dplyr::group_split(site, visit, .keep = TRUE) %>% 
     purrr::map(\(x) dplyr::slice_sample(x, prop = unique(x$prop_confirmable))) %>% 
     purrr::list_rbind()
   
   # If not confirmable, then the true spp label remains ambiguous (has value NA)
-  not_confirmable <- dplyr::setdiff(selected, confirmable)
+  not_confirmable <- dplyr::setdiff(selected_df, confirmable_df)
   not_confirmable$true_spp <- NA
   
   # Bind together a copy of selected subset that has confirmed and non-
   # confirmable recordings in it
-  selected_out <- dplyr::bind_rows(confirmable, not_confirmable) %>% 
+  selected_out <- dplyr::bind_rows(confirmable_df, not_confirmable) %>% 
     dplyr::arrange(unique_call_id)
   
   # Bind copy of selected subset with the not selected recordings

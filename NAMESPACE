@@ -3,6 +3,7 @@
 export("%>%")
 export("%notin%")
 export(L)
+export(make_not_confirmable)
 export(mask_FE_all_visits)
 export(mask_by_spp)
 export(mcmc_sum)

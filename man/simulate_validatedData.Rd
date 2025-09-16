@@ -8,12 +8,16 @@ simulate_validatedData(
   n_datasets,
   design_type = c("BySpecies", "FixedPercent"),
   scenarios = NULL,
-  nsites,
-  nspecies,
-  nvisits,
-  psi,
-  lambda,
-  theta,
+  nsites = 100,
+  nspecies = 8,
+  nvisits = 3,
+  psi = runif(nspecies, 0.1, 0.9),
+  lambda = abs(rnorm(nspecies, 0, 5)),
+  theta = t(apply(diag(18, nrow = nspecies) + 2, 1, function(x) {
+    
+    nimble::rdirch(alpha = x)
+ })),
+  confirmable_limits = NULL,
   scen_expand = TRUE,
   scen_df = NULL,
   save_datasets = FALSE,
@@ -46,6 +50,9 @@ Make sure the order is correct and matches psi.}
 
 \item{theta}{a matrix containing the (mis)classification probabilities. The rows of this matrix must sum
 to 1. See vignette for an example.}
+
+\item{confirmable_limits}{A numeric vector containing the lower and and upper bounds on the site-visit probabilities
+that a recording can be validated ("confirmed").}
 
 \item{scen_expand}{If \code{design_type = "BySpecies"}, should \code{simulate_validatedData} expand the list of \code{scenarios}?
 If TRUE (the default value), then \code{scenarios} must be a list; if FALSE, then \code{simulate_validatedData} expects a

@@ -12,6 +12,7 @@ plot_bias_vs_calls(
   regex_pars = NULL,
   theta_scenario,
   scenarios,
+  validated_only = FALSE,
   convergence_threshold = 1.1
 )
 }
@@ -33,6 +34,9 @@ between \code{calls_summary} and \code{sim_summary}.}
 
 \item{scenarios}{A vector of integers corresponding to the validation designs
 you would like to visualize.}
+
+\item{validated_only}{Logical: should the x-axis show just the number of successfully
+validated recordings? Default is FALSE, in which case the number of selected recordings are shown.}
 
 \item{convergence_threshold}{A threshold for the Gelman-Rubin statistic; values
 below this threshold indicate that a parameter has converged.}

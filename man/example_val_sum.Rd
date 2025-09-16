@@ -5,7 +5,7 @@
 \alias{example_val_sum}
 \title{example_val_sum: Example summaries of validated data}
 \format{
-A dataframe with 2 rows and 3 columns
+A dataframe with 2 rows and 4 columns
 }
 \source{
 Data was simulated using \link{simulate_validatedData} and summarized

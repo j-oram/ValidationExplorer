@@ -37,13 +37,15 @@ mask_FE_all_visits <- function (df, effort_prop, seed = NULL) {
   # for housekeeping -- make sure that we aren't double counting any obs
   # (or missing any)
   df$call <- 1:nrow(df)
+  df$selected <- 1
   
   # mask a fixed percent from each visit to each site
   masked <- df %>% 
     dplyr::ungroup() %>% 
     dplyr::group_by(.data$site, .data$visit) %>% 
     dplyr::slice_sample(prop = 1 - effort_prop) %>% 
-    dplyr::mutate(true_spp = NA)
+    dplyr::mutate(true_spp = NA,
+                  selected = 0)
   
   # grab the calls that were validated (not turned to NA)
   unmasked <- df %>% dplyr::filter(call %notin% masked$call)
@@ -64,7 +66,7 @@ mask_FE_all_visits <- function (df, effort_prop, seed = NULL) {
         site_visit_idspp_number, 
         sep = "_")
     ) %>% 
-    dplyr::select(-.data$site_visit_idspp_number) %>% 
+    dplyr::select(-site_visit_idspp_number) %>% 
     dplyr::ungroup()
   
   return(out_df)

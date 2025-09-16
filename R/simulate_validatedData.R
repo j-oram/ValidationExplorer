@@ -16,6 +16,8 @@
 #'   Make sure the order is correct and matches psi.
 #' @param theta a matrix containing the (mis)classification probabilities. The rows of this matrix must sum
 #'   to 1. See vignette for an example.
+#' @param confirmable_limits A numeric vector containing the lower and and upper bounds on the site-visit probabilities 
+#'   that a recording can be validated ("confirmed"). 
 #' @param scen_expand If `design_type = "BySpecies"`, should `simulate_validatedData` expand the list of `scenarios`?
 #'   If TRUE (the default value), then `scenarios` must be a list; if FALSE, then `simulate_validatedData` expects a
 #'   user-supplied dataframe object through the `scen_df` argument. 
