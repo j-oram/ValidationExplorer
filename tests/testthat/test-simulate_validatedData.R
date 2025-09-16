@@ -161,7 +161,7 @@ test_that("adding confirmation process with user-specified by-species validation
       psi = psi, 
       lambda = lambda, 
       theta = theta,
-      phi_vec = c(.5, .7),
+      confirmable_limits = c(0.2, 0.5),
       directory = here::here("Testing")
     )
   )

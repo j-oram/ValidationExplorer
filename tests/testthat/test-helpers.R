@@ -37,16 +37,11 @@ test_that(
     )$masked_dfs[[1]][[1]]
     
     # With site-night confirmability
-    md_after <- make_not_confirmable(md, confirmable_limits = c(.8, 1), phi_vec = NULL)
+    md_after <- make_not_confirmable(md, confirmable_limits = c(.8, 1))
     
     expect_equal(all(md_after$unique_call_id %in% md$unique_call_id), TRUE)
     expect_equal(all(md$unique_call_id %in% md_after$unique_call_id), TRUE)
     
-    # with by-species confirmability
-    md_after2 <- make_not_confirmable(md, confirmable_limits = NULL, phi_vec = c(.8, 1))
-    
-    expect_equal(all(md_after2$unique_call_id %in% md$unique_call_id), TRUE)
-    expect_equal(all(md$unique_call_id %in% md_after2$unique_call_id), TRUE)
     
     
     ## ----- With expand.grid for list of scenarios ----- ## 
@@ -64,17 +59,10 @@ test_that(
     )$masked_dfs[[5]][[1]]
     
     # With site-night confirmability
-    md_after3 <- make_not_confirmable(md2, confirmable_limits = c(.8, 1), phi_vec = NULL)
+    md_after2 <- make_not_confirmable(md2, confirmable_limits = c(.8, 1))
     
-    expect_equal(all(md_after3$unique_call_id %in% md2$unique_call_id), TRUE)
-    expect_equal(all(md2$unique_call_id %in% md_after3$unique_call_id), TRUE)
-    
-    # with by-species confirmability
-    md_after4 <- make_not_confirmable(md2, confirmable_limits = NULL, phi_vec = c(.8, 1))
-    
-    expect_equal(all(md_after4$unique_call_id %in% md2$unique_call_id), TRUE)
-    expect_equal(all(md2$unique_call_id %in% md_after4$unique_call_id), TRUE)
-    
+    expect_equal(all(md_after2$unique_call_id %in% md2$unique_call_id), TRUE)
+    expect_equal(all(md2$unique_call_id %in% md_after2$unique_call_id), TRUE)
   }
 )
 
@@ -92,18 +80,11 @@ test_that('All calls are retained after confirmation process is simulated (fixed
     directory = here::here("Testing")
   )$masked_dfs[[1]][[1]]
   
-  # With site-night confirmability
-  md_after <- make_not_confirmable(md, confirmable_limits = c(.8, 1), phi_vec = NULL)
+  md_after <- make_not_confirmable(md, confirmable_limits = c(.8, 1))
   
   expect_equal(all(md_after$unique_call_id %in% md$unique_call_id), TRUE)
   expect_equal(all(md$unique_call_id %in% md_after$unique_call_id), TRUE)
   
-  # With by-spp confirmability 
-  # with by-species confirmability
-  md_after2 <- make_not_confirmable(md, confirmable_limits = NULL, phi_vec = c(.8, 1))
-  
-  expect_equal(all(md_after2$unique_call_id %in% md$unique_call_id), TRUE)
-  expect_equal(all(md$unique_call_id %in% md_after2$unique_call_id), TRUE)
 })
 
 test_that('The number of calls with true_spp labels is less than or equal to the number before simulating confirmability', {
@@ -124,19 +105,11 @@ test_that('The number of calls with true_spp labels is less than or equal to the
     dplyr::group_by(site, visit) %>% 
     dplyr::summarize(prop_with_true_label = sum(!is.na(true_spp))/dplyr::n(), n = dplyr::n())
   
-  md_after1 <- make_not_confirmable(md, confirmable_limits = c(.8, 1), phi_vec = NULL)
-  md_after2 <- make_not_confirmable(md, confirmable_limits = NULL, phi_vec = c(.8, 1))
+  md_after1 <- make_not_confirmable(md, confirmable_limits = c(.8, 1))
   
   md_after1_summary <- md_after1 %>% 
     dplyr::group_by(site, visit) %>% 
     dplyr::summarize(prop_with_true_label = sum(!is.na(true_spp))/dplyr::n(), n = dplyr::n())
   
-  md_after2_summary <- md_after2 %>% 
-    dplyr::group_by(site, visit) %>% 
-    dplyr::summarize(prop_with_true_label = sum(!is.na(true_spp))/dplyr::n(), n = dplyr::n())
-  
-  expect_equal(all(md_summary$prop_with_true_label >= md_after1_summary$prop_with_true_label) & 
-                 all(md_summary$prop_with_true_label >= md_after2_summary$prop_with_true_label), TRUE)
-  
-  
+  expect_equal(all(md_summary$prop_with_true_label >= md_after1_summary$prop_with_true_label), TRUE)
 })
