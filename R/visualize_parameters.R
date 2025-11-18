@@ -90,7 +90,7 @@ visualize_single_parameter <- function(sim_summary,
     ) +
     ggplot2::labs(
       x = "Manual Verification Scenario",
-      y = "",
+      y = "Posterior Distribution",
       color = "Coverage"
     )
 
@@ -193,7 +193,7 @@ visualize_parameter_group <- function(sim_summary,
     ) +
     ggplot2::labs(
       x = "Manual Verification Scenario",
-      y = "",
+      y = "Posterior Distribution",
       color = "Coverage"
     )
 

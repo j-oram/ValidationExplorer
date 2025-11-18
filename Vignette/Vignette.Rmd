@@ -5,7 +5,7 @@ output:
   bookdown::pdf_document2: 
     number_sections: yes
     extra_dependencies: ['float']
-    keep_tex: no
+    keep_tex: yes
     toc: no
     pandoc_args:
       - '--lua-filter=lua-filters/scholarly-metadata.lua'
@@ -16,7 +16,7 @@ header-includes:
   - \usepackage{amsmath}
   - \usepackage{underscore}
 bibliography: Vignette.bib
-abstract: "Our vignette demonstrates the use of the `ValidationExplorer` package to conduct statistical simulation studies that can aid in the design phase of bioacoustic studies. In particular, our package facilitates explorion of the costs and inferential properties (e.g., coverage and interval widths) of alternative validation designs in the context of the count detection model framework. 
+abstract: "Our vignette demonstrates the use of the `ValidationExplorer` package to conduct statistical simulation studies that can aid in the design phase of bioacoustic studies. In particular, our package facilitates exploration of the costs and inferential properties (e.g., coverage and interval widths) of alternative validation designs in the context of the count detection model framework. 
 Our functions allow the user to specify a suite of candidate validation designs using either a stratified sampling procedure or a fixed-effort design type. An example of the former is provided in the manuscript entitled '`ValidationExplorer`: Streamlined simulations to provide bioacoustic study design guidance in the presence of misclassification', which was submitted to the Applications series of *Methods in Ecology and Evolution*. In this vignette, we provide further details not covered in the manuscript and an additional example of data simulation, model fitting, and visualization of simulation results when using a fixed-effort design type. Our demonstration here is intended to aid researchers and others to tailor a validation design that provides useful inference while also ensuring that the level of effort meets cost constraints. \\vfill"
 ---
 
@@ -211,7 +211,7 @@ sim_data <- simulate_validatedData(
 ```
 
 Note that we specified the design type through the argument `design_type = "FixedPercent"`, with the possible scenarios defined as the vector `scenarios = c(0.05, 0.1, 0.15, 0.3)`. These two arguments specify the set of alternative validation designs we will compare in our simulation study. Under the first validation design, 5% of recordings from each visit to a site are validated, while in the second validation design 10% of recordings from each visit to a site are validated, and so on.
-Additionally, we have assumed that all selected recordings are successfully validated because we have not specified the `confirmable_limits` argument, which is `NULL` by default. If we believed that the probability a randomly selected recording from detector-night $(i,j)$ lies between 0.4 and 0.6, for example, we would simulate data as follows: 
+Additionally, we have assumed that all selected recordings are successfully validated because we have not specified the `confirmable_limits` argument, which is `NULL` by default. If we believed that the probability a randomly selected recording from detector-night $(i,j)$ lies between 0.4 and 0.6 (as in the main manuscript), for example, we would simulate data as follows: 
 
 ```{r}
 sim_data_with_conf_limits <- simulate_validatedData(
@@ -231,7 +231,7 @@ sim_data_with_conf_limits <- simulate_validatedData(
 )
 ```
 
-This argument makes it so that the probability a call can be confirmed varies across site-visits, falling within the specified range; we can see this in the first 10 site-visits from the first dataset simulated under validation scenario 1: 
+This argument assumes the probability a call can be confirmed varies across site-visits, falling within the specified range; we can see this in the first 10 site-visits from the first dataset simulated under validation scenario 1: 
 
 ```{r}
 # validation scenario 1, dataset 1
@@ -559,11 +559,11 @@ In situations such as this one, a decision is required of the user. If a slightl
 
 In this section, we provide further details of the example in the main manuscript, which assumed a stratified-by-species design. In a stratified-by-species design, the random mechanism is a stratified random sample, with strata formed by the species labels assigned during automated classification (i.e., by autoID). In this type of design, the LOVE is the proportion of recordings selected to be validated for each species label.
 
-We repeat the simulation study conducted in the main text in this section, providing greater detail for some of the steps. We assume the same measurable objectives and cost constraints as in Section \@ref(FEEx). 
+We repeat the simulation study conducted in the main text in this section, providing greater detail for some of the steps. We assume the same measurable objectives as in Section \@ref(FEEx), but we now assume the maximum number of recordings that can be viewed by experts during the validation process is 1000. 
 
 ## Simulate data \label{simBySpp}
 
-Using the same values for `psi`, `lambda` and `Theta` as in Section \@ref(dataSimulation), we simulate data using `simulate_validatedData` with `design_type = "BySpecies"`. This will yield simulated data in the format described in Section \@ref(dataSimulation).
+Using the same values for `psi`, `lambda` and `Theta` as in Section \@ref(dataSimulation), we simulate data using `simulate_validatedData` with `design_type = "BySpecies"` and set the probability of successfully validating a selected recording using the `confirmable_limits` argument. This will yield simulated data in the format described in Section \@ref(dataSimulation).
 
 ```{r message=FALSE}
 sim_data <- simulate_validatedData(
@@ -702,21 +702,22 @@ The results appear satisfactory, with effective sample sizes of more than 250 in
 
 ## Fit models
 
-```{r fitBySpecies, cache=TRUE }
+```{r fitBySpecies, cache=TRUE}
 sims_out <- run_sims(
   data_list = sim_data$masked_dfs,
   zeros_list = sim_data$zeros,
   DGVs = list(lambda = lambda, psi = psi, theta = Theta),
   theta_scenario_id = "BySpecies", 
   parallel = TRUE,
-  niter = tune_list$min_iter + 1000, 
-  nburn = tune_list$min_warmup + 500,
+  niter = tune_list$min_iter + 500, 
+  nburn = tune_list$min_warmup + 250,
   thin = 1, 
   save_fits = FALSE,
   save_individual_summaries_list = FALSE,
   directory = here::here("Vignette", "BySpecies")
 )
 ```
+
 The output, `sims_out`, will have the same structure as described in Section \@ref(runSims).
 
 ## Visualize results \label{vizbyspp}
@@ -766,7 +767,8 @@ plot_width_vs_calls(
   calls_summary = call_sum, 
   regex_pars = "lambda",
   theta_scenario = unique(sims_out$theta_scenario),
-  scenarios = 1:6
+  scenarios = 1:6,
+  max_calls = 1000 # put shading over scenarios that are beyond budget
 )
 ```
 
