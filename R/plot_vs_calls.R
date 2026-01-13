@@ -94,7 +94,7 @@ plot_bias_vs_calls <- function(sim_summary,
         color = .data$parameter
       )
     ) 
-  x_title <- 'Number of selected (confirmed) calls'
+  x_title <- 'Average number of selected (confirmed) calls'
   
   labs <- paste0(unique(calls_summary$n_selected), '\n', '(', unique(calls_summary$n_validated), ')')
   
@@ -231,7 +231,7 @@ plot_width_vs_calls <- function(sim_summary,
         color = .data$parameter
       )
     )
-  x_title <- 'Number of selected (confirmed) calls'
+  x_title <- 'Average number of selected (confirmed) calls'
   
   labs <- paste0(unique(calls_summary$n_selected), '\n', '(', unique(calls_summary$n_validated), ')')
   
@@ -359,7 +359,7 @@ plot_coverage_vs_calls <- function(sim_summary,
         color = .data$parameter
       )
     ) 
-  x_title <- 'Number of selected (confirmed) calls'
+  x_title <- 'Average number of selected (confirmed) calls'
   
   labs <- paste0(unique(calls_summary$n_selected), '\n', '(', unique(calls_summary$n_validated), ')')
   
