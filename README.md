@@ -2,6 +2,8 @@
 
 This repository contains the `ValidationExplorer` package, as described in the manuscript "*ValidationExplorer*: Streamlined simulations to inform bioacoustic study design in the presence of misclassification," submitted to *Journal of Data Science*. 
 
+**Disclaimer**: This software is preliminary or provisional and is subject to revision. It is being provided to meet the need for timely best science. The software has not received final approval by the U.S. Geological Survey (USGS). No warranty, expressed or implied, is made by the USGS or the U.S. Government as to the functionality of the software and related material nor shall the fact of release constitute any such warranty. The software is provided on the condition that neither the USGS nor the U.S. Government shall be held liable for any damages resulting from the authorized or unauthorized use of the software.
+
 ## Getting started 
 
 To install `ValidationExplorer`, see the instructions in the manuscript. Installation instructions will be added to this README after peer review is complete.
