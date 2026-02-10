@@ -184,3 +184,160 @@ test_that("adding confirmation process with user-specified by-species validation
   )
 })
 
+test_that(
+  'error when scenarios length is incorrect for by-species validation',
+  {
+    expect_error(
+      simulate_validatedData(
+        n_datasets = D, 
+        design_type = "BySpecies",
+        scen_expand = TRUE,
+        scenarios = list(
+          spp1 = c(0.1, 0.5), 
+          spp2 = c(0.02, 0.05), 
+          spp3 = 0.45 # Add an extra species; should throw warning
+        ),
+        nsites = n,
+        nspecies = K, 
+        nvisits = J,
+        psi = psi, 
+        lambda = lambda, 
+        theta = theta,
+        confirmable_limits = c(.5, 1),
+        directory = here::here("Testing")
+      )
+    )
+  }
+)
+
+## File creation tests: 
+
+test_that("creates directories when save_datasets = TRUE", {
+  withr::with_tempdir({
+    temp_dir <- getwd()
+    
+    # Verify directories don't exist initially
+    expect_false(dir.exists(file.path(temp_dir, "datasets")))
+    expect_false(dir.exists(file.path(temp_dir, "zeros")))
+    
+    # Run function with save_datasets = TRUE
+    simulate_validatedData(
+      n_datasets = 1,
+      design_type = "BySpecies",
+      scenarios = list(spp1 = 0.5, spp2 = 0.5),
+      nsites = 5,
+      nvisits = 2,
+      nspecies = 2,
+      save_datasets = TRUE,
+      save_masked_datasets = FALSE,
+      directory = temp_dir
+    )
+    
+    # Verify directories were created
+    expect_true(dir.exists(file.path(temp_dir, "datasets")))
+    expect_true(dir.exists(file.path(temp_dir, "zeros")))
+  })
+})
+
+test_that("creates directories when save_masked_datasets = TRUE", {
+  withr::with_tempdir({
+    temp_dir <- getwd()
+    
+    # Verify directory doesn't exist initially
+    expect_false(dir.exists(file.path(temp_dir, "masked_datasets")))
+    
+    # Run function with save_masked_datasets = TRUE
+    simulate_validatedData(
+      n_datasets = 1,
+      design_type = "BySpecies",
+      scenarios = list(spp1 = 0.5, spp2 = 0.5),
+      nsites = 5,
+      nvisits = 2,
+      nspecies = 2,
+      save_datasets = FALSE,
+      save_masked_datasets = TRUE,
+      directory = temp_dir
+    )
+    
+    # Verify directory was created
+    expect_true(dir.exists(file.path(temp_dir, "masked_datasets")))
+  })
+})
+
+test_that("creates all directories when both save options are TRUE", {
+  withr::with_tempdir({
+    temp_dir <- getwd()
+    
+    # Run function with both save options TRUE
+    simulate_validatedData(
+      n_datasets = 2,
+      design_type = "BySpecies",
+      scenarios = list(spp1 = 0.5, spp2 = 0.5),
+      nsites = 5,
+      nvisits = 2,
+      nspecies = 2,
+      save_datasets = TRUE,
+      save_masked_datasets = TRUE,
+      directory = temp_dir
+    )
+    
+    # Verify all directories were created
+    expect_true(dir.exists(file.path(temp_dir, "datasets")))
+    expect_true(dir.exists(file.path(temp_dir, "zeros")))
+    expect_true(dir.exists(file.path(temp_dir, "masked_datasets")))
+  })
+})
+
+test_that("does not create directories when both save options are FALSE", {
+  withr::with_tempdir({
+    temp_dir <- getwd()
+    
+    # Run function with both save options FALSE
+    simulate_validatedData(
+      n_datasets = 1,
+      design_type = "BySpecies",
+      scenarios = list(spp1 = 0.5, spp2 = 0.5),
+      nsites = 5,
+      nvisits = 2,
+      nspecies = 2,
+      save_datasets = FALSE,
+      save_masked_datasets = FALSE,
+      directory = temp_dir
+    )
+    
+    # Verify no subdirectories were created (temp_dir itself still exists)
+    subdirs <- list.dirs(temp_dir, recursive = FALSE)
+    expect_length(subdirs, 0)
+  })
+})
+
+test_that("handles pre-existing directories without error", {
+  withr::with_tempdir({
+    temp_dir <- getwd()
+    
+    # Pre-create the directories
+    dir.create(file.path(temp_dir, "datasets"), recursive = TRUE)
+    dir.create(file.path(temp_dir, "zeros"), recursive = TRUE)
+    dir.create(file.path(temp_dir, "masked_datasets"), recursive = TRUE)
+    
+    # Should not error when directories already exist
+    expect_no_error(
+      simulate_validatedData(
+        n_datasets = 1,
+        design_type = "BySpecies",
+        scenarios = list(spp1 = 0.5, spp2 = 0.5),
+        nsites = 5,
+        nvisits = 2,
+        nspecies = 2,
+        save_datasets = TRUE,
+        save_masked_datasets = TRUE,
+        directory = temp_dir
+      )
+    )
+    
+    # Directories should still exist
+    expect_true(dir.exists(file.path(temp_dir, "datasets")))
+    expect_true(dir.exists(file.path(temp_dir, "zeros")))
+    expect_true(dir.exists(file.path(temp_dir, "masked_datasets")))
+  })
+})
