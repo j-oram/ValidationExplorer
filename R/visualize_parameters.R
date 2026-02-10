@@ -188,8 +188,7 @@ visualize_parameter_group <- function(sim_summary,
       ggplot2::aes(x = .data$scenario, y = .data$truth)
     ) +
     ggplot2::facet_wrap(
-      ~.data$parameter,
-      labeller = L
+      ~.data$parameter
     ) +
     ggplot2::labs(
       x = "Manual Verification Scenario",
