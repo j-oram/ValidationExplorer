@@ -4,7 +4,12 @@
 \alias{\%notin\%}
 \title{Negation of \%in\%}
 \usage{
-x <- c(1,2,3); 1 %notin% x
+x \%notin\% table
+}
+\arguments{
+\item{x}{Vector of values to check}
+
+\item{table}{Vector to check against}
 }
 \value{
 A logical vector indicating if there are values not in \code{table}.
