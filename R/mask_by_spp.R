@@ -57,11 +57,11 @@ mask_by_spp <- function(data, props_to_val){
       by = "call" # this is necessary to ensure the number of rows after masking is the same as OG df
     ),
     dplyr::inner_join( # returns rows of data[,-true_spp] that have a match in masked_df
-      data %>% dplyr::select(-c(true_spp, selected)),
+      data %>% dplyr::select(-dplyr::all_of(c('true_spp', 'selected'))),
       masked_df
     )
   ) %>%
-    dplyr::arrange(call)
+    dplyr::arrange(.data$call)
   
   # add a unique call id that combines the site, visit, autoID and 
   # call number within the site-visit
@@ -74,7 +74,7 @@ mask_by_spp <- function(data, props_to_val){
         site_visit_idspp_number, 
         sep = "_")
       ) %>% 
-    dplyr::select(-site_visit_idspp_number) %>% 
+    dplyr::select(-'site_visit_idspp_number') %>% 
     dplyr::ungroup()
     
 

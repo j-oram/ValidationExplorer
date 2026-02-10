@@ -110,14 +110,14 @@ plot_bias_vs_calls <- function(sim_summary,
       y = "Average Estimation Error (50% intervals)",
       color = "Parameter"
     ) + 
-    scale_x_continuous(
+    ggplot2::scale_x_continuous(
       breaks = unique(calls_summary$n_selected),
       labels = labs
     )
   
   if (!is.null(max_calls)) {
     plt_out <- plt_out + 
-      annotate(
+      ggplot2::annotate(
         "rect",
         xmin = max_calls, 
         xmax = Inf,  # region to shade: x > max_calls
@@ -243,14 +243,14 @@ plot_width_vs_calls <- function(sim_summary,
       y = "Average 95% credible interval width",
       color = "Parameter"
     ) + 
-    scale_x_continuous(
+    ggplot2::scale_x_continuous(
       breaks = unique(calls_summary$n_selected),
       labels = labs
     )
   
   if (!is.null(max_calls)) {
     plt_out <- plt_out + 
-      annotate(
+      ggplot2::annotate(
         "rect",
         xmin = max_calls, 
         xmax = Inf,  # region to shade: x > max_calls

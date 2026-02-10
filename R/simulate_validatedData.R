@@ -47,6 +47,7 @@
 #'   dataset 27, assuming validation scenario 9. If `save_masked_datasets = TRUE`, then each dataset/scenario
 #'   scenario combination is saved individually in `directory` as dataset_n_masked_under_scenario_s.rds,
 #'   where n is the dataset number and s is the scenario number.
+#' @importFrom stats rnorm runif
 #' @export
 #'
 #' @examples

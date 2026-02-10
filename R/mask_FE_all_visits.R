@@ -66,7 +66,7 @@ mask_FE_all_visits <- function (df, effort_prop, seed = NULL) {
         site_visit_idspp_number, 
         sep = "_")
     ) %>% 
-    dplyr::select(-site_visit_idspp_number) %>% 
+    dplyr::select(-'site_visit_idspp_number') %>% 
     dplyr::ungroup()
   
   return(out_df)
