@@ -161,7 +161,7 @@ tune_mcmc <- function(dataset, zeros, return_fit = TRUE) {
         values_fill = 0 # if NA, turn into a 0, since the NA is due to no calls being detected at that site-visit
       ) %>%
       dplyr::ungroup() %>%
-      dplyr::select(-.data$site) %>%
+      dplyr::select(-'site') %>%
       as.matrix()
   )
 
@@ -215,7 +215,7 @@ tune_mcmc <- function(dataset, zeros, return_fit = TRUE) {
     
     # obtain the MCMC diagnostics from the fit
     n_eff_df <- mcmc_sum(out = fit, truth = rep(0, ncol(fit[[1]]))) %>% 
-      dplyr::select(parameter, ess_bulk, ess_tail, Rhat)
+      dplyr::select(dplyr::all_of(c('parameter', 'ess_bulk', 'ess_tail', 'Rhat')))
     
     if (all(M == 0)) {
       stop(message("Convergence was not reached in under 10,000 iterations. You must run chains for longer or increase validation effort!"))

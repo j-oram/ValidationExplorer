@@ -29,7 +29,7 @@ mask_by_spp <- function(data, props_to_val){
 
   n <- nrow(data)
   data$call <- 1:n # For housekeeping to make sure that the anti_join call works properly
-  data$selected <- 1 # At the start, when all none of the true spp labels are masked, all calls are "selected"
+  data$selected <- 1 # At the start, when none of the true spp labels are masked, all calls are "selected"
 
     # Otherwise, specify that the proportion to mask is 1 - proportion to validate
     # and do the masking using slice_sample

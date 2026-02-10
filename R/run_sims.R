@@ -205,7 +205,7 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
               values_fill = 0 # if NA, turn into a 0, since the NA is due to no calls being detected at that site-visit
             ) %>%
             dplyr::ungroup() %>%
-            dplyr::select(-.data$site) %>%
+            dplyr::select(-'site') %>%
             as.matrix()
         )
 

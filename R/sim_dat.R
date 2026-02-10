@@ -71,7 +71,7 @@ sim_dat <- function(
 
   # add latent z state and counts for each true-autoID pair at each site-night
   df3 <- df2 %>%
-    dplyr::select(.data$site, .data$true_spp, .data$psi) %>%
+    dplyr::select(dplyr::all_of(c('site', 'true_spp', 'psi'))) %>%
     dplyr::distinct() %>%
     dplyr::mutate(z = stats::rbinom(dplyr::n(), size = 1, prob = .data$psi)) %>%
     dplyr::left_join(

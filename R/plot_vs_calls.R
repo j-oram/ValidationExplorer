@@ -13,6 +13,9 @@
 #'   between `calls_summary` and `sim_summary`.
 #' @param scenarios A vector of integers corresponding to the validation designs
 #'   you would like to visualize.
+#' @param max_calls The maximum number of calls that can be manually reviewed. 
+#'   All points beyond this threshold will be shaded gray in the plot. Default 
+#'   value is NULL.
 #' @param convergence_threshold A threshold for the Gelman-Rubin statistic; values
 #'   below this threshold indicate that a parameter has converged.
 #'
@@ -63,12 +66,9 @@ plot_bias_vs_calls <- function(sim_summary,
       up50 = quantile(.data$est_error, 0.75)
     ) %>%
     dplyr::select(
-      .data$theta_scenario,
-      .data$scenario,
-      .data$parameter,
-      .data$av_est_err,
-      .data$low50,
-      .data$up50
+      dplyr::all_of(
+        c('theta_scenario', 'scenario', 'parameter', 'av_est_err', 'low50', 'up50')
+      )
     ) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(theta_scenario = as.character(.data$theta_scenario),
@@ -147,8 +147,9 @@ plot_bias_vs_calls <- function(sim_summary,
 #'   between `calls_summary` and `sim_summary`.
 #' @param scenarios A vector of integers corresponding to the validation designs
 #'   you would like to visualize.
-#' @param validated_only Logical: should the x-axis show just the number of successfully 
-#'   validated recordings? Default is FALSE, in which case the number of selected recordings are shown. 
+#' @param max_calls The maximum number of calls that can be manually reviewed. 
+#'   All points beyond this threshold will be shaded gray in the plot. Default 
+#'   value is NULL.
 #' @param convergence_threshold A threshold for the Gelman-Rubin statistic; values
 #'   below this threshold indicate that a parameter has converged.
 #'
@@ -198,12 +199,9 @@ plot_width_vs_calls <- function(sim_summary,
       up50_width = quantile(.data$width, .75)
     ) %>%
     dplyr::select(
-      .data$theta_scenario,
-      .data$scenario,
-      .data$parameter,
-      .data$mean_width,
-      .data$low50_width,
-      .data$up50_width
+      dplyr::all_of(
+        c('theta_scenario', 'scenario', 'parameter', 'mean_width', 'low50_width', 'up50_width')
+      )
     ) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(theta_scenario = as.character(.data$theta_scenario),
@@ -282,8 +280,9 @@ plot_width_vs_calls <- function(sim_summary,
 #'   between `calls_summary` and `sim_summary`.
 #' @param scenarios A vector of integers corresponding to the validation designs
 #'   you would like to visualize.
-#' @param validated_only Logical: should the x-axis show just the number of successfully 
-#'   validated recordings? Default is FALSE, in which case the number of selected recordings are shown. 
+#' @param max_calls The maximum number of calls that can be manually reviewed. 
+#'   All points beyond this threshold will be shaded gray in the plot. Default 
+#'   value is NULL.
 #' @param convergence_threshold A threshold for the Gelman-Rubin statistic; values
 #'   below this threshold (and near 1) indicate that a parameter has converged.
 #'
@@ -330,10 +329,7 @@ plot_coverage_vs_calls <- function(sim_summary,
       coverage = mean(.data$capture),
     ) %>%
     dplyr::select(
-      .data$theta_scenario,
-      .data$scenario,
-      .data$parameter,
-      .data$coverage
+      dplyr::all_of(c('theta_scenario', 'scenario', 'parameter', 'coverage'))
     ) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(theta_scenario = as.character(.data$theta_scenario),
@@ -375,14 +371,14 @@ plot_coverage_vs_calls <- function(sim_summary,
       y = "Coverage",
       Shape = "Parameter"
     ) + 
-    scale_x_continuous(
+    ggplot2::scale_x_continuous(
       breaks = unique(calls_summary$n_selected),
       labels = labs
     )
   
   if (!is.null(max_calls)) {
     plt_out <- plt_out + 
-      annotate(
+      ggplot2::annotate(
         "rect",
         xmin = max_calls, 
         xmax = Inf,  # region to shade: x > max_calls
