@@ -114,8 +114,8 @@ tune_mcmc <- function(dataset, zeros, return_fit = TRUE) {
 
       pi2[row, 1:nspecies] <- z[site2[row], 1:nspecies] * lambda[1:nspecies] /
         sum(z[site2[row], 1:nspecies] * lambda[1:nspecies])
-      y2[row] ~ dmarginal_autoID(theta_mat = theta[1:nspecies, 1:nspecies],
-                                 pi = pi2[row, 1:nspecies])
+      probs[row, 1:nspecies] <- pi2[row, 1:nspecies] %*% theta[1:nspecies, 1:nspecies]
+      y2[row] ~ dcat(prob = probs[row, 1:nspecies])
 
     }
 

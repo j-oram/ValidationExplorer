@@ -113,7 +113,7 @@ warmup <- tuning_list$min_warmup
 expected_time <- tuning_list$max_iter_time
 
 shortened_fit <- lapply(tuning_list$fit, function(x) {x[(warmup+1):min_iters,]})
-bayesplot::mcmc_trace(shortened_fit, regex_pars = "lambda")\
+bayesplot::mcmc_trace(shortened_fit, regex_pars = "lambda")
 
 mcmc_sum(shortened_fit, truth = rep(0, ncol(shortened_fit[[1]]))) %>% 
   dplyr::select(parameter, Rhat, ess_tail, ess_bulk)

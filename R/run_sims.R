@@ -88,6 +88,21 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
   # storage
   big_list <- list()
 
+  # if parallel = TRUE, set up cluster and load nimble on each worker. 
+  # The cluster is recycled for all scenarios and datasets, but new data
+  # is added and the model is re-initialized for each scenario-dataset combination.
+  # Also specify that the cluster should be stopped when the function exits, 
+  # even if there is an error, to avoid leaving open clusters running.
+  if (parallel){
+    this_cluster <- parallel::makeCluster(nchains)
+      on.exit(parallel::stopCluster(this_cluster), add = TRUE)
+      parallel::clusterEvalQ(cl = this_cluster, {
+          library(nimble)
+          nimbleOptions(verbose = FALSE)
+          nimbleOptions(MCMCprogressBar = FALSE)
+      })
+  }
+
   # run scenarios
   for(scenario in 1:nscenarios){
     # progress
@@ -97,8 +112,9 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
     # storage
     individual_summaries_list <- list()
 
-    # progress
+    # progressbar for datasets within a scenario
     pb <- txtProgressBar(min = 0, max = ndatasets, style = 3, width = 50, char = "=")
+
     for(dataset in 1:ndatasets){
       # select the dataset and zeros
       observed_df <- data_list[[scenario]][[dataset]]
@@ -158,8 +174,8 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
 
             pi2[row, 1:nspecies] <- z[site2[row], 1:nspecies] * lambda[1:nspecies] /
               sum(z[site2[row], 1:nspecies] * lambda[1:nspecies])
-            y2[row] ~ dmarginal_autoID(theta_mat = theta[1:nspecies, 1:nspecies], 
-                                       pi = pi2[row, 1:nspecies])
+            probs[row, 1:nspecies] <- pi2[row, 1:nspecies] %*% theta[1:nspecies, 1:nspecies]
+            y2[row] ~ dcat(prob = probs[row, 1:nspecies])
 
           }
 
@@ -212,8 +228,6 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
 
       if(parallel){
 
-        this_cluster <- parallel::makeCluster(nchains)
-        parallel::clusterEvalQ(cl = this_cluster, library(nimble))
         fit <- parallel::parLapply(cl = this_cluster,
                          X = 1:nchains,
                          fun = runMCMC_fit,
@@ -224,7 +238,6 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
                          nburn = nburn,
                          thin = thin
         )
-        parallel::stopCluster(this_cluster)
 
       } else {
 
