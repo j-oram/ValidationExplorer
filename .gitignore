@@ -2,6 +2,13 @@
 .Rhistory
 .RData
 .Ruserdata
+ValidationExplorer.Rproj
+.DS_Store
 jacob_scripts/
 Testing/simulation
 in_development/
+Vignette/.DS_Store
+Vignette/BySpecies/
+Vignette/Fixed_Effort/
+compare-FE-sims/
+Testing/FixedEffortExample
