@@ -58,7 +58,7 @@
 #'
 #' # ::::::::::::: run simulations on sim'd data ::::::::::: #
 #'
-#' \dontrun{
+#' \donttest{
 #' out <- run_sims(
 #'   data_list = fake_data$masked_dfs,
 #'   zeros_list = fake_data$zeros,

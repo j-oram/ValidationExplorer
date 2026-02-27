@@ -368,5 +368,3 @@ test_that("run_sims output columns match expected format (mocked)", {
   # Check values
   expect_true(all(result$theta_scenario == "col_test"))
 })
-
-

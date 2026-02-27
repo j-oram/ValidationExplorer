@@ -168,6 +168,7 @@ tune_mcmc <- function(dataset, zeros, return_fit = TRUE) {
   print("Fitting MCMC in parallel ... this may take a few minutes")
     this_cluster <- parallel::makeCluster(3)
     parallel::clusterEvalQ(cl = this_cluster, library(nimble))
+    on.exit(parallel::stopCluster(this_cluster))
     start <- Sys.time()
     fit <- parallel::parLapply(
       cl = this_cluster,
