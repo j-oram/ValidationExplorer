@@ -1,8 +1,35 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
 # ValidationExplorer
+
+<!-- badges: start -->
+<!-- badges: end -->
 
 This repository contains the `ValidationExplorer` package, as described in the manuscript "*ValidationExplorer*: Streamlined simulations to inform bioacoustic study design in the presence of misclassification," submitted to *Journal of Data Science*. 
 
 **Disclaimer**: This software is preliminary or provisional and is subject to revision. It is being provided to meet the need for timely best science. The software has not received final approval by the U.S. Geological Survey (USGS). No warranty, expressed or implied, is made by the USGS or the U.S. Government as to the functionality of the software and related material nor shall the fact of release constitute any such warranty. The software is provided on the condition that neither the USGS nor the U.S. Government shall be held liable for any damages resulting from the authorized or unauthorized use of the software.
+
+## Installation
+
+You can install the development version of ValidationExplorer from [GitHub](https://github.com/) with:
+
+``` r
+# install.packages("pak")
+pak::pak("j-oram/BySpeciesValidation")
+```
 
 ## Purpose 
 
@@ -22,23 +49,11 @@ We hope our software will allow practitioners to improve their bioacoustic study
 
 A complete working example of how to compare possible validation designs using our package is available here: [Link to the vignette article inserted here].
 
-## Getting started 
-
-To install `ValidationExplorer`, see the instructions in the manuscript. 
-To install the latest development version, run 
-
-```
-devtools::install_github("j-oram/ValidationExplorer")
-```
-
-To install a stable version from CRAN (once submitted and accepted), run 
-
-```
-install.packages("ValidationExplorer")
-```
-
-Note that this package depends on [NIMBLE](https://r-nimble.org/) for model fitting. You may be prompted to install this and other packages as  a part of the installation process.
-
 ## Overview
+An overview of the main functionality of our package, which follows the steps of a simulation study, is illustrated in (Figure \@ref{fig-flowdiag}).:
 
-The following figure provides an overview of the main functionality of our package:
+```{r fig-flowdiag, echo = FALSE, out.width='85%', fig.cap = "Flowchart illustrating the main functionality of the ValidationExplorer package."}
+load_all()
+knitr::include_graphics("man/figures/ValExp_flowchart.png")
+```
+
