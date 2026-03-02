@@ -8,6 +8,9 @@
 #'
 #' @return A dataframe object that is a copy of the input `df`, but with the
 #'   appropriate level of effort according to a fixed effort validation design.
+#' 
+#' @importFrom rlang .data
+#'
 #' @export
 #'
 #' @examples
@@ -24,7 +27,6 @@
 #'   summarize(
 #'     prop_validated = sum(!is.na(true_spp))/n()
 #'   )
-#'   
 #'
 
 mask_FE_all_visits <- function (df, effort_prop, seed = NULL) {
@@ -62,7 +64,7 @@ mask_FE_all_visits <- function (df, effort_prop, seed = NULL) {
     dplyr::mutate(
       site_visit_idspp_number = 1:dplyr::n(), 
       unique_call_id = paste(
-        paste(.data$site, .data$visit, .data$id_spp, sep = "-"), 
+        paste(.data$site, .data$visit, .data$id_spp, sep = "-"),
         site_visit_idspp_number, 
         sep = "_")
     ) %>% 

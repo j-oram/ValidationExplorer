@@ -28,6 +28,7 @@
 #'   A copy of this output is also saved to the current working directory.
 #'
 #' @importFrom utils setTxtProgressBar txtProgressBar
+#' @importFrom rlang .data
 #'
 #' @examples
 #' # :::::::::::: Simulate data ::::::::::::: #
@@ -59,24 +60,28 @@
 #' # ::::::::::::: run simulations on sim'd data ::::::::::: #
 #'
 #' \donttest{
+#' 
+#' td <- withr::local_tempdir()
 #' out <- run_sims(
 #'   data_list = fake_data$masked_dfs,
 #'   zeros_list = fake_data$zeros,
 #'   DGVs = list(lambda = lambda, psi = psi, theta = test_theta1),
 #'   theta_scenario_id = 'StratBySpecies_1',
-#'   parallel = TRUE,
-#'   niter = 1000,
-#'   nburn = 500,
+#'   parallel = FALSE,
+#'   nchains = 2,
+#'   niter = 500,
+#'   nburn = 250,
 #'   thin = 1,
 #'   save_fits = FALSE,
 #'   save_individual_summaries_list = FALSE,
-#'   directory = here::here()
+#'   directory = td
 #' )
 #' }
 
 run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
                      parallel = TRUE,
-                     niter = 2000, nburn = floor(niter/2), thin = 1, nchains = 3,
+                     niter = 2000, nburn = floor(niter / 2),
+                     thin = 1, nchains = 3,
                      save_fits = FALSE,
                      save_individual_summaries_list = FALSE,
                      directory = here::here()) {
@@ -98,8 +103,8 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
       on.exit(parallel::stopCluster(this_cluster), add = TRUE)
       parallel::clusterEvalQ(cl = this_cluster, {
           library(nimble)
-          nimbleOptions(verbose = FALSE)
-          nimbleOptions(MCMCprogressBar = FALSE)
+          nimble::nimbleOptions(verbose = FALSE)
+          nimble::nimbleOptions(MCMCprogressBar = FALSE)
       })
   }
 
@@ -215,9 +220,9 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
             dplyr::group_by(.data$site, .data$visit) %>%
             dplyr::summarize(total = unique(.data$Y.)) %>%
             tidyr::pivot_wider(
-              names_from = .data$visit,
+              names_from = 'visit',
               names_prefix = "visit",
-              values_from = .data$total,
+              values_from = 'total',
               values_fill = 0 # if NA, turn into a 0, since the NA is due to no calls being detected at that site-visit
             ) %>%
             dplyr::ungroup() %>%
@@ -226,29 +231,32 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
         )
 
 
-      if(parallel){
+      if (parallel) {
 
-        fit <- parallel::parLapply(cl = this_cluster,
-                         X = 1:nchains,
-                         fun = runMCMC_fit,
-                         code = code,
-                         data = nimble_data,
-                         constants = constants,
-                         niter = niter,
-                         nburn = nburn,
-                         thin = thin
+        fit <- parallel::parLapply(
+          cl = this_cluster,
+          X = 1:nchains,
+          fun = runMCMC_fit,
+          code = code,
+          data = nimble_data,
+          constants = constants,
+          niter = niter,
+          nburn = nburn,
+          thin = thin
         )
 
       } else {
 
-        fit <- runMCMC_fit(code = code,
-                           data = nimble_data,
-                           constants = constants,
-                           nchains = nchains,
-                           niter = niter,
-                           nburn = nburn,
-                           thin = thin,
-                           seed = 1:nchains)
+        fit <- runMCMC_fit(
+          code = code,
+          data = nimble_data,
+          constants = constants,
+          nchains = nchains,
+          niter = niter,
+          nburn = nburn,
+          thin = thin,
+          seed = 1:nchains
+        )
 
       }
 

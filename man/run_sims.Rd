@@ -89,18 +89,21 @@ fake_data <- simulate_validatedData(
 # ::::::::::::: run simulations on sim'd data ::::::::::: #
 
 \donttest{
+
+td <- withr::local_tempdir()
 out <- run_sims(
   data_list = fake_data$masked_dfs,
   zeros_list = fake_data$zeros,
   DGVs = list(lambda = lambda, psi = psi, theta = test_theta1),
   theta_scenario_id = 'StratBySpecies_1',
-  parallel = TRUE,
-  niter = 1000,
-  nburn = 500,
+  parallel = FALSE,
+  nchains = 2,
+  niter = 500,
+  nburn = 250,
   thin = 1,
   save_fits = FALSE,
   save_individual_summaries_list = FALSE,
-  directory = here::here()
+  directory = td
 )
 }
 }

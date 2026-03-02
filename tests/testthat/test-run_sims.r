@@ -35,7 +35,7 @@ test_that("run_sims returns a dataframe with expected columns (parallel = FALSE)
     niter                 = 100,
     nburn                 = 50,
     thin                  = 1,
-    nchains               = 2,   # single chain to keep test fast
+    nchains               = 2, 
     save_fits             = FALSE,
     save_individual_summaries_list = FALSE,
     directory             = tmp_dir
@@ -85,9 +85,9 @@ test_that("run_sims saves summary RDS files to disk", {
   skip_on_cran()
   skip_if_not_installed("nimble")
 
-  tmp_dir     <- withr::local_tempdir()
+  tmp_dir <- withr::local_tempdir()
 
-  run_sims(
+  res <- run_sims(
     data_list         = sim_inputs$masked_dfs,
     zeros_list        = sim_inputs$zeros,
     DGVs              = DGVs,
@@ -95,7 +95,7 @@ test_that("run_sims saves summary RDS files to disk", {
     parallel          = FALSE,
     niter             = 100,
     nburn             = 50,
-    nchains           = 1,
+    nchains           = 2,
     save_fits         = FALSE,
     directory         = tmp_dir
   )
@@ -195,7 +195,7 @@ test_that("run_sims saves individual scenario summaries correctly (mocked)", {
     parallel          = FALSE,
     niter             = 100,
     nburn             = 50,
-    nchains           = 1,
+    nchains           = 2,
     save_fits         = FALSE,
     save_individual_summaries_list = FALSE,
     directory         = tmp_dir
@@ -235,7 +235,7 @@ test_that("run_sims saves individual summaries per dataset when save_individual_
       parallel          = FALSE,
       niter             = 100,
       nburn             = 50,
-      nchains           = 1,
+      nchains           = 2,
       save_fits         = FALSE,
       save_individual_summaries_list = TRUE,
       directory         = tmp_dir
@@ -271,7 +271,7 @@ test_that("run_sims saves fit files correctly with save_fits = TRUE (mocked)", {
       parallel          = FALSE,
       niter             = 100,
       nburn             = 50,
-      nchains           = 1,
+      nchains           = 2,
       save_fits         = TRUE,
       save_individual_summaries_list = FALSE,
       directory         = tmp_dir
@@ -307,7 +307,7 @@ test_that("run_sims correctly assigns scenario and dataset identifiers (mocked)"
       parallel          = FALSE,
       niter             = 100,
       nburn             = 50,
-      nchains           = 1,
+      nchains           = 2,
       save_fits         = FALSE,
       save_individual_summaries_list = FALSE,
       directory         = tmp_dir
@@ -349,7 +349,7 @@ test_that("run_sims output columns match expected format (mocked)", {
       parallel          = FALSE,
       niter             = 100,
       nburn             = 50,
-      nchains           = 1,
+      nchains           = 2,
       save_fits         = FALSE,
       save_individual_summaries_list = FALSE,
       directory         = tmp_dir

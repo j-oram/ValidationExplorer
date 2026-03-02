@@ -36,6 +36,5 @@ FE_data \%>\%
   summarize(
     prop_validated = sum(!is.na(true_spp))/n()
   )
-  
 
 }
