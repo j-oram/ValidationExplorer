@@ -1,10 +1,11 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# ValidationExplorer
+# ValidationExplorer <img src="man/figures/logo.png" align="right" height="139" alt="" />
 
 <!-- badges: start -->
 
+[![R-CMD-check](https://github.com/j-oram/BySpeciesValidation/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/j-oram/BySpeciesValidation/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 This repository contains the `ValidationExplorer` package, as described
@@ -62,8 +63,7 @@ programs that rely on acoustic monitoring.
 ## Overview
 
 An overview of the main functionality of our package, which follows the
-steps of a simulation study, is illustrated in (Figure
-@ref{fig-flowdiag}).:
+steps of a simulation study, is illustrated below:
 
 <div class="figure">
 
@@ -75,6 +75,8 @@ package.
 </p>
 
 </div>
+
+\[Some more sentences here showing the important steps.\]
 
 ### Example
 

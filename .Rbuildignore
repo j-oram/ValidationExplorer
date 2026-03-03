@@ -11,3 +11,4 @@
 ^Vignette/
 ^compare-FE-sims/
 ^README\.Rmd$
+^\.github$
