@@ -45,15 +45,13 @@ This question -- identifying a feasible validation design, in light of logistica
 The goal of `ValidationExplorer` is to provide a suite of simulation-based tools that streamline comparison of competing validation designs. 
 We hope our software will allow practitioners to improve their bioacoustic study design and increase the efficiency of programs that rely on acoustic monitoring. 
 
-## Example
-
-A complete working example of how to compare possible validation designs using our package is available here: [Link to the vignette article inserted here].
-
 ## Overview
 An overview of the main functionality of our package, which follows the steps of a simulation study, is illustrated in (Figure \@ref{fig-flowdiag}).:
 
 ```{r fig-flowdiag, echo = FALSE, out.width='85%', fig.cap = "Flowchart illustrating the main functionality of the ValidationExplorer package."}
-load_all()
 knitr::include_graphics("man/figures/ValExp_flowchart.png")
 ```
 
+### Example
+
+A complete worked example (which is too long for a README file) that compares possible validation designs using our package is available here: [Link to the vignette article inserted here].
