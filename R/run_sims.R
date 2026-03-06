@@ -20,7 +20,9 @@
 #'   be saved? While this requires much less space than `save_fits`, we still
 #'   recommend keeping this at the default value of FALSE. Only use it if you
 #'   anticipate that simulations may be interrupted.
-#' @param directory The directory to save objects. Defaults to the current working directory.
+#' @param directory The directory to save objects. Defaults to \code{tempdir()},
+#'   but users should specify a permanent location for real simulation studies
+#'   as \code{tempdir()} is cleared at the end of the R session.
 #'
 #' @export
 #'
@@ -59,8 +61,7 @@
 #'
 #' # ::::::::::::: run simulations on sim'd data ::::::::::: #
 #'
-#' \donttest{
-#' 
+#' if (interactive()){
 #' td <- withr::local_tempdir()
 #' out <- run_sims(
 #'   data_list = fake_data$masked_dfs,
@@ -84,7 +85,7 @@ run_sims <- function(data_list, zeros_list, DGVs, theta_scenario_id,
                      thin = 1, nchains = 3,
                      save_fits = FALSE,
                      save_individual_summaries_list = FALSE,
-                     directory = here::here()) {
+                     directory = tempdir()) {
 
   # housekeeping
   ndatasets <- length(data_list[[1]])

@@ -44,11 +44,11 @@
 #'   theta = test_theta1,
 #'   save_datasets = FALSE,
 #'   save_masked_datasets = FALSE,
-#'   directory = paste0(here::here("Testing"))
+#'   directory = withr::local_tempdir()
 #' )
 #' # scenario 1 has the lowest effort, so use the 5th dataset from that scenario
 #' # Not run during checks
-#' \dontrun{
+#' if (interactive()) {
 #' # note the index of the zeros matches the index of the dataset
 #' tune_mcmc(dataset = fake_data$masked_dfs[[1]][[5]], zeros = fake_data$zeros[[5]])
 #' }

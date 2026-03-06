@@ -16,7 +16,7 @@ run_sims(
   nchains = 3,
   save_fits = FALSE,
   save_individual_summaries_list = FALSE,
-  directory = here::here()
+  directory = tempdir()
 )
 }
 \arguments{
@@ -50,7 +50,9 @@ be saved? While this requires much less space than \code{save_fits}, we still
 recommend keeping this at the default value of FALSE. Only use it if you
 anticipate that simulations may be interrupted.}
 
-\item{directory}{The directory to save objects. Defaults to the current working directory.}
+\item{directory}{The directory to save objects. Defaults to \code{tempdir()},
+but users should specify a permanent location for real simulation studies
+as \code{tempdir()} is cleared at the end of the R session.}
 }
 \value{
 a dataframe with the summaries (from \link{mcmc_sum}) for all scenarios and datasets.
@@ -88,8 +90,7 @@ fake_data <- simulate_validatedData(
 
 # ::::::::::::: run simulations on sim'd data ::::::::::: #
 
-\donttest{
-
+if (interactive()){
 td <- withr::local_tempdir()
 out <- run_sims(
   data_list = fake_data$masked_dfs,

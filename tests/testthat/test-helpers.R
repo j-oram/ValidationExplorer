@@ -33,7 +33,7 @@ test_that(
       theta = theta,
       scen_expand = FALSE,
       scen_df = my_scenarios,
-      directory = here::here("Testing")
+      directory = tempdir()
     )$masked_dfs[[1]][[1]]
     
     # With site-night confirmability
@@ -55,7 +55,7 @@ test_that(
       lambda = lambda, 
       theta = theta,
       scenarios = list_scenarios,
-      directory = here::here("Testing")
+      directory = tempdir()
     )$masked_dfs[[5]][[1]]
     
     # With site-night confirmability
@@ -77,7 +77,7 @@ test_that('All calls are retained after confirmation process is simulated (fixed
     lambda = lambda, 
     theta = theta,
     scenarios = c(.3, .5),
-    directory = here::here("Testing")
+    directory = tempdir()
   )$masked_dfs[[1]][[1]]
   
   md_after <- make_not_confirmable(md, confirmable_limits = c(.8, 1))
@@ -98,7 +98,7 @@ test_that('The number of calls with true_spp labels is less than or equal to the
     lambda = lambda, 
     theta = theta,
     scenarios = c(.3, .5),
-    directory = here::here("Testing")
+    directory = tempdir()
   )$masked_dfs[[1]][[1]]
   
   md_summary <- md %>% 

@@ -8,12 +8,13 @@ test_that("mask_FE_all_visits returns df with the same number of rows as input",
 
 test_that("mask_by_spp proportions for each spp are approximately equal", {
   expect_true(all(mask_FE_all_visits(test_df, effort_prop=p) %>% 
-                    filter(count !=0) %>% 
-                    ungroup() %>% 
-                    group_by(visit) %>% 
-                    summarize(props_vald = sum(!is.na(true_spp))/n()) %>%
-                    ungroup() %>% 
-                    select(props_vald) %>% 
-                    unlist()- p <= 0.15)
+                    dplyr::filter(count !=0) %>% 
+                    dplyr::ungroup() %>% 
+                    dplyr::group_by(visit) %>% 
+                    dplyr::summarize(props_vald = sum(!is.na(true_spp)) / 
+                                       dplyr::n()) %>%
+                    dplyr::ungroup() %>% 
+                    dplyr::select(props_vald) %>% 
+                    unlist() - p <= 0.15)
   )
 })

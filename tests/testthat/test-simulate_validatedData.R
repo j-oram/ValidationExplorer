@@ -20,7 +20,7 @@ scen_expand <- TRUE
 scen_df <- NULL
 save_datasets <- FALSE
 save_masked_datasets <- FALSE
-directory <- here::here("Testing")
+directory <- withr::local_tempdir()
 
 
 test_that("number of scenarios is correct", {
@@ -35,7 +35,7 @@ test_that("number of scenarios is correct", {
     lambda = lambda, 
     theta = theta, 
     scen_expand = TRUE, 
-    directory = here::here("Testing")
+    directory = withr::local_tempdir()
   )$masked_dfs), nrow(expand.grid(list_scenarios))
   )
 })
@@ -52,7 +52,7 @@ test_that("number of datasets is correct", {
     lambda = lambda, 
     theta = theta, 
     scen_expand = TRUE, 
-    directory = here::here("Testing")
+    directory = withr::local_tempdir()
   )$masked_dfs, length))), D)
 })
 
@@ -68,7 +68,7 @@ test_that("scen_expand = FALSE fails if no dataframe provided", {
     lambda = lambda, 
     theta = theta, 
     scen_expand = FALSE, 
-    directory = here::here("Testing")
+    directory = withr::local_tempdir()
   ), regexp = "`scen_df` must not be NULL if `scen_expand = FALSE`")
 })
 
@@ -85,7 +85,7 @@ test_that("rows of Theta are required to be 1", {
       lambda = lambda, 
       theta = theta - matrix(c(0.02,0,0, 0), nrow = K), 
       scen_expand = TRUE, 
-      directory = here::here("Testing")
+      directory = withr::local_tempdir()
     ), 
     regexp = "rows of theta do not sum to 1"
   )
@@ -104,7 +104,7 @@ test_that("user can supply their own scenarios ", {
       theta = theta,
       scen_expand = FALSE,
       scen_df = my_scenarios,
-      directory = here::here("Testing")
+      directory = withr::local_tempdir()
     )
   )
 })
@@ -122,7 +122,7 @@ test_that("output is correct when user supplies a fixed effort design", {
     theta = theta,
     scen_expand = FALSE,
     scen_df = my_scenarios,
-    directory = here::here("Testing")
+    directory = withr::local_tempdir()
   )), c("full_datasets", "zeros", "masked_dfs")
   )
 })
@@ -141,7 +141,7 @@ test_that("error when incorrect design type specified", {
       theta = theta,
       scen_expand = FALSE,
       scen_df = my_scenarios,
-      directory = here::here("Testing")
+      directory = withr::local_tempdir()
     ), 
     regexp = "design_type must be one of"
   )
@@ -162,7 +162,7 @@ test_that("adding confirmation process with user-specified by-species validation
       lambda = lambda, 
       theta = theta,
       confirmable_limits = c(0.2, 0.5),
-      directory = here::here("Testing")
+      directory = withr::local_tempdir()
     )
   )
   
@@ -179,7 +179,7 @@ test_that("adding confirmation process with user-specified by-species validation
       lambda = lambda, 
       theta = theta,
       confirmable_limits = c(.5, 1),
-      directory = here::here("Testing")
+      directory = withr::local_tempdir()
     )
   )
 })
@@ -204,7 +204,7 @@ test_that(
         lambda = lambda, 
         theta = theta,
         confirmable_limits = c(.5, 1),
-        directory = here::here("Testing")
+        directory = withr::local_tempdir()
       )
     )
   }

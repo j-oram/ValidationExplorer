@@ -4,9 +4,6 @@ Version: 0.0.0.9000
 Authors@R: 
     person("Jacob", "Oram", , "jacoboram@montana.edu", role = c("aut", "cre"),
            comment = c(ORCID = "0009-0001-8405-529X"))
-    person("Katharine", "Banner", , "katharine.banner@montana.edu", role = "aut",
-           comment = c(ORCID = "0000-0002-7103-0042"))
-    person("Christian", "Stratton", , "cstratton@middlebury.edu", role = "aut")
 Description: Modeling misclassification in multinomial data requires external 
     information to identify all model parameters. In the context of bat 
     acoustic data, this additional information is often supplied by expert 
@@ -17,19 +14,18 @@ Description: Modeling misclassification in multinomial data requires external
     validation sampling designs. Simulations assume the count-detection model,
     which is a realistic model for bioacoustic data, especially for bats. The 
     package includes functions to simulate data, fit models using this 
-    framework and summarize simulation results. For more details, see 
+    framework and summarize simulation results.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Depends: 
     nimble,
-    R (>= 4.1)
+    R (>= 3.5)
 Imports: 
     coda,
     dplyr,
     ggplot2,
-    here,
     magrittr,
     purrr,
     rlang,

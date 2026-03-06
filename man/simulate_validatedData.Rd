@@ -22,7 +22,7 @@ simulate_validatedData(
   scen_df = NULL,
   save_datasets = FALSE,
   save_masked_datasets = FALSE,
-  directory = here::here()
+  directory = tempdir()
 )
 }
 \arguments{
@@ -70,7 +70,8 @@ n_datasets x nrow(scenarios_dataframe) datasets saved: one for each dataset unde
 Default value is FALSE.}
 
 \item{directory}{character. Required if save_datasets = TRUE or save_masked_datasets = TRUE. This is where the
-datasets will be saved. By default, the current working directory (i.e., here::here()) will be used.}
+datasets will be saved. By default, a temporary directory will be used. This \emph{must} be changed if access
+to saved datasets is desired after the end of the R session, as tempdir() is cleared at the end of the session.}
 }
 \value{
 A list containing three elements:
@@ -118,7 +119,7 @@ fake_data <- simulate_validatedData(
   theta = test_theta1,
   save_datasets = FALSE,
   save_masked_datasets = FALSE,
-  directory = paste0(here::here("Testing"))
+  directory = tempdir()
 )
 
 

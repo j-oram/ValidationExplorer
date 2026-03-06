@@ -15,7 +15,7 @@ sim_inputs <- simulate_validatedData(
   lambda = DGVs$lambda, 
   theta = DGVs$theta, 
   scen_expand = TRUE, # Will yield 2 scenarios: spp1 = 0.5, spp2 = 0.5 and spp1 = 0.5, spp2 = 0.75
-  directory = here::here("Testing")
+  directory = withr::local_tempdir()
 )
 
 test_that("run_sims returns a dataframe with expected columns (parallel = FALSE)", {
