@@ -1,5 +1,3 @@
-library(nimble)
-
 DGVs <- list(
     psi = c(0.5, 0.75, 0.25),
     lambda = c(1, 2, 3),

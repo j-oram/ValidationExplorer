@@ -1,5 +1,4 @@
 # Testing for fixed effort (all visits) masking function
-library(dplyr)
 test_df <- sim_dat()$full_df
 p <- 0.2
 

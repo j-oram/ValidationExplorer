@@ -1,6 +1,4 @@
 # Testing for mask_by_spp.R
-library(dplyr)
-
 test_df <- sim_dat()$full_df
 props <- runif(dplyr::n_distinct(test_df$true_spp), min = 0.2, max = 1)
 
