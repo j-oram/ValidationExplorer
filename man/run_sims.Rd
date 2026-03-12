@@ -73,6 +73,8 @@ nvisits <- 5
 test_theta1 <- matrix(c(0.9, 0.1, 0.15, 0.85), byrow = TRUE, nrow = 2)
 val_scenarios <- list(spp1 = c(.75, .5), spp2 = .5)
 
+td <- withr::local_tempdir()
+
 fake_data <- simulate_validatedData(
   n_datasets = 5,
   design_type = "BySpecies",
@@ -85,13 +87,13 @@ fake_data <- simulate_validatedData(
   theta = test_theta1,
   save_datasets = FALSE,
   save_masked_datasets = FALSE,
-  directory = paste0(here::here("Testing"))
+  directory = td
 )
 
 # ::::::::::::: run simulations on sim'd data ::::::::::: #
 
 if (interactive()){
-td <- withr::local_tempdir()
+
 out <- run_sims(
   data_list = fake_data$masked_dfs,
   zeros_list = fake_data$zeros,

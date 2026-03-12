@@ -33,7 +33,7 @@
 #'   theta = test_theta1,
 #'   save_datasets = FALSE,
 #'   save_masked_datasets = FALSE,
-#'   directory = paste0(here::here("Testing"))
+#'   directory = withr::local_tempdir()
 #' )
 #'
 #' summarize_n_validated(
