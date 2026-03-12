@@ -76,7 +76,14 @@ package.
 
 </div>
 
-\[Some more sentences here showing the important steps.\]
+The gray plates show the main steps of a simulation study with
+`ValidationExplorer`: simulating data, fitting models to those data, and
+summarizing results. Blue boxes show the main functions in our package
+that help accomplish each step. User inputs – including those that
+should be considered before opening R, such as the measurable objectives
+of the study and known financial and logistical constraints – are shown
+in green boxes. Repeated iteration on the set of possible validation and
+study designs may be necessary.
 
 ### Example
 
