@@ -12,3 +12,6 @@
 ^compare-FE-sims/
 ^README\.Rmd$
 ^\.github$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
