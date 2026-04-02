@@ -16,4 +16,4 @@
 ^docs$
 ^pkgdown$
 ^vignettes/articles$
-vignettes/precomile.R
+^vignettes/precompile\.R$
