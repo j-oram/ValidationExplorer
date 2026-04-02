@@ -1,17 +1,19 @@
 ---
 title: "Vignette: Simulation studies with `ValidationExplorer` "
 date: "`r Sys.Date()`"
-output: 
-  bookdown::html_document2:
-    toc: false
+output: html_document
 header-includes:
   - \usepackage{setspace}
   - \usepackage{float}
   - \usepackage{amsmath}
   - \usepackage{underscore}
 bibliography: Vignette.bib
-abstract: "Our vignette demonstrates the use of the `ValidationExplorer` package to conduct statistical simulation studies that can aid in the design phase of bioacoustic studies. In particular, our package facilitates exploration of the costs and inferential properties (e.g., coverage and interval widths) of alternative validation designs in the context of the count detection model framework. 
-Our functions allow the user to specify a suite of candidate validation designs using either a stratified sampling procedure or a fixed-effort design type. An example of the former is provided in the manuscript entitled '`ValidationExplorer`: Streamlined simulations to provide bioacoustic study design guidance in the presence of misclassification', which was submitted to the Applications series of *Methods in Ecology and Evolution*. In this vignette, we provide further details not covered in the manuscript and an additional example of data simulation, model fitting, and visualization of simulation results when using a fixed-effort design type. Our demonstration here is intended to aid researchers and others to tailor a validation design that provides useful inference while also ensuring that the level of effort meets cost constraints. \\vfill"
+abstract: "Our vignette demonstrates the use of the `ValidationExplorer` package to conduct statistical simulation studies that can aid in the design phase of bioacoustic studies. 
+In particular, our package facilitates exploration of the costs and inferential properties (e.g., coverage and interval widths) of alternative validation designs in the context of the count detection model framework. 
+Our functions allow the user to specify a suite of candidate validation designs using either a stratified sampling procedure or a fixed-effort design type. 
+An example of the former is provided in the manuscript entitled '`ValidationExplorer`: Streamlined simulations to inform bioacoustic study design in the presence of misclassification', which was submitted to the *Journal of Data Science*. 
+In this vignette, we provide further details not covered in the manuscript and an additional example of data simulation, model fitting, and visualization of simulation results when using a fixed-effort design type. 
+Our demonstration here is intended to aid researchers and others to tailor a validation design that provides useful inference while also ensuring that the level of effort meets cost constraints. \\vfill"
 ---
 
 ```{r setup, include=FALSE, message=FALSE}
@@ -25,38 +27,38 @@ library(here)
 library(kableExtra)
 theme_set(theme_bw())
 
-chunk_hook  <- knitr::knit_hooks$get("chunk") # single space code chunks
-knitr::knit_hooks$set(plot = function(x, options) {
-  cap <- options$fig.cap
-  label <- options$label
-  paste0("![", cap, " {#fig:", label, "}](", x, ")\n")
-})
+# chunk_hook  <- knitr::knit_hooks$get("chunk") # single space code chunks
+# knitr::knit_hooks$set(plot = function(x, options) {
+#   cap <- options$fig.cap
+#   label <- options$label
+#   paste0("![", cap, " {#fig:", label, "}](", x, ")\n")
+# })
 
 devtools::load_all()
 ```
 
 ------------------------------------------------------------------------
 
-**Disclaimer:** This draft manuscript is distributed solely for the purposes of scientific peer review. Its content is deliberative and pre-decisional, so it must not be disclosed or released by reviewers. Because the manuscript has not yet been approved for publication by the U.S. Geological Survey (USGS), it does not represent any official USGS funding or policy. Any use of trade, firm, or product names is for descriptive purposes only and does not imply endorsement by the U.S. Government.
+**Disclaimer:** This draft manuscript is distributed solely for the purposes of scientific peer review.
+Its content is deliberative and pre-decisional, so it must not be disclosed or released by reviewers.
+Because the manuscript has not yet been approved for publication by the U.S. Geological Survey (USGS), it does not represent any official USGS funding or policy. 
+Any use of trade, firm, or product names is for descriptive purposes only and does not imply endorsement by the U.S. Government.
 
-\newpage
-
-```{=latex}
-\setcounter{tocdepth}{4}
-\tableofcontents
-```
-
-\newpage
-
-\doublespacing
+------------------------------------------------------------------------
 
 # Introduction
 
-Automated recording units (ARUs) provide one of the main data sources for many contemporary ecological studies that aim to provide inference about status and trends for assemblages of species [@loeb15]. As described in the main text, entitled, "`ValidationExplorer`: Streamlined simulations to provide bioacoustic study design guidance in the presence of misclassification," substantial practical interest lies in identifying cost-effective validation designs that will allow a study to obtain its measurable objectives. We believe that statistical simulation studies are a valuable tool for informing study design -- including the validation step -- prior to gathering ARU data, and it is our goal for `ValidationExplorer` to provide those tools in an approachable package.
+Automated recording units (ARUs) provide one of the main data sources for many contemporary ecological studies that aim to provide inference about status and trends for assemblages of species [@loeb15]. 
+As described in the manuscript "`ValidationExplorer`: Streamlined simulations to inform bioacoustic study design in the presence of misclassification," substantial practical interest lies in identifying cost-effective validation designs that will allow a study to obtain its measurable objectives. 
+We believe that statistical simulation studies are a valuable tool for informing study design -- including the validation step -- prior to gathering ARU data, and it is our goal for `ValidationExplorer` to provide those tools in an approachable package.
 
-This vignette aids exploration of possible validation designs within a count-detection framework using the `ValidationExplorer` package. As described in the main text, a validation design is composed of two parts: a random mechanism for selecting observations to be manually reviewed by experts ("validated"), and a percentage or proportion that controls the number of validated recordings. We refer to the random mechanism as the *design type* and the proportion as the level of validation effort (LOVE). In the following section we consider five possible LOVEs and show an example of a fixed effort design.
+This vignette aids exploration of possible validation designs within a count-detection framework using the `ValidationExplorer` package. 
+As described in the main text, a validation design is composed of two parts: a random mechanism for selecting observations to be manually reviewed by experts ("validated"), and a percentage or proportion that controls the number of validated recordings. 
+We refer to the random mechanism as the *design type* and the proportion as the level of validation effort (LOVE). 
+In the following section we consider five possible LOVEs and show an example of a fixed effort design.
 
-We emphasize that results from any simulation study -- including those produced using the `ValidationExplorer` package -- are conditional on the settings and assumptions of the study. In the case of the count-detection model framework that is implemented in `ValidationExplorer`, the assumptions are
+We emphasize that results from any simulation study -- including those produced using the `ValidationExplorer` package -- are conditional on the settings and assumptions of the study. 
+In the case of the count-detection model framework that is implemented in `ValidationExplorer`, the assumptions are
 
 \begin{enumerate}
   \item  The occurrence of species within a site are independent; the presence of one species carries no information about the presence or absence of another.
@@ -787,96 +789,5 @@ To keep the number of scenarios in this example small, we fixed the LOVE for sev
 
 We have demonstrated the use of the `ValidationExplorer` package when the objective is to compare the merits of four competing LOVEs for fixed-effort and stratified-by-species designs. Specifically, in the fixed-effort design we considered validating a random sample of 5%, 10%, 15% or 30% of the recordings obtained during each visit to each site. In the stratified-by-species designs, we considered a suite of validation designs, fixing effort for species 1,2, 4, and 6 at less than or equal to 25%, and varied the level of effort for species 3 and 5. The exact simulations considered are summarized in the `call_sum` object in Section \@ref(simBySpp). The measurable objectives outlined in Section \@ref(MO) were to estimate the relative activity parameters for each species, with near-nominal coverage and width less than 3 calls per night for 95% posterior intervals. Results, and their implications for these measurable objectives were summarized in Sections \@ref(takeaway-FE) and \@ref(takeaway-bySpp). Practitioners who would like to inform study design prior to data collection can repeat multiple simulation studies to see how inferences change with the number of sites and balanced visits, in addition to the validation design.
 
-
-\newpage
-
-# Table of Functions \label{BigTable}
-
-\singlespacing
-\begin{longtable}{p{0.27\linewidth}p{0.32\linewidth}p{0.33\linewidth}}
-    \toprule
-        Function & Argument & Description   \\
-        \midrule
-        
-        \texttt{simulate\textunderscore validatedData} &  \texttt{n\textunderscore datasets} & The number of datasets to be simulated \\ 
-        \addlinespace
-        & \texttt{design\textunderscore type} & The type of validation design. Must be one of \texttt{"BySpecies"} or \texttt{"FixedPercent"} \\ 
-        \addlinespace
-        & \texttt{scenarios} & The possible levels of effort. If \texttt{design\textunderscore type = "BySpecies"}, this is provided as a list with vector-valued entries containing the possible percentages to validate for each species. If \texttt{design\textunderscore type = "FixedPercent"}, this argument is a vector of possible percentages. \\ 
-        \addlinespace
-        & \texttt{n\textunderscore sites, n\textunderscore visits, n\textunderscore species} & The number of sites, visits and species in the assemblage \\ 
-        \addlinespace
-        & \texttt{psi, lambda, theta},  & Vectors of length \texttt{nspecies} containing the the parameter values for each species \\ 
-        \addlinespace
-        & \texttt{directory} & The working directory where datasets are to be saved if the following arguments are set to TRUE \\
-        \addlinespace
-        & \texttt{save\textunderscore datasets, save\textunderscore masked_datasets} & Logicals indicating whether to save each type of dataset \\
-        \addlinespace
-
-        \hline
-        \texttt{summarize\textunderscore n\textunderscore validated} & \texttt{data\textunderscore list} & A list of simulated (masked) datasets output from \texttt{simulate\textunderscore validatedData} \\ 
-        \addlinespace 
-        & \texttt{zeros\textunderscore list} & A list of true species/autoID combinations that were never observed at each site-visit. \\ 
-        \addlinespace
-        & \texttt{theta\textunderscore scenario} & An optional character string identifying the classifier scenario. If output from \texttt{summarize\textunderscore n\textunderscore validated} is to be used with any of the \texttt{plot\textunderscore X\textunderscore vs\textunderscore calls} functions described below, this string must match the \texttt{theta\textunderscore scenario\textunderscore id} argument supplied to \texttt{run\textunderscore sims}. \\
-        \addlinespace
-
-        \hline
-        \texttt{run\textunderscore sims} & \texttt{data\textunderscore list} & A nested list of masked datasets in the format output from \texttt{simualate\textunderscore validatedData}. The first layer of the list corresponds to scenarios, with each entry containing a list of \texttt{n\textunderscore datasets} validated according to the scenario. \\ 
-        \addlinespace
-        & \texttt{zeros\textunderscore list} & A list of length \texttt{n\textunderscore datasets} containing the site-visit-true-autoID combinations that were never observed. \\ 
-        \addlinespace 
-        & \texttt{DGVs} & A named list of the true data-generating values with entries \texttt{"psi", "lambda"} and \texttt{"theta"}. \\ 
-        \addlinespace
-        & \texttt{theta\textunderscore scenario\textunderscore id} & An ID to show which classifier the scenario is under. This is provided as a convenience for the user if multiple simulation studies are to be conducted.\\
-        \addlinespace
-        & \texttt{parallel} &  A logical indicating whether MCMC sampling should be fit in parallel (default setting is TRUE). If you have many datasets and many scenarios, we recommend this setting. \\
-        \addlinespace
-        & \texttt{n\textunderscore iter, nburn, thin} &  The number of iterations, warmup and thinning interval for each chain in the MCMC. Default values are 2000, 1000, and 1, respectively. \\ 
-        \addlinespace
-        & \texttt{save\textunderscore fits} &  A logical denoting whether or not to save the draws from individual fitted models. If TRUE, you must have the file structure described in Step 2. Fits will be saved as RDS objects that can be read in later. Default value is FALSE.\\
-        \addlinespace
-        & \texttt{save\textunderscore individual\textunderscore summaries\textunderscore list} & A logical indicating whether to save individual summary lists that are output after each validation scenario. Default value is FALSE.\\ 
-        \addlinespace
-        & \texttt{directory} &  Where to save fits and summaries. Required if \texttt{save\textunderscore fits\ =\ TRUE} or \texttt{save\textunderscore individual\textunderscore summaries\textunderscore list\ =\ TRUE}. Default value is the current working directory given by \texttt{here::here()} \\ 
-        \addlinespace 
-
-        \hline
-    
-        \texttt{visualize\textunderscore parameter\textunderscore group} & \texttt{sim\textunderscore summary} & A dataframe in the format of the summaries output by \texttt{run\textunderscore sims}. Column names must match those of the \texttt{run\textunderscore sims} output. \\ 
-        \addlinespace 
-        & \texttt{pars} & The name of the parameter ``group'' to be visualized (e.g, \texttt{"psi"}, \texttt{"lambda"} or \texttt{"theta"}). \\ 
-        \addlinespace 
-        & \texttt{theta\textunderscore scenario}&  The \(\Theta\) classifier ID. \\ 
-        \addlinespace 
-        & \texttt{scenarios} &  Which scenarios to visualize? \\ 
-        \addlinespace 
-        & \texttt{convergence\textunderscore threshold}& What value should $\hat{R}$ be below to be considered ``converged''? Default value is 1.1. This value matters because only model fits where all parameter values are below the \texttt{convergence\textunderscore threshold} are used for visualization. \\ 
-        \addlinespace 
-        
-        \hline
-        \texttt{visualize\textunderscore single\textunderscore parameter} & & Arguments are identical to  \texttt{visualize\textunderscore parameter\textunderscore group} \\ 
-        \addlinespace
-        
-        \hline 
-        
-        \texttt{plot_bias_vs_calls}, \texttt{plot_coverage_vs_calls}, \texttt{plot_width_vs_calls} & \texttt{sims_summary} & The summary output in the format from \texttt{run\textunderscore sims} \\ 
-        \addlinespace
-        & \texttt{calls\textunderscore summary} & A summary of the number of calls validated per scenario. Expected format is that of output from \texttt{summarize\textunderscore n\textunderscore validated}. \\ 
-        \addlinespace
-        & \texttt{pars} & The parameters to visualize. \\ 
-        \addlinespace
-        & \texttt{regex\textunderscore pars} & A group of parameters to visualize. One of \texttt{"psi"}, \texttt{"lambda"} or \texttt{"theta"}. \\ 
-        \addlinespace
-        & \texttt{theta\textunderscore scenario} & The classifier scenario ID. \\
-        \addlinespace
-        & \texttt{scenarios} & The scenarios to be compared. \\
-        \addlinespace
-        & \texttt{convergence\textunderscore threshold} & At what value is an MCMC algorithm considered ``converged"? \\ 
-        \addlinespace
-        \bottomrule
-    \caption{Argument descriptions for each function in the \texttt{ValidationExplorer} software. My hope is that in the eventual final paper, this will be a scrollable html table}
-    \label{tab:my_label}
-\end{longtable}
 
 # References

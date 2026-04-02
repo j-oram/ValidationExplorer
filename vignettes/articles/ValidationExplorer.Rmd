@@ -1,9 +1,7 @@
 ---
 title: "Vignette: Simulation studies with `ValidationExplorer` "
-date: "2026-04-01"
-output: 
-  bookdown::html_document2:
-    toc: false
+date: "2026-04-02"
+output: html_document
 header-includes:
   - \usepackage{setspace}
   - \usepackage{float}
@@ -437,8 +435,11 @@ names(tune_list)
 ```
 
 ```
-## [1] "max_iter_time"    "min_warmup"       "min_iter"        
-## [4] "fit"              "MCMC_diagnostics"
+## [1] "max_iter_time"   
+## [2] "min_warmup"      
+## [3] "min_iter"        
+## [4] "fit"             
+## [5] "MCMC_diagnostics"
 ```
 
 The first element is the time required to fit a model with three chains of 10,000 iterations each:
@@ -449,7 +450,7 @@ tune_list$max_iter_time
 ```
 
 ```
-## Time difference of 5.227828 mins
+## Time difference of 5.053052 mins
 ```
 
 This may seem insignificant, but over the course of an entire simulations study with 5 scenarios $\times$ 50 datasets, that corresponds to around 8 hours of run time. Using fewer than 10,000 iterations will substantially reduce the time to run a simulation study.
@@ -462,7 +463,29 @@ To decide the number of iterations and warmup for use in a simulation study, we 
 ``` r
 # Load bayesplot package specifically designed for visualizing 
 library(bayesplot)
+```
 
+```
+## This is bayesplot version 1.13.0
+```
+
+```
+## - Online documentation and vignettes at mc-stan.org/bayesplot
+```
+
+```
+## - bayesplot theme set to bayesplot::theme_default()
+```
+
+```
+##    * Does _not_ affect other ggplot2 plots
+```
+
+```
+##    * See ?bayesplot_theme_set for details on theme setting
+```
+
+``` r
 # extract the fitted model from tune_mcmc output
 fit <- tune_list$fit
 
@@ -540,55 +563,104 @@ tune_list$MCMC_diagnostics
 ```
 
 ```
-##      parameter   ess_bulk   ess_tail      Rhat
-## 1    lambda[1]  4770.2714  5841.0118 1.0001149
-## 2    lambda[2]  4095.6052  5760.7237 1.0010437
-## 3    lambda[3]  3237.3587  4645.7969 1.0017989
-## 4    lambda[4]  2495.9626  4232.4814 1.0014662
-## 5    lambda[5]  2879.9029  4294.7970 1.0007962
-## 6    lambda[6]  4071.9963  5322.8757 1.0009297
-## 7       psi[1] 29516.2112 30009.1486 1.0000120
-## 8       psi[2] 28846.0126 27944.2537 1.0000845
-## 9       psi[3] 29347.3297 29879.3931 1.0000029
-## 10      psi[4] 24875.4209 28980.9506 0.9999775
-## 11      psi[5] 25355.6421 22027.8609 1.0001526
-## 12      psi[6]  9454.3588 12668.4048 1.0002731
-## 13 theta[1, 1]  1910.3918  3703.5017 1.0013733
-## 14 theta[2, 1]  3630.3862  4874.7438 1.0001933
-## 15 theta[3, 1]  1607.8801  2096.1496 1.0012721
-## 16 theta[4, 1]   720.7315   540.2615 1.0007250
-## 17 theta[5, 1]   975.6013   855.5459 1.0024203
-## 18 theta[6, 1]  2802.3919  3424.2046 1.0006176
-## 19 theta[1, 2]  2267.8410  2624.2372 1.0025893
-## 20 theta[2, 2]  3848.9139  6635.3879 1.0002797
-## 21 theta[3, 2]  2290.3027  2813.9145 1.0012058
-## 22 theta[4, 2]  2437.0490  3280.5287 1.0002766
-## 23 theta[5, 2]  4999.7284  5112.8860 1.0016986
-## 24 theta[6, 2]  3536.8908  3113.9568 1.0021997
-## 25 theta[1, 3]   768.5256   379.4775 1.0037476
-## 26 theta[2, 3]  1304.4808  2715.5118 1.0029771
-## 27 theta[3, 3]  3688.7953  6910.8929 1.0009131
-## 28 theta[4, 3]  1641.2496  2926.8810 1.0005574
-## 29 theta[5, 3]   996.6878   561.3444 1.0040089
-## 30 theta[6, 3]  1208.7588  2815.1836 1.0018348
-## 31 theta[1, 4]  3342.8744  3865.8007 1.0007729
-## 32 theta[2, 4]  3250.6184  3498.6268 1.0011958
-## 33 theta[3, 4]  3474.6267  6504.7810 1.0006828
-## 34 theta[4, 4]  2276.0366  6258.4225 1.0005815
-## 35 theta[5, 4]  2352.1623  4236.2622 1.0008669
-## 36 theta[6, 4]  5677.3311  6400.6796 1.0003071
-## 37 theta[1, 5]  4722.3872  6463.1769 1.0004922
-## 38 theta[2, 5]  2625.5808  2665.9297 1.0004279
-## 39 theta[3, 5]  3180.4544  3532.0676 1.0004103
-## 40 theta[4, 5]  6071.1349  8194.5253 1.0003161
-## 41 theta[5, 5]  2678.3689  5126.2308 1.0008335
-## 42 theta[6, 5]  4181.7895  4427.8094 1.0013216
-## 43 theta[1, 6]  3395.8748  4024.3526 1.0003238
-## 44 theta[2, 6]  3838.5611  4529.4445 1.0012178
-## 45 theta[3, 6]  3225.4515  4957.9674 1.0004814
-## 46 theta[4, 6]  4184.1543  6177.2000 1.0004393
-## 47 theta[5, 6]  3446.2033  3597.7538 1.0010062
-## 48 theta[6, 6]  3493.7468  6155.5868 1.0003373
+##      parameter   ess_bulk
+## 1    lambda[1]  4054.4236
+## 2    lambda[2]  3514.6735
+## 3    lambda[3]  3036.5144
+## 4    lambda[4]  2378.0551
+## 5    lambda[5]  2585.8105
+## 6    lambda[6]  3176.6072
+## 7       psi[1] 28909.0859
+## 8       psi[2] 19763.1950
+## 9       psi[3] 29835.3203
+## 10      psi[4] 21712.9515
+## 11      psi[5] 25742.8365
+## 12      psi[6] 10267.1298
+## 13 theta[1, 1]  1542.5891
+## 14 theta[2, 1]  3717.6854
+## 15 theta[3, 1]  1391.4888
+## 16 theta[4, 1]   709.3102
+## 17 theta[5, 1]  1188.8520
+## 18 theta[6, 1]  3278.1872
+## 19 theta[1, 2]  1712.3623
+## 20 theta[2, 2]  3545.0542
+## 21 theta[3, 2]  2291.4777
+## 22 theta[4, 2]  2651.2734
+## 23 theta[5, 2]  3115.4405
+## 24 theta[6, 2]  2779.3062
+## 25 theta[1, 3]   763.5706
+## 26 theta[2, 3]  1687.6679
+## 27 theta[3, 3]  3183.6525
+## 28 theta[4, 3]  1608.4691
+## 29 theta[5, 3]  1423.8439
+## 30 theta[6, 3]  1199.1200
+## 31 theta[1, 4]  2816.1549
+## 32 theta[2, 4]  2833.7896
+## 33 theta[3, 4]  3459.4692
+## 34 theta[4, 4]  2169.4721
+## 35 theta[5, 4]  2350.5577
+## 36 theta[6, 4]  4985.5655
+## 37 theta[1, 5]  5251.3568
+## 38 theta[2, 5]  2670.2778
+## 39 theta[3, 5]  3255.1403
+## 40 theta[4, 5]  5303.9713
+## 41 theta[5, 5]  2332.3713
+## 42 theta[6, 5]  4407.2662
+## 43 theta[1, 6]  3204.5839
+## 44 theta[2, 6]  3106.7680
+## 45 theta[3, 6]  3097.9977
+## 46 theta[4, 6]  4308.8156
+## 47 theta[5, 6]  3254.2060
+## 48 theta[6, 6]  3122.1714
+##      ess_tail      Rhat
+## 1   5770.1855 1.0011266
+## 2   3894.8708 1.0002901
+## 3   4456.8951 1.0004039
+## 4   4572.3424 1.0004010
+## 5   5619.9162 1.0007189
+## 6   3770.7663 1.0011671
+## 7  28348.5238 1.0000918
+## 8  15742.4672 1.0001141
+## 9  30060.1558 1.0000642
+## 10 25544.4414 0.9999419
+## 11 18974.0253 1.0001736
+## 12 12266.2976 1.0005568
+## 13  2362.2184 1.0036248
+## 14  5137.6162 1.0008359
+## 15  2236.1813 1.0024110
+## 16   507.7748 1.0052294
+## 17  1445.3176 1.0040228
+## 18  3649.3393 1.0006421
+## 19   774.5759 1.0029408
+## 20  5579.7800 1.0003422
+## 21  2245.4984 1.0014262
+## 22  3716.6232 1.0002864
+## 23  1967.8070 1.0013981
+## 24  3766.9523 1.0008955
+## 25   319.7502 1.0047156
+## 26  2648.0894 1.0015834
+## 27  6093.6712 1.0006143
+## 28  2643.0294 1.0009317
+## 29  1011.0957 1.0010778
+## 30  3058.8395 1.0034046
+## 31  2786.9224 1.0019193
+## 32  1512.8902 1.0008602
+## 33  6046.2850 1.0004885
+## 34  5214.6979 1.0014410
+## 35  4079.5499 1.0008002
+## 36  5831.5408 1.0009314
+## 37  5662.5413 1.0001760
+## 38  3606.1415 1.0011935
+## 39  3606.0417 1.0003796
+## 40  7242.1309 1.0001506
+## 41  6331.6009 1.0007064
+## 42  4941.2201 1.0003350
+## 43  3980.9929 1.0007695
+## 44  3922.2798 1.0006531
+## 45  4576.2506 1.0007187
+## 46  6274.8528 1.0005013
+## 47  3855.1332 1.0006519
+## 48  5039.8867 1.0008938
 ```
 
 For all parameters, the bulk and tail effective sample sizes are fairly large, meaning that even with fewer than 10,000 draws, we could expect $n_\text{eff} \geq 250,$ allowing us to characterize both the center and tails of the posteriors for all parameters with these draws. Furthermore, the $\hat{R}$ values for all parameters is near 1. In general, we want values of $\hat{R} \leq 1.1$ for chains to be considered converged. We can double check by recomputing these statistics on shortened chains: 
@@ -606,55 +678,104 @@ mcmc_sum(shortened, truth = rep(0, ncol(shortened[[1]]))) %>%
 ```
 
 ```
-##      parameter   ess_bulk   ess_tail     Rhat
-## 1    lambda[1]  836.42388 1105.03671 1.007497
-## 2    lambda[2]  496.85473  772.79890 1.013402
-## 3    lambda[3]  491.52533  632.44374 1.004354
-## 4    lambda[4]  325.29694  508.75871 1.018429
-## 5    lambda[5]  488.68381  775.74349 1.010526
-## 6    lambda[6]  545.40817  855.18402 1.007801
-## 7       psi[1] 4467.81253 4597.03436 1.000042
-## 8       psi[2] 4360.26526 3949.06579 1.001168
-## 9       psi[3] 4421.86908 4437.65946 1.000608
-## 10      psi[4] 4151.63957 4231.05291 1.001304
-## 11      psi[5] 4607.34377 4519.56348 1.000037
-## 12      psi[6] 1867.11509 3382.27001 1.002290
-## 13 theta[1, 1]  144.06970  487.48476 1.035298
-## 14 theta[2, 1]  382.67439  759.69856 1.013951
-## 15 theta[3, 1]  221.30901  309.55197 1.007054
-## 16 theta[4, 1]   89.39319   92.59612 1.018030
-## 17 theta[5, 1]  120.64393  266.94801 1.011665
-## 18 theta[6, 1]  598.99942  573.93588 1.004119
-## 19 theta[1, 2]  473.56735  424.66028 1.006533
-## 20 theta[2, 2]  402.61149  859.43420 1.012815
-## 21 theta[3, 2]  336.05016  454.57529 1.003238
-## 22 theta[4, 2]  371.85489  864.01071 1.006112
-## 23 theta[5, 2]  770.28076  922.44990 1.003528
-## 24 theta[6, 2]  630.62372  721.23832 1.002142
-## 25 theta[1, 3]   68.07905   78.71707 1.067807
-## 26 theta[2, 3]   72.86387  344.07324 1.044628
-## 27 theta[3, 3]  566.03922 1195.55756 1.006989
-## 28 theta[4, 3]  252.65595  462.26575 1.013172
-## 29 theta[5, 3]  162.58780   78.69637 1.012568
-## 30 theta[6, 3]  154.86655  579.08216 1.025275
-## 31 theta[1, 4]  398.64573  320.47405 1.010137
-## 32 theta[2, 4]  548.60240  592.87923 1.001745
-## 33 theta[3, 4]  592.49886 1044.16430 1.004575
-## 34 theta[4, 4]  266.84429 1246.98551 1.006931
-## 35 theta[5, 4]  376.21934  710.91201 1.009730
-## 36 theta[6, 4]  941.81858 1202.81393 1.001166
-## 37 theta[1, 5]  750.05969 1079.97657 1.006808
-## 38 theta[2, 5]  463.11413  404.02135 1.005741
-## 39 theta[3, 5]  433.67361  456.40596 1.007114
-## 40 theta[4, 5]  970.16096 1415.84386 1.006220
-## 41 theta[5, 5]  542.26221 1006.72452 1.006993
-## 42 theta[6, 5]  557.30802  656.87659 1.005322
-## 43 theta[1, 6]  629.19866  540.98250 1.000747
-## 44 theta[2, 6]  633.65308  843.54033 1.001114
-## 45 theta[3, 6]  494.86751  957.00746 1.007156
-## 46 theta[4, 6]  634.22392 1026.37099 1.005892
-## 47 theta[5, 6]  367.31838  280.09482 1.002261
-## 48 theta[6, 6]  501.33382 1408.71658 1.007044
+##      parameter  ess_bulk
+## 1    lambda[1]  658.2022
+## 2    lambda[2]  550.5922
+## 3    lambda[3]  576.4797
+## 4    lambda[4]  450.2969
+## 5    lambda[5]  455.9770
+## 6    lambda[6]  660.7857
+## 7       psi[1] 4649.8232
+## 8       psi[2] 4378.2597
+## 9       psi[3] 4500.3756
+## 10      psi[4] 3788.2563
+## 11      psi[5] 4383.7439
+## 12      psi[6] 1807.7268
+## 13 theta[1, 1]  360.2251
+## 14 theta[2, 1]  663.9001
+## 15 theta[3, 1]  376.1326
+## 16 theta[4, 1]  247.2145
+## 17 theta[5, 1]  239.8531
+## 18 theta[6, 1]  609.7759
+## 19 theta[1, 2]  505.3942
+## 20 theta[2, 2]  602.9410
+## 21 theta[3, 2]  403.8982
+## 22 theta[4, 2]  398.0627
+## 23 theta[5, 2]  642.8147
+## 24 theta[6, 2]  534.5960
+## 25 theta[1, 3]  211.9127
+## 26 theta[2, 3]  320.0592
+## 27 theta[3, 3]  588.3401
+## 28 theta[4, 3]  282.1578
+## 29 theta[5, 3]  276.4982
+## 30 theta[6, 3]  229.8418
+## 31 theta[1, 4]  615.6445
+## 32 theta[2, 4]  669.9655
+## 33 theta[3, 4]  543.2731
+## 34 theta[4, 4]  614.7354
+## 35 theta[5, 4]  458.8077
+## 36 theta[6, 4]  853.7886
+## 37 theta[1, 5]  863.0625
+## 38 theta[2, 5]  417.8105
+## 39 theta[3, 5]  564.0875
+## 40 theta[4, 5]  904.1084
+## 41 theta[5, 5]  559.4221
+## 42 theta[6, 5]  681.0388
+## 43 theta[1, 6]  598.9303
+## 44 theta[2, 6]  574.0554
+## 45 theta[3, 6]  560.4546
+## 46 theta[4, 6]  640.0082
+## 47 theta[5, 6]  583.5810
+## 48 theta[6, 6]  881.0856
+##     ess_tail     Rhat
+## 1   955.7715 1.003779
+## 2   726.2727 1.009008
+## 3   888.6949 1.006161
+## 4   744.7443 1.006063
+## 5   917.9029 1.007533
+## 6  1008.3208 1.005419
+## 7  4279.6838 1.000143
+## 8  4283.3146 1.000344
+## 9  4402.6275 1.000199
+## 10 3946.1370 1.001289
+## 11 4126.1893 1.000702
+## 12 2928.5848 1.000919
+## 13  996.1972 1.008518
+## 14  887.6737 1.006361
+## 15  599.4371 1.004398
+## 16  214.0841 1.015350
+## 17  226.6231 1.011429
+## 18  642.8152 1.000313
+## 19  701.7421 1.004619
+## 20  846.2510 1.007544
+## 21  651.9722 1.005891
+## 22  557.4768 1.004191
+## 23  606.3136 1.008394
+## 24  808.7405 1.004095
+## 25  115.4204 1.008644
+## 26  300.4538 1.004973
+## 27 1125.4872 1.007956
+## 28  574.9396 1.010124
+## 29  231.7699 1.004734
+## 30  468.2777 1.018594
+## 31  639.3157 1.008925
+## 32  735.9931 1.002426
+## 33 1109.1766 1.004559
+## 34 1127.4199 1.003270
+## 35  597.8274 1.007086
+## 36 1166.9474 1.001054
+## 37  897.7508 1.002499
+## 38  566.1289 1.001707
+## 39  599.5925 1.003324
+## 40 1109.2376 1.002278
+## 41 1006.9323 1.004774
+## 42  722.0841 1.003327
+## 43  975.7490 1.000567
+## 44  496.1368 1.005828
+## 45  820.7931 1.006667
+## 46  911.4349 1.003882
+## 47  642.1363 1.001772
+## 48 1582.9839 1.003882
 ```
 
 These results appear satisfactory, with effective sample sizes in both the tail and bulk of the posterior distributions of more than 250 and $\hat{R}$ near 1. Based on the results of MCMC tuning, it appears that using an MCMC with at least 1500 iterations with  at least 500 discarded as warmup should to produce good results for our simulation study.
@@ -1053,54 +1174,54 @@ tune_list$MCMC_diagnostics
 
 ```
 ##      parameter  ess_bulk  ess_tail      Rhat
-## 1    lambda[1]  4105.920  5093.092 1.0015222
-## 2    lambda[2]  3224.711  4325.058 1.0007080
-## 3    lambda[3]  3178.741  3220.303 1.0005545
-## 4    lambda[4]  3542.687  5034.150 1.0018114
-## 5    lambda[5]  4168.174  4546.059 1.0006859
-## 6    lambda[6]  3156.084  3332.959 1.0012733
-## 7       psi[1] 27616.712 26132.975 1.0000240
-## 8       psi[2] 29075.474 30183.854 0.9999127
-## 9       psi[3] 28440.490 28369.799 0.9999925
-## 10      psi[4] 27598.386 26181.775 1.0000273
-## 11      psi[5] 29123.056 28762.148 0.9999657
-## 12      psi[6] 13297.201  9509.746 1.0001470
-## 13 theta[1, 1]  5557.236  9270.271 1.0003012
-## 14 theta[2, 1]  4248.448  4436.638 1.0012428
-## 15 theta[3, 1]  4090.392  5602.954 1.0011529
-## 16 theta[4, 1]  5474.445  7730.170 1.0010162
-## 17 theta[5, 1]  4377.466  5291.743 1.0003609
-## 18 theta[6, 1]  3613.907  4024.102 1.0016962
-## 19 theta[1, 2]  3549.315  5188.728 1.0003106
-## 20 theta[2, 2]  3830.995  5843.958 1.0004549
-## 21 theta[3, 2]  3794.354  4496.351 1.0003278
-## 22 theta[4, 2]  3436.335  4171.454 1.0010594
-## 23 theta[5, 2]  5623.188  6938.548 1.0006777
-## 24 theta[6, 2]  3624.774  4552.426 1.0005470
-## 25 theta[1, 3]  4416.661  4700.294 1.0004330
-## 26 theta[2, 3]  3814.696  5962.573 1.0015357
-## 27 theta[3, 3]  4645.675  5093.490 1.0001520
-## 28 theta[4, 3]  4195.097  6088.669 1.0006468
-## 29 theta[5, 3]  3073.439  4015.557 1.0022658
-## 30 theta[6, 3]  3391.364  4725.887 1.0009124
-## 31 theta[1, 4]  3133.493  3159.142 1.0005091
-## 32 theta[2, 4]  3570.315  4735.549 1.0004217
-## 33 theta[3, 4]  3671.849  6065.983 1.0009979
-## 34 theta[4, 4]  5174.047  7833.831 1.0011594
-## 35 theta[5, 4]  3781.552  4848.449 1.0009527
-## 36 theta[6, 4]  4242.301  5005.729 1.0006346
-## 37 theta[1, 5]  8379.936 11578.322 1.0002781
-## 38 theta[2, 5]  6231.335  6575.569 1.0003165
-## 39 theta[3, 5]  3671.938  4227.201 1.0001515
-## 40 theta[4, 5]  6621.178  8221.770 1.0002517
-## 41 theta[5, 5]  5285.474  6986.035 1.0004432
-## 42 theta[6, 5]  6097.613  6765.193 1.0006171
-## 43 theta[1, 6]  3192.302  4337.003 1.0012994
-## 44 theta[2, 6]  3258.950  3476.040 1.0004224
-## 45 theta[3, 6]  4515.023  5769.640 1.0004789
-## 46 theta[4, 6]  5723.400  6602.714 1.0000477
-## 47 theta[5, 6]  4498.208  4227.500 1.0007520
-## 48 theta[6, 6]  4245.882  5078.214 1.0005554
+## 1    lambda[1]  4411.712  5075.826 1.0008570
+## 2    lambda[2]  3827.332  5475.444 1.0005849
+## 3    lambda[3]  3762.533  4686.665 1.0009581
+## 4    lambda[4]  3206.393  4600.939 1.0004574
+## 5    lambda[5]  4228.607  6127.541 1.0008397
+## 6    lambda[6]  3652.573  4722.771 1.0007881
+## 7       psi[1] 29446.415 28701.993 1.0000263
+## 8       psi[2] 27109.440 27985.432 0.9999968
+## 9       psi[3] 30129.683 29257.987 1.0000275
+## 10      psi[4] 27616.065 24113.192 1.0000258
+## 11      psi[5] 29984.150 29459.775 1.0000359
+## 12      psi[6] 23885.002 27051.214 1.0001203
+## 13 theta[1, 1]  4461.689  6616.594 1.0009545
+## 14 theta[2, 1]  4658.091  5518.394 1.0016494
+## 15 theta[3, 1]  4357.274  5752.392 1.0003899
+## 16 theta[4, 1]  5058.373  5865.667 1.0005367
+## 17 theta[5, 1]  4323.358  5311.374 1.0012423
+## 18 theta[6, 1]  2483.553  1975.702 1.0015118
+## 19 theta[1, 2]  3983.665  6168.221 1.0007351
+## 20 theta[2, 2]  4895.183  8476.599 1.0016017
+## 21 theta[3, 2]  4480.450  6144.553 1.0007043
+## 22 theta[4, 2]  3267.580  3558.951 1.0011257
+## 23 theta[5, 2]  4619.141  3727.881 1.0014557
+## 24 theta[6, 2]  3719.859  4832.967 1.0009185
+## 25 theta[1, 3]  4081.447  4779.149 1.0002906
+## 26 theta[2, 3]  3677.004  4099.239 1.0012552
+## 27 theta[3, 3]  5021.276  8711.786 1.0004397
+## 28 theta[4, 3]  3978.477  5923.716 1.0003775
+## 29 theta[5, 3]  2769.528  4169.229 1.0005744
+## 30 theta[6, 3]  4237.980  5279.353 1.0002744
+## 31 theta[1, 4]  2700.257  3845.687 1.0022986
+## 32 theta[2, 4]  4154.352  5486.461 1.0008314
+## 33 theta[3, 4]  4080.105  5522.917 1.0009553
+## 34 theta[4, 4]  6096.753 10157.659 1.0000987
+## 35 theta[5, 4]  4354.714  5283.307 1.0007603
+## 36 theta[6, 4]  4257.072  5994.818 1.0008287
+## 37 theta[1, 5]  8044.594 10421.494 1.0005310
+## 38 theta[2, 5]  6431.429  7604.410 1.0001540
+## 39 theta[3, 5]  3280.469  3576.631 1.0004762
+## 40 theta[4, 5]  7559.438  9818.991 1.0003410
+## 41 theta[5, 5]  5080.458  9601.559 1.0006176
+## 42 theta[6, 5]  5986.157  6828.019 1.0001843
+## 43 theta[1, 6]  3591.567  4074.711 1.0012672
+## 44 theta[2, 6]  3379.530  3578.255 1.0010264
+## 45 theta[3, 6]  5175.367  6948.406 1.0012568
+## 46 theta[4, 6]  5892.084  5450.029 1.0007011
+## 47 theta[5, 6]  5046.006  5375.288 1.0008528
+## 48 theta[6, 6]  4400.703  6541.605 1.0002848
 ```
 
 For all parameters, the bulk and tail effective sample sizes are fairly large: if we slightly decrease the number of post-warmup draws, we could expect to characterize both the center and tails of the posteriors well.  Additionally, $\hat{R} \approx 1.00$ for all parameters, indicating good mixing for chains. As before, we check this suspicion by computing MCMC diagnostic statistics for truncated chains:
@@ -1118,54 +1239,54 @@ mcmc_sum(shortened, truth = rep(0, ncol(shortened[[1]]))) %>%
 
 ```
 ##      parameter  ess_bulk  ess_tail
-## 1    lambda[1]  388.6188  445.5232
-## 2    lambda[2]  383.7521  574.9537
-## 3    lambda[3]  491.6128  602.1112
-## 4    lambda[4]  291.1537  344.0215
-## 5    lambda[5]  450.1781  583.2722
-## 6    lambda[6]  340.8592  409.4970
-## 7       psi[1] 2899.8440 2788.5571
-## 8       psi[2] 3020.8348 2907.1223
-## 9       psi[3] 2729.3955 2903.9133
-## 10      psi[4] 2876.9116 2956.9816
-## 11      psi[5] 2950.7831 2818.7796
-## 12      psi[6] 2273.3439 2623.9129
-## 13 theta[1, 1]  670.6015 1149.5642
-## 14 theta[2, 1]  495.0689  585.8607
-## 15 theta[3, 1]  420.4232  676.8732
-## 16 theta[4, 1]  463.6905  674.7722
-## 17 theta[5, 1]  434.0649  616.9490
-## 18 theta[6, 1]  495.2923  466.8757
-## 19 theta[1, 2]  423.7537  514.1305
-## 20 theta[2, 2]  542.3143 1039.6225
-## 21 theta[3, 2]  480.1724  612.9503
-## 22 theta[4, 2]  413.6157  601.6311
-## 23 theta[5, 2]  535.4271  826.9918
-## 24 theta[6, 2]  342.6117  426.5043
-## 25 theta[1, 3]  538.8812  377.4495
-## 26 theta[2, 3]  463.4394  544.1444
-## 27 theta[3, 3]  573.3120 1026.3066
-## 28 theta[4, 3]  493.3325  777.0279
-## 29 theta[5, 3]  479.4382  582.1946
-## 30 theta[6, 3]  357.0730  378.2117
-## 31 theta[1, 4]  428.4761  329.6088
-## 32 theta[2, 4]  486.0878  703.7452
-## 33 theta[3, 4]  419.4238  723.0669
-## 34 theta[4, 4]  396.0344 1133.0202
-## 35 theta[5, 4]  371.3781  571.6955
-## 36 theta[6, 4]  417.4386  737.2703
-## 37 theta[1, 5]  750.0537  952.2822
-## 38 theta[2, 5]  759.6186 1203.2831
-## 39 theta[3, 5]  384.4972  509.4124
-## 40 theta[4, 5]  745.6229 1048.6135
-## 41 theta[5, 5]  533.8762  857.1090
-## 42 theta[6, 5]  665.0436  901.6531
-## 43 theta[1, 6]  378.6460  520.5876
-## 44 theta[2, 6]  388.6926  525.9187
-## 45 theta[3, 6]  623.1743  952.7598
-## 46 theta[4, 6]  643.8642  588.0402
-## 47 theta[5, 6]  507.7357  514.2828
-## 48 theta[6, 6]  437.5146 1179.0849
+## 1    lambda[1]  514.7794  580.9664
+## 2    lambda[2]  409.9161  554.2566
+## 3    lambda[3]  448.1242  569.4980
+## 4    lambda[4]  341.3012  546.5218
+## 5    lambda[5]  434.7627  652.0142
+## 6    lambda[6]  397.1954  551.7277
+## 7       psi[1] 2981.3869 2875.5568
+## 8       psi[2] 2631.1969 2860.0358
+## 9       psi[3] 2782.5491 2948.1396
+## 10      psi[4] 3047.8464 2737.8796
+## 11      psi[5] 3100.0604 2826.3848
+## 12      psi[6] 2734.8438 2717.5210
+## 13 theta[1, 1]  642.2079 1050.9386
+## 14 theta[2, 1]  446.5953  443.5968
+## 15 theta[3, 1]  414.8716  521.0798
+## 16 theta[4, 1]  623.9602  951.0877
+## 17 theta[5, 1]  406.9615  384.8896
+## 18 theta[6, 1]  294.4622  370.8728
+## 19 theta[1, 2]  529.9494  619.5206
+## 20 theta[2, 2]  438.1253  939.7569
+## 21 theta[3, 2]  575.4868  738.4073
+## 22 theta[4, 2]  340.2637  561.6814
+## 23 theta[5, 2]  542.1589  747.0598
+## 24 theta[6, 2]  394.9043  691.6319
+## 25 theta[1, 3]  456.2168  599.3858
+## 26 theta[2, 3]  568.9441  909.9717
+## 27 theta[3, 3]  561.4967 1058.7823
+## 28 theta[4, 3]  479.4218  738.6999
+## 29 theta[5, 3]  285.0221  402.7418
+## 30 theta[6, 3]  464.1362  692.4044
+## 31 theta[1, 4]  297.2059  521.0631
+## 32 theta[2, 4]  354.3479  533.4024
+## 33 theta[3, 4]  446.5107  733.0057
+## 34 theta[4, 4]  546.9003 1110.6211
+## 35 theta[5, 4]  578.4054  903.0284
+## 36 theta[6, 4]  512.5837  670.2176
+## 37 theta[1, 5]  727.2456 1208.4140
+## 38 theta[2, 5]  702.2273  711.6099
+## 39 theta[3, 5]  416.8643  502.1447
+## 40 theta[4, 5]  856.2655 1082.7194
+## 41 theta[5, 5]  621.9363 1142.3946
+## 42 theta[6, 5]  696.3721  868.0834
+## 43 theta[1, 6]  427.8874  308.6183
+## 44 theta[2, 6]  342.5146  380.8514
+## 45 theta[3, 6]  534.1244  919.5947
+## 46 theta[4, 6]  723.1718  801.2722
+## 47 theta[5, 6]  608.8972  575.1002
+## 48 theta[6, 6]  478.9933  976.4922
 ```
 
 The results appear satisfactory, with effective sample sizes of more than 250 in both the tail and bulk of the posterior distributions for each parameter. Based on the results of MCMC exploration, it appears that using an MCMC with 2500 iterations with 500 discarded as warmup is likely to produce good results for our simulation study.
@@ -1267,96 +1388,5 @@ To keep the number of scenarios in this example small, we fixed the LOVE for sev
 
 We have demonstrated the use of the `ValidationExplorer` package when the objective is to compare the merits of four competing LOVEs for fixed-effort and stratified-by-species designs. Specifically, in the fixed-effort design we considered validating a random sample of 5%, 10%, 15% or 30% of the recordings obtained during each visit to each site. In the stratified-by-species designs, we considered a suite of validation designs, fixing effort for species 1,2, 4, and 6 at less than or equal to 25%, and varied the level of effort for species 3 and 5. The exact simulations considered are summarized in the `call_sum` object in Section \@ref(simBySpp). The measurable objectives outlined in Section \@ref(MO) were to estimate the relative activity parameters for each species, with near-nominal coverage and width less than 3 calls per night for 95% posterior intervals. Results, and their implications for these measurable objectives were summarized in Sections \@ref(takeaway-FE) and \@ref(takeaway-bySpp). Practitioners who would like to inform study design prior to data collection can repeat multiple simulation studies to see how inferences change with the number of sites and balanced visits, in addition to the validation design.
 
-
-\newpage
-
-# Table of Functions \label{BigTable}
-
-\singlespacing
-\begin{longtable}{p{0.27\linewidth}p{0.32\linewidth}p{0.33\linewidth}}
-    \toprule
-        Function & Argument & Description   \\
-        \midrule
-        
-        \texttt{simulate\textunderscore validatedData} &  \texttt{n\textunderscore datasets} & The number of datasets to be simulated \\ 
-        \addlinespace
-        & \texttt{design\textunderscore type} & The type of validation design. Must be one of \texttt{"BySpecies"} or \texttt{"FixedPercent"} \\ 
-        \addlinespace
-        & \texttt{scenarios} & The possible levels of effort. If \texttt{design\textunderscore type = "BySpecies"}, this is provided as a list with vector-valued entries containing the possible percentages to validate for each species. If \texttt{design\textunderscore type = "FixedPercent"}, this argument is a vector of possible percentages. \\ 
-        \addlinespace
-        & \texttt{n\textunderscore sites, n\textunderscore visits, n\textunderscore species} & The number of sites, visits and species in the assemblage \\ 
-        \addlinespace
-        & \texttt{psi, lambda, theta},  & Vectors of length \texttt{nspecies} containing the the parameter values for each species \\ 
-        \addlinespace
-        & \texttt{directory} & The working directory where datasets are to be saved if the following arguments are set to TRUE \\
-        \addlinespace
-        & \texttt{save\textunderscore datasets, save\textunderscore masked_datasets} & Logicals indicating whether to save each type of dataset \\
-        \addlinespace
-
-        \hline
-        \texttt{summarize\textunderscore n\textunderscore validated} & \texttt{data\textunderscore list} & A list of simulated (masked) datasets output from \texttt{simulate\textunderscore validatedData} \\ 
-        \addlinespace 
-        & \texttt{zeros\textunderscore list} & A list of true species/autoID combinations that were never observed at each site-visit. \\ 
-        \addlinespace
-        & \texttt{theta\textunderscore scenario} & An optional character string identifying the classifier scenario. If output from \texttt{summarize\textunderscore n\textunderscore validated} is to be used with any of the \texttt{plot\textunderscore X\textunderscore vs\textunderscore calls} functions described below, this string must match the \texttt{theta\textunderscore scenario\textunderscore id} argument supplied to \texttt{run\textunderscore sims}. \\
-        \addlinespace
-
-        \hline
-        \texttt{run\textunderscore sims} & \texttt{data\textunderscore list} & A nested list of masked datasets in the format output from \texttt{simualate\textunderscore validatedData}. The first layer of the list corresponds to scenarios, with each entry containing a list of \texttt{n\textunderscore datasets} validated according to the scenario. \\ 
-        \addlinespace
-        & \texttt{zeros\textunderscore list} & A list of length \texttt{n\textunderscore datasets} containing the site-visit-true-autoID combinations that were never observed. \\ 
-        \addlinespace 
-        & \texttt{DGVs} & A named list of the true data-generating values with entries \texttt{"psi", "lambda"} and \texttt{"theta"}. \\ 
-        \addlinespace
-        & \texttt{theta\textunderscore scenario\textunderscore id} & An ID to show which classifier the scenario is under. This is provided as a convenience for the user if multiple simulation studies are to be conducted.\\
-        \addlinespace
-        & \texttt{parallel} &  A logical indicating whether MCMC sampling should be fit in parallel (default setting is TRUE). If you have many datasets and many scenarios, we recommend this setting. \\
-        \addlinespace
-        & \texttt{n\textunderscore iter, nburn, thin} &  The number of iterations, warmup and thinning interval for each chain in the MCMC. Default values are 2000, 1000, and 1, respectively. \\ 
-        \addlinespace
-        & \texttt{save\textunderscore fits} &  A logical denoting whether or not to save the draws from individual fitted models. If TRUE, you must have the file structure described in Step 2. Fits will be saved as RDS objects that can be read in later. Default value is FALSE.\\
-        \addlinespace
-        & \texttt{save\textunderscore individual\textunderscore summaries\textunderscore list} & A logical indicating whether to save individual summary lists that are output after each validation scenario. Default value is FALSE.\\ 
-        \addlinespace
-        & \texttt{directory} &  Where to save fits and summaries. Required if \texttt{save\textunderscore fits\ =\ TRUE} or \texttt{save\textunderscore individual\textunderscore summaries\textunderscore list\ =\ TRUE}. Default value is the current working directory given by \texttt{here::here()} \\ 
-        \addlinespace 
-
-        \hline
-    
-        \texttt{visualize\textunderscore parameter\textunderscore group} & \texttt{sim\textunderscore summary} & A dataframe in the format of the summaries output by \texttt{run\textunderscore sims}. Column names must match those of the \texttt{run\textunderscore sims} output. \\ 
-        \addlinespace 
-        & \texttt{pars} & The name of the parameter ``group'' to be visualized (e.g, \texttt{"psi"}, \texttt{"lambda"} or \texttt{"theta"}). \\ 
-        \addlinespace 
-        & \texttt{theta\textunderscore scenario}&  The \(\Theta\) classifier ID. \\ 
-        \addlinespace 
-        & \texttt{scenarios} &  Which scenarios to visualize? \\ 
-        \addlinespace 
-        & \texttt{convergence\textunderscore threshold}& What value should $\hat{R}$ be below to be considered ``converged''? Default value is 1.1. This value matters because only model fits where all parameter values are below the \texttt{convergence\textunderscore threshold} are used for visualization. \\ 
-        \addlinespace 
-        
-        \hline
-        \texttt{visualize\textunderscore single\textunderscore parameter} & & Arguments are identical to  \texttt{visualize\textunderscore parameter\textunderscore group} \\ 
-        \addlinespace
-        
-        \hline 
-        
-        \texttt{plot_bias_vs_calls}, \texttt{plot_coverage_vs_calls}, \texttt{plot_width_vs_calls} & \texttt{sims_summary} & The summary output in the format from \texttt{run\textunderscore sims} \\ 
-        \addlinespace
-        & \texttt{calls\textunderscore summary} & A summary of the number of calls validated per scenario. Expected format is that of output from \texttt{summarize\textunderscore n\textunderscore validated}. \\ 
-        \addlinespace
-        & \texttt{pars} & The parameters to visualize. \\ 
-        \addlinespace
-        & \texttt{regex\textunderscore pars} & A group of parameters to visualize. One of \texttt{"psi"}, \texttt{"lambda"} or \texttt{"theta"}. \\ 
-        \addlinespace
-        & \texttt{theta\textunderscore scenario} & The classifier scenario ID. \\
-        \addlinespace
-        & \texttt{scenarios} & The scenarios to be compared. \\
-        \addlinespace
-        & \texttt{convergence\textunderscore threshold} & At what value is an MCMC algorithm considered ``converged"? \\ 
-        \addlinespace
-        \bottomrule
-    \caption{Argument descriptions for each function in the \texttt{ValidationExplorer} software. My hope is that in the eventual final paper, this will be a scrollable html table}
-    \label{tab:my_label}
-\end{longtable}
 
 # References
