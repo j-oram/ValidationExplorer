@@ -40,7 +40,10 @@ All points beyond this threshold will be shaded gray in the plot. Default
 value is NULL.}
 
 \item{convergence_threshold}{A threshold for the Gelman-Rubin statistic; values
-below this threshold indicate that a parameter has converged.}
+below this threshold indicate that a parameter has converged.
+
+#' @return A ggplot2 object showing the number of calls validated on the x-axis
+and the average 95\% credible interval on the y-axis.}
 }
 \description{
 plot_width_vs_calls: Compare validation designs based on 95\% posterior interval

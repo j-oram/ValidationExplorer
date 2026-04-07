@@ -42,6 +42,10 @@ value is NULL.}
 \item{convergence_threshold}{A threshold for the Gelman-Rubin statistic; values
 below this threshold (and near 1) indicate that a parameter has converged.}
 }
+\value{
+A ggplot2 object showing the number of calls validated on the x-axis
+and the average coverage of 95\% credible intervals on the y-axis.
+}
 \description{
 plot_coverage_vs_calls: Compare validation designs based on coverage of 95\%
 posterior intervals and expected level of effort
@@ -51,7 +55,7 @@ posterior intervals and expected level of effort
 sim_summary <- example_output
 calls_summary <- example_val_sum
 
-plot_bias_vs_calls(sim_summary, calls_summary, regex_pars = "lambda",
+plot_coverage_vs_calls(sim_summary, calls_summary, regex_pars = "lambda",
                    theta_scenario = "1", scenarios = 1:2,
                    convergence_threshold = 1.05)
 

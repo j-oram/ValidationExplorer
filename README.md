@@ -25,6 +25,12 @@ resulting from the authorized or unauthorized use of the software.
 
 ## Installation
 
+To install from CRAN, run
+
+``` r
+install.packages("ValidationExplorer")
+```
+
 You can install the development version of ValidationExplorer from
 [GitHub](https://github.com/) with:
 
@@ -87,6 +93,6 @@ study designs may be necessary.
 
 ### Example
 
-A complete worked example (which is too long for a README file) that
-compares possible validation designs using our package is available
-here: \[Link to the vignette article inserted here\].
+A complete worked example (too long for a README file) comparing
+possible validation designs with our package is available as an article
+[here](https://j-oram.github.io/ValidationExplorer/articles/ValidationExplorer.html).

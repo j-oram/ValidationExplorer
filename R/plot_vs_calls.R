@@ -18,6 +18,9 @@
 #'   value is NULL.
 #' @param convergence_threshold A threshold for the Gelman-Rubin statistic; values
 #'   below this threshold indicate that a parameter has converged.
+#'   
+#' @return A ggplot2 object showing the number of calls validated on the x-axis
+#'   and the average estimation error on the y-axis.
 #'
 #' @importFrom stats quantile
 #'
@@ -153,6 +156,9 @@ plot_bias_vs_calls <- function(sim_summary,
 #' @param convergence_threshold A threshold for the Gelman-Rubin statistic; values
 #'   below this threshold indicate that a parameter has converged.
 #'
+#'#' @return A ggplot2 object showing the number of calls validated on the x-axis
+#'   and the average 95% credible interval on the y-axis.
+#'
 #' @importFrom stats quantile
 #'
 #' @examples
@@ -286,6 +292,9 @@ plot_width_vs_calls <- function(sim_summary,
 #' @param convergence_threshold A threshold for the Gelman-Rubin statistic; values
 #'   below this threshold (and near 1) indicate that a parameter has converged.
 #'
+#' @return A ggplot2 object showing the number of calls validated on the x-axis
+#'   and the average coverage of 95% credible intervals on the y-axis.
+#'
 #' @importFrom stats quantile
 #'
 #' @examples
@@ -293,7 +302,7 @@ plot_width_vs_calls <- function(sim_summary,
 #' sim_summary <- example_output
 #' calls_summary <- example_val_sum
 #'
-#' plot_bias_vs_calls(sim_summary, calls_summary, regex_pars = "lambda",
+#' plot_coverage_vs_calls(sim_summary, calls_summary, regex_pars = "lambda",
 #'                    theta_scenario = "1", scenarios = 1:2,
 #'                    convergence_threshold = 1.05)
 #'
