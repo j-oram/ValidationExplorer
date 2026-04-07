@@ -63,19 +63,24 @@ plot_coverage_vs_calls(
   A threshold for the Gelman-Rubin statistic; values below this
   threshold (and near 1) indicate that a parameter has converged.
 
+## Value
+
+A ggplot2 object showing the number of calls validated on the x-axis and
+the average coverage of 95% credible intervals on the y-axis.
+
 ## Examples
 
 ``` r
 sim_summary <- example_output
 calls_summary <- example_val_sum
 
-plot_bias_vs_calls(sim_summary, calls_summary, regex_pars = "lambda",
+plot_coverage_vs_calls(sim_summary, calls_summary, regex_pars = "lambda",
                    theta_scenario = "1", scenarios = 1:2,
                    convergence_threshold = 1.05)
+#> Ignoring unknown labels:
+#> • Shape : "Parameter"
 #> Warning: Position guide is perpendicular to the intended axis.
 #> ℹ Did you mean to specify a different guide `position`?
-#> Warning: Removed 20 rows containing missing values or values outside the scale range
-#> (`geom_segment()`).
 #> Warning: Removed 20 rows containing missing values or values outside the scale range
 #> (`geom_line()`).
 #> Warning: Removed 20 rows containing missing values or values outside the scale range

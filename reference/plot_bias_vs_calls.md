@@ -63,6 +63,11 @@ plot_bias_vs_calls(
   A threshold for the Gelman-Rubin statistic; values below this
   threshold indicate that a parameter has converged.
 
+## Value
+
+A ggplot2 object showing the number of calls validated on the x-axis and
+the average estimation error on the y-axis.
+
 ## Examples
 
 ``` r

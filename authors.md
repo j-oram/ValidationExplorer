@@ -16,14 +16,13 @@
 ## Citation
 
 Oram J, Banner K, Stratton C, Irvine K (2026). *ValidationExplorer:
-Simulation-Based Tools for Bioacoustic Study Design with the
-Count-Detection Model*. R package version 0.0.0.9000,
-<https://j-oram.github.io/ValidationExplorer/>.
+Simulation-Based Tools for Bioacoustic Study Design*. R package version
+0.1.0, <https://j-oram.github.io/ValidationExplorer/>.
 
     @Manual{,
-      title = {ValidationExplorer: Simulation-Based Tools for Bioacoustic Study Design with the Count-Detection Model},
+      title = {ValidationExplorer: Simulation-Based Tools for Bioacoustic Study Design},
       author = {Jacob Oram and Katharine Banner and Christian Stratton and Kathryn Irvine},
       year = {2026},
-      note = {R package version 0.0.0.9000},
+      note = {R package version 0.1.0},
       url = {https://j-oram.github.io/ValidationExplorer/},
     }
