@@ -24,16 +24,16 @@ Authors@R: c(
       role = "aut",
       comment = c(ORCID = "0000-0002-6426-940X")
     ))
-Description: Modeling misclassification in multinomial data requires external 
-    information to identify all model parameters. In some contexts with
-    bioacoustic data, this additional information is supplied by expert 
-    manual review (i.e., validation) of a subset of call files, which 
-    can be prohibitively expensive. We provide user-friendly functions to 
-    reduce the programming burden of simulation studies that compare 
-    validation sampling designs. Simulations assume the count-detection model,
-    which is a realistic model for bioacoustic data, especially for bats. For 
-    more information, see Oram et al. (2025) 
-    <doi:https://doi.org/10.1214/25-AOAS2096>.
+Description: Many bioacoustic data workflows rely on manual review (i.e., 
+    validation) of a subset of call files to provide information to statistical
+    models that account for misclassification by automated algorithms.
+    Because manual review can be prohibitively expensive, simulation can be a 
+    valuable tool to aid the design of studies that use validation. This package 
+    provides user-friendly functions to reduce the programming burden of 
+    simulation studies that compare validation sampling designs. Simulations 
+    assume the count-detection model, which is a realistic model for bioacoustic 
+    data, especially for bats. For more information, see Oram et al. (2025) 
+    <doi:10.1214/25-AOAS2096>.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
