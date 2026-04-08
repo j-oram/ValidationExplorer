@@ -36,7 +36,7 @@ You can install the development version of ValidationExplorer from
 
 ``` r
 # install.packages("pak")
-pak::pak("j-oram/BySpeciesValidation")
+pak::pak("j-oram/ValidationExplorer")
 ```
 
 ## Purpose
