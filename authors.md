@@ -15,6 +15,9 @@
 
 ## Citation
 
+Source:
+[`DESCRIPTION`](https://github.com/j-oram/ValidationExplorer/blob/main/DESCRIPTION)
+
 Oram J, Banner K, Stratton C, Irvine K (2026). *ValidationExplorer:
 Simulation-Based Tools for Bioacoustic Study Design*. R package version
 0.1.0, <https://j-oram.github.io/ValidationExplorer/>.
