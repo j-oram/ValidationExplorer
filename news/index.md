@@ -2,4 +2,4 @@
 
 ## ValidationExplorer (development version)
 
-- Initial CRAN submission.
+- Development of simulation, model fitting, and visualization functions.
