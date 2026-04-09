@@ -5,7 +5,7 @@
 
 <!-- badges: start -->
 
-[![R-CMD-check](https://github.com/j-oram/BySpeciesValidation/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/j-oram/BySpeciesValidation/actions/workflows/R-CMD-check.yaml)
+[![R-CMD-check](https://github.com/j-oram/ValidationExplorer/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/j-oram/ValidationExplorer/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 This repository contains the `ValidationExplorer` package, as described
