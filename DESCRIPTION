@@ -1,6 +1,6 @@
 Package: ValidationExplorer
 Title: Simulation-Based Tools for Bioacoustic Study Design
-Version: 0.1.0
+Version: 0.1.1
 Authors@R: c(
     person(
       "Jacob", "Oram", 
