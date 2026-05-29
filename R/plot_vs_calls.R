@@ -156,7 +156,7 @@ plot_bias_vs_calls <- function(sim_summary,
 #' @param convergence_threshold A threshold for the Gelman-Rubin statistic; values
 #'   below this threshold indicate that a parameter has converged.
 #'
-#'#' @return A ggplot2 object showing the number of calls validated on the x-axis
+#' @return A ggplot2 object showing the number of calls validated on the x-axis
 #'   and the average 95% credible interval on the y-axis.
 #'
 #' @importFrom stats quantile
