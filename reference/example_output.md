@@ -50,6 +50,7 @@ A complete small-scale simulation study was run using the functions in
 ## Examples
 
 ``` r
+
 head(example_output)
 #>     parameter       Mean         SD     Naive SE Time-series SE      2.5%
 #> 1   lambda[1] 10.5402608 0.44750142 0.0081702207   0.0182798878 9.5979341

@@ -31,6 +31,7 @@ scenario, and number of validated calls.
 ## Examples
 
 ``` r
+
 psi <- c(0.3, 0.6)
 lambda <- c(11, 2)
 

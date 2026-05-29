@@ -71,6 +71,7 @@ the average coverage of 95% credible intervals on the y-axis.
 ## Examples
 
 ``` r
+
 sim_summary <- example_output
 calls_summary <- example_val_sum
 

@@ -20,6 +20,7 @@ resulting from the authorized or unauthorized use of the software.
 To install from CRAN, run
 
 ``` r
+
 install.packages("ValidationExplorer")
 ```
 
@@ -27,6 +28,7 @@ You can install the development version of ValidationExplorer from
 [GitHub](https://github.com/) with:
 
 ``` r
+
 # install.packages("pak")
 pak::pak("j-oram/ValidationExplorer")
 ```

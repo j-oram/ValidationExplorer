@@ -34,6 +34,7 @@ quantiles and posterior means.
 ## Examples
 
 ``` r
+
 # An example fit of one dataset
 draws <- ValExp_example_fit
 

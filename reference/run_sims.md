@@ -124,7 +124,7 @@ fake_data <- simulate_validatedData(
 
 # ::::::::::::: run simulations on sim'd data ::::::::::: #
 
-if (interactive()){
+# \donttest{
 
 out <- run_sims(
   data_list = fake_data$masked_dfs,
@@ -140,5 +140,321 @@ out <- run_sims(
   save_individual_summaries_list = FALSE,
   directory = td
 )
-}
+#> Beginning scenario 1.
+#> 2026-05-29 22:17:51.541101
+#>   |                                                          |                                                  |   0%
+#> Defining model
+#> Building model
+#> Setting data and initial values
+#> Running calculate on model
+#>   [Note] Any error reports that follow may simply reflect missing values in model variables.
+#> Checking model sizes and dimensions
+#> Compiling
+#>   [Note] This may take a minute.
+#>   [Note] Use 'showCompilerOutput = TRUE' to see C++ compilation details.
+#> ===== Monitors =====
+#> thin = 1: lambda, psi, theta
+#> ===== Samplers =====
+#> conjugate sampler (2)
+#>   - psi[]  (2 elements)
+#> binary sampler (60)
+#>   - z[]  (60 elements)
+#> RW_dirichlet sampler (2)
+#>   - theta[1, 1:2]
+#>   - theta[2, 1:2] 
+#> RW sampler (2)
+#>   - lambda[]  (2 elements)
+#> Compiling
+#>   [Note] This may take a minute.
+#>   [Note] Use 'showCompilerOutput = TRUE' to see C++ compilation details.
+#> running chain 1...
+#> |-------------|-------------|-------------|-------------|
+#> |-------------------------------------------------------|
+#> running chain 2...
+#> |-------------|-------------|-------------|-------------|
+#> |-------------------------------------------------------|
+#>   |                                                          |==========                                        |  20%
+#> Defining model
+#> Building model
+#> Setting data and initial values
+#> Running calculate on model
+#>   [Note] Any error reports that follow may simply reflect missing values in model variables.
+#> Checking model sizes and dimensions
+#> Compiling
+#>   [Note] This may take a minute.
+#>   [Note] Use 'showCompilerOutput = TRUE' to see C++ compilation details.
+#> ===== Monitors =====
+#> thin = 1: lambda, psi, theta
+#> ===== Samplers =====
+#> conjugate sampler (2)
+#>   - psi[]  (2 elements)
+#> binary sampler (60)
+#>   - z[]  (60 elements)
+#> RW_dirichlet sampler (2)
+#>   - theta[1, 1:2]
+#>   - theta[2, 1:2] 
+#> RW sampler (2)
+#>   - lambda[]  (2 elements)
+#> Compiling
+#>   [Note] This may take a minute.
+#>   [Note] Use 'showCompilerOutput = TRUE' to see C++ compilation details.
+#> running chain 1...
+#> |-------------|-------------|-------------|-------------|
+#> |-------------------------------------------------------|
+#> running chain 2...
+#> |-------------|-------------|-------------|-------------|
+#> |-------------------------------------------------------|
+#>   |                                                          |====================                              |  40%
+#> Defining model
+#> Building model
+#> Setting data and initial values
+#> Running calculate on model
+#>   [Note] Any error reports that follow may simply reflect missing values in model variables.
+#> Checking model sizes and dimensions
+#> Compiling
+#>   [Note] This may take a minute.
+#>   [Note] Use 'showCompilerOutput = TRUE' to see C++ compilation details.
+#> ===== Monitors =====
+#> thin = 1: lambda, psi, theta
+#> ===== Samplers =====
+#> conjugate sampler (2)
+#>   - psi[]  (2 elements)
+#> binary sampler (60)
+#>   - z[]  (60 elements)
+#> RW_dirichlet sampler (2)
+#>   - theta[1, 1:2]
+#>   - theta[2, 1:2] 
+#> RW sampler (2)
+#>   - lambda[]  (2 elements)
+#> Compiling
+#>   [Note] This may take a minute.
+#>   [Note] Use 'showCompilerOutput = TRUE' to see C++ compilation details.
+#> running chain 1...
+#> |-------------|-------------|-------------|-------------|
+#> |-------------------------------------------------------|
+#> running chain 2...
+#> |-------------|-------------|-------------|-------------|
+#> |-------------------------------------------------------|
+#>   |                                                          |==============================                    |  60%
+#> Defining model
+#> Building model
+#> Setting data and initial values
+#> Running calculate on model
+#>   [Note] Any error reports that follow may simply reflect missing values in model variables.
+#> Checking model sizes and dimensions
+#> Compiling
+#>   [Note] This may take a minute.
+#>   [Note] Use 'showCompilerOutput = TRUE' to see C++ compilation details.
+#> ===== Monitors =====
+#> thin = 1: lambda, psi, theta
+#> ===== Samplers =====
+#> conjugate sampler (2)
+#>   - psi[]  (2 elements)
+#> binary sampler (60)
+#>   - z[]  (60 elements)
+#> RW_dirichlet sampler (2)
+#>   - theta[1, 1:2]
+#>   - theta[2, 1:2] 
+#> RW sampler (2)
+#>   - lambda[]  (2 elements)
+#> Compiling
+#>   [Note] This may take a minute.
+#>   [Note] Use 'showCompilerOutput = TRUE' to see C++ compilation details.
+#> running chain 1...
+#> |-------------|-------------|-------------|-------------|
+#> |-------------------------------------------------------|
+#> running chain 2...
+#> |-------------|-------------|-------------|-------------|
+#> |-------------------------------------------------------|
+#>   |                                                          |========================================          |  80%
+#> Defining model
+#> Building model
+#> Setting data and initial values
+#> Running calculate on model
+#>   [Note] Any error reports that follow may simply reflect missing values in model variables.
+#> Checking model sizes and dimensions
+#> Compiling
+#>   [Note] This may take a minute.
+#>   [Note] Use 'showCompilerOutput = TRUE' to see C++ compilation details.
+#> ===== Monitors =====
+#> thin = 1: lambda, psi, theta
+#> ===== Samplers =====
+#> conjugate sampler (2)
+#>   - psi[]  (2 elements)
+#> binary sampler (60)
+#>   - z[]  (60 elements)
+#> RW_dirichlet sampler (2)
+#>   - theta[1, 1:2]
+#>   - theta[2, 1:2] 
+#> RW sampler (2)
+#>   - lambda[]  (2 elements)
+#> Compiling
+#>   [Note] This may take a minute.
+#>   [Note] Use 'showCompilerOutput = TRUE' to see C++ compilation details.
+#> running chain 1...
+#> |-------------|-------------|-------------|-------------|
+#> |-------------------------------------------------------|
+#> running chain 2...
+#> |-------------|-------------|-------------|-------------|
+#> |-------------------------------------------------------|
+#>   |                                                          |==================================================| 100%
+#> Beginning scenario 2.
+#> 2026-05-29 22:20:38.90805
+#>   |                                                          |                                                  |   0%
+#> Defining model
+#> Building model
+#> Setting data and initial values
+#> Running calculate on model
+#>   [Note] Any error reports that follow may simply reflect missing values in model variables.
+#> Checking model sizes and dimensions
+#> Compiling
+#>   [Note] This may take a minute.
+#>   [Note] Use 'showCompilerOutput = TRUE' to see C++ compilation details.
+#> ===== Monitors =====
+#> thin = 1: lambda, psi, theta
+#> ===== Samplers =====
+#> conjugate sampler (2)
+#>   - psi[]  (2 elements)
+#> binary sampler (60)
+#>   - z[]  (60 elements)
+#> RW_dirichlet sampler (2)
+#>   - theta[1, 1:2]
+#>   - theta[2, 1:2] 
+#> RW sampler (2)
+#>   - lambda[]  (2 elements)
+#> Compiling
+#>   [Note] This may take a minute.
+#>   [Note] Use 'showCompilerOutput = TRUE' to see C++ compilation details.
+#> running chain 1...
+#> |-------------|-------------|-------------|-------------|
+#> |-------------------------------------------------------|
+#> running chain 2...
+#> |-------------|-------------|-------------|-------------|
+#> |-------------------------------------------------------|
+#>   |                                                          |==========                                        |  20%
+#> Defining model
+#> Building model
+#> Setting data and initial values
+#> Running calculate on model
+#>   [Note] Any error reports that follow may simply reflect missing values in model variables.
+#> Checking model sizes and dimensions
+#> Compiling
+#>   [Note] This may take a minute.
+#>   [Note] Use 'showCompilerOutput = TRUE' to see C++ compilation details.
+#> ===== Monitors =====
+#> thin = 1: lambda, psi, theta
+#> ===== Samplers =====
+#> conjugate sampler (2)
+#>   - psi[]  (2 elements)
+#> binary sampler (60)
+#>   - z[]  (60 elements)
+#> RW_dirichlet sampler (2)
+#>   - theta[1, 1:2]
+#>   - theta[2, 1:2] 
+#> RW sampler (2)
+#>   - lambda[]  (2 elements)
+#> Compiling
+#>   [Note] This may take a minute.
+#>   [Note] Use 'showCompilerOutput = TRUE' to see C++ compilation details.
+#> running chain 1...
+#> |-------------|-------------|-------------|-------------|
+#> |-------------------------------------------------------|
+#> running chain 2...
+#> |-------------|-------------|-------------|-------------|
+#> |-------------------------------------------------------|
+#>   |                                                          |====================                              |  40%
+#> Defining model
+#> Building model
+#> Setting data and initial values
+#> Running calculate on model
+#>   [Note] Any error reports that follow may simply reflect missing values in model variables.
+#> Checking model sizes and dimensions
+#> Compiling
+#>   [Note] This may take a minute.
+#>   [Note] Use 'showCompilerOutput = TRUE' to see C++ compilation details.
+#> ===== Monitors =====
+#> thin = 1: lambda, psi, theta
+#> ===== Samplers =====
+#> conjugate sampler (2)
+#>   - psi[]  (2 elements)
+#> binary sampler (60)
+#>   - z[]  (60 elements)
+#> RW_dirichlet sampler (2)
+#>   - theta[1, 1:2]
+#>   - theta[2, 1:2] 
+#> RW sampler (2)
+#>   - lambda[]  (2 elements)
+#> Compiling
+#>   [Note] This may take a minute.
+#>   [Note] Use 'showCompilerOutput = TRUE' to see C++ compilation details.
+#> running chain 1...
+#> |-------------|-------------|-------------|-------------|
+#> |-------------------------------------------------------|
+#> running chain 2...
+#> |-------------|-------------|-------------|-------------|
+#> |-------------------------------------------------------|
+#>   |                                                          |==============================                    |  60%
+#> Defining model
+#> Building model
+#> Setting data and initial values
+#> Running calculate on model
+#>   [Note] Any error reports that follow may simply reflect missing values in model variables.
+#> Checking model sizes and dimensions
+#> Compiling
+#>   [Note] This may take a minute.
+#>   [Note] Use 'showCompilerOutput = TRUE' to see C++ compilation details.
+#> ===== Monitors =====
+#> thin = 1: lambda, psi, theta
+#> ===== Samplers =====
+#> conjugate sampler (2)
+#>   - psi[]  (2 elements)
+#> binary sampler (60)
+#>   - z[]  (60 elements)
+#> RW_dirichlet sampler (2)
+#>   - theta[1, 1:2]
+#>   - theta[2, 1:2] 
+#> RW sampler (2)
+#>   - lambda[]  (2 elements)
+#> Compiling
+#>   [Note] This may take a minute.
+#>   [Note] Use 'showCompilerOutput = TRUE' to see C++ compilation details.
+#> running chain 1...
+#> |-------------|-------------|-------------|-------------|
+#> |-------------------------------------------------------|
+#> running chain 2...
+#> |-------------|-------------|-------------|-------------|
+#> |-------------------------------------------------------|
+#>   |                                                          |========================================          |  80%
+#> Defining model
+#> Building model
+#> Setting data and initial values
+#> Running calculate on model
+#>   [Note] Any error reports that follow may simply reflect missing values in model variables.
+#> Checking model sizes and dimensions
+#> Compiling
+#>   [Note] This may take a minute.
+#>   [Note] Use 'showCompilerOutput = TRUE' to see C++ compilation details.
+#> ===== Monitors =====
+#> thin = 1: lambda, psi, theta
+#> ===== Samplers =====
+#> conjugate sampler (2)
+#>   - psi[]  (2 elements)
+#> binary sampler (60)
+#>   - z[]  (60 elements)
+#> RW_dirichlet sampler (2)
+#>   - theta[1, 1:2]
+#>   - theta[2, 1:2] 
+#> RW sampler (2)
+#>   - lambda[]  (2 elements)
+#> Compiling
+#>   [Note] This may take a minute.
+#>   [Note] Use 'showCompilerOutput = TRUE' to see C++ compilation details.
+#> running chain 1...
+#> |-------------|-------------|-------------|-------------|
+#> |-------------------------------------------------------|
+#> running chain 2...
+#> |-------------|-------------|-------------|-------------|
+#> |-------------------------------------------------------|
+#>   |                                                          |==================================================| 100%
+# }
 ```

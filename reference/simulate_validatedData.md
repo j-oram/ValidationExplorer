@@ -150,6 +150,7 @@ A list containing three elements:
 ## Examples
 
 ``` r
+
 psi <- c(0.3, 0.6)
 lambda <- c(11, 2)
 

@@ -12,8 +12,8 @@
 <link rel="icon" sizes="any" href="../favicon.ico">
 <link rel="manifest" href="../site.webmanifest">
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Vignette: Simulation studies with `ValidationExplorer` ">
 </head>
@@ -414,7 +414,7 @@ recordings are successfully validated because we have not specified the
 <code>confirmable_limits</code> argument, which is <code>NULL</code> by
 default. If we believed that the probability a randomly selected
 recording from detector-night
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">(</mo><mi>i</mi><mo>,</mo><mi>j</mi><mo stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(i,j)</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>i</mi><mo>,</mo><mi>j</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(i,j)</annotation></semantics></math>
 lies between 0.4 and 0.6 (as in the main manuscript), for example, we
 would simulate data as follows:</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
@@ -679,7 +679,7 @@ chains of 10,000 iterations each:</p>
 <pre><code><span><span class="co">## Time difference of 5.066324 mins</span></span></code></pre>
 <p>This may seem insignificant, but over the course of an entire
 simulations study with 5 scenarios
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>×</mi><annotation encoding="application/x-tex">\times</annotation></semantics></math>
 50 datasets, that corresponds to around 8 hours of run time. Using fewer
 than 10,000 iterations will substantially reduce the time to run a
 simulation study.</p>
@@ -1140,7 +1140,7 @@ scenario will not appear on the x-axis. In our example, we used
 other model parameters, we can create plots for
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ψ</mi><annotation encoding="application/x-tex">\psi</annotation></semantics></math>
 and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Θ</mi><annotation encoding="application/x-tex">\Theta</annotation></semantics></math>:</p>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Θ</mi><annotation encoding="application/x-tex">\Theta</annotation></semantics></math>:</p>
 <div class="sourceCode" id="cb55"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/visualize_parameter_group.html">visualize_parameter_group</a></span><span class="op">(</span></span>
 <span>  sim_summary <span class="op">=</span> <span class="va">sims_output</span>, </span>
@@ -1170,14 +1170,14 @@ in simulation.</div>
 <div class="float">
 <img src="figure/plotTheta-1.png" alt="Checking inference for the elements of the classification matrix \Theta. For most parameters (facets), validation scenario 2 appears to lead to minimal estimation error and near-nominal coverage."><div class="figcaption">Checking inference for the elements of the
 classification matrix
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Θ</mi><annotation encoding="application/x-tex">\Theta</annotation></semantics></math>.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Θ</mi><annotation encoding="application/x-tex">\Theta</annotation></semantics></math>.
 For most parameters (facets), validation scenario 2 appears to lead to
 minimal estimation error and near-nominal coverage.</div>
 </div>
 <p>The simulation results for
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>𝛙</mi><annotation encoding="application/x-tex">\boldsymbol{\psi}</annotation></semantics></math>
 and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Θ</mi><annotation encoding="application/x-tex">\Theta</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Θ</mi><annotation encoding="application/x-tex">\Theta</annotation></semantics></math>
 don’t immediately cause concern that inference for relative activity
 rates will be severely compromised for any of these validation designs.
 Some parameters have slightly low coverage, but we believe this is
@@ -1617,7 +1617,7 @@ each
 for severe estimation error and/or lack of coverage, which are not shown
 in the figure above. Similarly, we do not observe alarming simulation
 results for
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Θ</mi><annotation encoding="application/x-tex">\Theta</annotation></semantics></math>:</p>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Θ</mi><annotation encoding="application/x-tex">\Theta</annotation></semantics></math>:</p>
 <div class="sourceCode" id="cb82"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/visualize_parameter_group.html">visualize_parameter_group</a></span><span class="op">(</span></span>
 <span>  sim_summary <span class="op">=</span> <span class="va">sims_out</span>, </span>
@@ -1706,18 +1706,16 @@ validation design.</p>
 <div class="section level2">
 <h2 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
-<div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0">
+<div id="refs" class="references csl-bib-body hanging-indent">
 <div id="ref-bayesplot" class="csl-entry">
 Gabry, Jonah, Daniel Simpson, Aki Vehtari, Michael Betancourt, and
 Andrew Gelman. 2019. <span>“Visualization in Bayesian Workflow.”</span>
 <em>J. R. Stat. Soc. A</em> 182: 389–402. <a href="https://doi.org/10.1111/rssa.12378" class="external-link">https://doi.org/10.1111/rssa.12378</a>.
 </div>
 <div id="ref-loeb15" class="csl-entry">
-Loeb, Susan C., Thomas J. Rodhouse, Laura E. Ellison, Cori L. Lausen,
-Jonathan D. Reichard, Kathryn M. Irvine, Thomas E. Ingersoll, et al.
-2015. <span>“A Plan for the <span>N</span>orth <span>A</span>merican Bat
-Monitoring Program (<span>NAB</span>at).”</span> SRS-208. USDA Forest
-Service.
+Loeb, Susan C., Thomas J. Rodhouse, Laura E. Ellison, et al. 2015. <em>A
+Plan for the <span>N</span>orth <span>A</span>merican Bat Monitoring
+Program (<span>NAB</span>at)</em>. SRS-208. USDA Forest Service.
 </div>
 <div id="ref-stratton22" class="csl-entry">
 Stratton, Christian, Kathryn M. Irvine, Katharine M. Banner, Wilson J.
@@ -1725,7 +1723,7 @@ Wright, Cori Lausen, and Jason Rae. 2022. <span>“Coupling Validation
 Effort with in Situ Bioacoustic Data Improves Estimating Relative
 Activity and Occupancy for Multiple Species with Cross-Species
 Misclassifications.”</span> <em>Methods in Ecology and Evolution</em> 13
-(6): 1288–1303. https://doi.org/<a href="https://doi.org/10.1111/2041-210X.13831" class="external-link">https://doi.org/10.1111/2041-210X.13831</a>.
+(6): 1288–303. https://doi.org/<a href="https://doi.org/10.1111/2041-210X.13831" class="external-link">https://doi.org/10.1111/2041-210X.13831</a>.
 </div>
 </div>
 </div>

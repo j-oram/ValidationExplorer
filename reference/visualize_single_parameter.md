@@ -47,6 +47,7 @@ A ggplot object summarizing simulation results.
 ## Examples
 
 ``` r
+
 visualize_single_parameter(
   example_output,
   par = "lambda[1]",

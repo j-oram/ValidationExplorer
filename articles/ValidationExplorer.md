@@ -98,10 +98,10 @@ Under these assumptions, we outline the step-by-step use of
 
 ### What is a fixed effort design?
 
-In this section, we assume a fixed-effort design type, under which $x\%$
-of recordings obtained from each visit to a site are validated by
-experts. The level of validation effort is controlled by the value of
-$x.$ We begin the process of simulating under this design by defining
+In this section, we assume a fixed-effort design type, under which
+$`x\%`$ of recordings obtained from each visit to a site are validated
+by experts. The level of validation effort is controlled by the value of
+$`x.`$ We begin the process of simulating under this design by defining
 the real-world objectives and constraints we anticipate.
 
 ### Step 0: Define measurable objectives and constraints
@@ -112,7 +112,7 @@ data will be used for. Suppose that, for this example, the measurable
 objectives and cost constraints are as follows:
 
 - The measurable objective is to estimate relative activity parameters
-  (denoted as $\lambda_{k}$) for each species with 95% coverage and
+  (denoted as $`\lambda_k`$) for each species with 95% coverage and
   expected posterior interval width less than 3 calls per night.
 - The monitoring program can pay their expert bat biologists to validate
   at most 4000 recordings. We make the assumption that all recordings
@@ -125,18 +125,18 @@ existing prior knowledge (perhaps from another study) about the relative
 activity rates and occurrence probabilities for each species are
 summarized in the following table:
 
-| Species                          | $\psi$ | $\lambda$ |
-|:---------------------------------|-------:|----------:|
-| Eptesicus fuscus (EPFU)          |   0.63 |       5.9 |
-| Lasiurus cinereus (LACI)         |   0.61 |       4.2 |
-| Lasionycteris noctivagans (LANO) |   0.85 |      14.3 |
-| Myotis californicus (MYCA)       |   0.70 |       6.2 |
-| Myotis ciliolabrum (MYCI)        |   0.24 |      11.9 |
-| Myotis evotis (MYEV)             |   0.70 |       2.4 |
+| Species                          | $`\psi`$ | $`\lambda`$ |
+|:---------------------------------|---------:|------------:|
+| Eptesicus fuscus (EPFU)          |     0.63 |         5.9 |
+| Lasiurus cinereus (LACI)         |     0.61 |         4.2 |
+| Lasionycteris noctivagans (LANO) |     0.85 |        14.3 |
+| Myotis californicus (MYCA)       |     0.70 |         6.2 |
+| Myotis ciliolabrum (MYCI)        |     0.24 |        11.9 |
+| Myotis evotis (MYEV)             |     0.70 |         2.4 |
 
 Prior knowledge of relative activity rates and occurrence probabilities
 for the six bat species of interest. These values will be used to
-simulate data.
+simulate data. {.table}
 
 ### Step 1: Installing and loading required packages
 
@@ -148,12 +148,14 @@ version, run the following, with `your_package_name_here` replaced by
 the name of the package:
 
 ``` r
+
 install.packages("your_package_name_here")
 ```
 
 After installing the necessary packages, load these libraries by calling
 
 ``` r
+
 library(tidyverse)
 library(nimble)
 library(coda)
@@ -165,6 +167,7 @@ library(here)
 Finally, install and load `ValidationExplorer` by running
 
 ``` r
+
 # Install development version
 devtools::install_github(repo = "j-oram/ValidationExplorer")
 
@@ -182,6 +185,7 @@ as the parameter values shown above, which are existing estimates
 obtained by Stratton et al. (2022):
 
 ``` r
+
 # Set the number of sites, species and visits
 nsites <- 30
 nspecies <- 6
@@ -202,6 +206,7 @@ matrix of probabilities that meet these criteria is to leverage the
 `rdirch` function from the `nimble` package:
 
 ``` r
+
 # Simulate a hypothetical confusion matrix 
 set.seed(10092024) 
 Theta <- t(apply(diag(29, nspecies) + 1, 1, function(x) {nimble::rdirch(alpha = x)}))
@@ -213,6 +218,7 @@ classification. To lower the diagonal values, change the specification
 of `diag(29, nspecies)` to a smaller value. For example:
 
 ``` r
+
 another_Theta <- t(apply(diag(5, nspecies) + 1, 1, function(x) {
     nimble::rdirch(alpha = x)
   }))
@@ -225,6 +231,7 @@ classification probabilities (e.g., from an experiment), these can be
 supplied manually:
 
 ``` r
+
 manual_Theta <- matrix(c(0.9, 0.05, 0.01, 0.01, 0.02, 0.01, 
                        0.01, 0.7, 0.21, 0.05, 0.02, 0.01,  
                        0.01, 0.01, 0.95, 0.01, 0.01, 0.01,
@@ -248,12 +255,14 @@ If you define the classifier manually, make sure the rows sum to 1 by
 running
 
 ``` r
+
 all(rowSums(manual_Theta) == 1) # want this to return TRUE
 ```
 
     ## [1] TRUE
 
 ``` r
+
 # If the above returns FALSE, see which one is not 1: 
 rowSums(manual_Theta)
 ```
@@ -263,6 +272,7 @@ rowSums(manual_Theta)
 With the required inputs defined, we can simulate data:
 
 ``` r
+
 sim_data <- simulate_validatedData(
     n_datasets = 10, # For demonstration -- use 50+ for real simulation studies
     nsites = nsites, 
@@ -290,10 +300,11 @@ on. Additionally, we have assumed that all selected recordings are
 successfully validated because we have not specified the
 `confirmable_limits` argument, which is `NULL` by default. If we
 believed that the probability a randomly selected recording from
-detector-night $(i,j)$ lies between 0.4 and 0.6 (as in the main
+detector-night $`(i,j)`$ lies between 0.4 and 0.6 (as in the main
 manuscript), for example, we would simulate data as follows:
 
 ``` r
+
 sim_data_with_conf_limits <- simulate_validatedData(
     n_datasets = 10,
     nsites = nsites, 
@@ -317,6 +328,7 @@ in the first 10 site-visits from the first dataset simulated under
 validation scenario 1:
 
 ``` r
+
 # validation scenario 1, dataset 1
 sim_data_with_conf_limits$masked_dfs[[1]][[1]] %>% 
   group_by(site, visit) %>% 
@@ -354,6 +366,7 @@ To understand the output from `simulate_validatedData`, we can
 investigate `sim_data`. The output is a list, containing three objects:
 
 ``` r
+
 names(sim_data)
 ```
 
@@ -372,6 +385,7 @@ We examine each of these objects below:
   full dataset:
 
 ``` r
+
 full_dfs <- sim_data$full_datasets
 head(full_dfs[[3]]) # Dataset number 3 if all recordings were validated
 ```
@@ -418,6 +432,7 @@ to site 1.
   as `zeros_in_dataset_n.rds`, where `n` is the dataset number.
 
 ``` r
+
 zeros <- sim_data$zeros
 
 # The site-visit-true_spp-autoID combinations that were never observed in
@@ -446,6 +461,7 @@ head(zeros[[3]])
   number and `s` is the scenario number.
 
 ``` r
+
 masked_dfs <- sim_data$masked_dfs
 
 # View dataset 3 subjected to the validation design in scenario 4: 
@@ -486,6 +502,7 @@ scenario. This can be accomplished using the `summarize_n_validated`
 function:
 
 ``` r
+
 summarize_n_validated(
   data_list = sim_data$masked_dfs, 
   theta_scenario = "1", 
@@ -522,8 +539,8 @@ below:
 
 2.  Create trace plots for all model parameters.
 
-3.  Examine effective sample sizes $n_{\text{eff}}$ and Gelman-Rubin
-    statistics $\widehat{R}$ for all parameters.
+3.  Examine effective sample sizes $`n_\text{eff}`$ and Gelman-Rubin
+    statistics $`\hat{R}`$ for all parameters.
 
 4.  Choose values for the number of iterations and warmup that are
     slightly larger than what is needed based on steps 1-3. This may
@@ -535,9 +552,10 @@ below:
 We use a dataset from the scenario with the lowest number of validated
 recordings, as we expect the greatest number of iterations for this
 scenario. In our example, this is scenario 1 , in which an average of
-$\approx 218$ recordings are validated per dataset.
+$`\approx 218`$ recordings are validated per dataset.
 
 ``` r
+
 scenario_number <- 1
 dataset_number <- sample(1:length(masked_dfs[[scenario_number]]), 1)
 
@@ -557,6 +575,7 @@ and/or warmup are greater than 10,000 draws, an error is issued. We can
 see the names for each object by running the following block:
 
 ``` r
+
 names(tune_list)
 ```
 
@@ -567,13 +586,14 @@ The first element is the time required to fit a model with three chains
 of 10,000 iterations each:
 
 ``` r
+
 tune_list$max_iter_time
 ```
 
     ## Time difference of 5.066324 mins
 
 This may seem insignificant, but over the course of an entire
-simulations study with 5 scenarios $\times$ 50 datasets, that
+simulations study with 5 scenarios $`\times`$ 50 datasets, that
 corresponds to around 8 hours of run time. Using fewer than 10,000
 iterations will substantially reduce the time to run a simulation study.
 
@@ -590,6 +610,7 @@ assessing the first of these. To create a trace plot using the bayesplot
 package (Gabry et al. 2019) for a single parameter, run the following:
 
 ``` r
+
 # Load bayesplot package specifically designed for visualizing 
 library(bayesplot)
 
@@ -617,6 +638,7 @@ parameters. One way to accelerate visual inspection this is through the
 species as in the following three code blocks.
 
 ``` r
+
 mcmc_trace(fit, regex_pars = "lambda")
 ```
 
@@ -625,6 +647,7 @@ mcmc_trace(fit, regex_pars = "lambda")
 plot of chunk FE_allLambda_trace
 
 ``` r
+
 mcmc_trace(fit, regex_pars = "psi")
 ```
 
@@ -633,6 +656,7 @@ mcmc_trace(fit, regex_pars = "psi")
 plot of chunk FE_allPsi_trace
 
 ``` r
+
 # create a traceplot for all elements of the confusion matrix
 mcmc_trace(fit, regex_pars = "theta")
 ```
@@ -649,12 +673,14 @@ for reducing the number of iterations is from the output given by
 of iterations is 1500 with a warmup of 500:
 
 ``` r
+
 tune_list$min_iter
 ```
 
     ## [1] 1500
 
 ``` r
+
 tune_list$min_warmup
 ```
 
@@ -664,6 +690,7 @@ It is possible to use these values to zoom in on the trace plots by
 using the `window` argument:
 
 ``` r
+
 mcmc_trace(fit, regex_pars = "lambda", window = c(0, tune_list$min_iter))
 ```
 
@@ -684,7 +711,7 @@ tuning to avoid simulations failing due to convergence.
 #### Examine effective sample size and Gelman-Rubin statistics
 
 As a final step, we examine the effective sample sizes (out of 10,000
-draws) and $\widehat{R}$ values. The effective sample size statistics
+draws) and $`\hat{R}`$ values. The effective sample size statistics
 `ess_bulk` and `ess_tail` are MCMC diagnostic statistics that summarizes
 the number of effectively independent draws from a parameter’s posterior
 distribution the Markov chain contains. If a parameter has a large value
@@ -692,9 +719,10 @@ in the `ess_bulk` column, then it is likely that inference based on
 sampled draws will characterize the center of the posterior distribution
 well. The `ess_tail` column, on the other hand, describes how much
 information is available about posterior tail probabilities. Once again,
-we want a large value for `ess_tail`, preferably `ess_tail`$\geq 250$.
+we want a large value for `ess_tail`, preferably `ess_tail`$`\geq 250`$.
 
 ``` r
+
 tune_list$MCMC_diagnostics
 ```
 
@@ -750,14 +778,15 @@ tune_list$MCMC_diagnostics
 
 For all parameters, the bulk and tail effective sample sizes are fairly
 large, meaning that even with fewer than 10,000 draws, we could expect
-$n_{\text{eff}} \geq 250,$ allowing us to characterize both the center
+$`n_\text{eff} \geq 250,`$ allowing us to characterize both the center
 and tails of the posteriors for all parameters with these draws.
-Furthermore, the $\widehat{R}$ values for all parameters is near 1. In
-general, we want values of $\widehat{R} \leq 1.1$ for chains to be
+Furthermore, the $`\hat{R}`$ values for all parameters is near 1. In
+general, we want values of $`\hat{R} \leq 1.1`$ for chains to be
 considered converged. We can double check by recomputing these
 statistics on shortened chains:
 
 ``` r
+
 # for each chain, extract iterations 1001:2500 for all parameters
 shortened <- lapply(fit, function(x) x[1001:2500,])
 
@@ -820,10 +849,9 @@ mcmc_sum(shortened, truth = rep(0, ncol(shortened[[1]]))) %>%
 
 These results appear satisfactory, with effective sample sizes in both
 the tail and bulk of the posterior distributions of more than 250 and
-$\widehat{R}$ near 1. Based on the results of MCMC tuning, it appears
-that using an MCMC with at least 1500 iterations with at least 500
-discarded as warmup should to produce good results for our simulation
-study.
+$`\hat{R}`$ near 1. Based on the results of MCMC tuning, it appears that
+using an MCMC with at least 1500 iterations with at least 500 discarded
+as warmup should to produce good results for our simulation study.
 
 #### Set iterations for simulation
 
@@ -832,6 +860,7 @@ iterations for simulation to be slightly higher to guard against
 convergence issues that preclude using a fitted model for inference:
 
 ``` r
+
 # to be used in the following section 
 iters_for_sims <- tune_list$min_iter + 1000
 warmup_for_sims <- tune_list$min_warmup + 500
@@ -874,6 +903,7 @@ With the simulated dataset and some informed choices about tuning of the
 MCMC, we use `run_sims` to run the simulations:
 
 ``` r
+
 sims_output <- run_sims(
          data_list = sim_data$masked_dfs, 
          zeros_list = sim_data$zeros, 
@@ -898,6 +928,7 @@ for 50% and 95% posterior intervals, median, and MCMC diagnostics
 bulk of the distribution).
 
 ``` r
+
 str(sims_output)
 ```
 
@@ -958,6 +989,7 @@ parameters in the first three scenarios in our simulation study above by
 running the code below.
 
 ``` r
+
 visualize_parameter_group(
   sim_summary = sims_output, 
   pars = "lambda", 
@@ -1000,6 +1032,7 @@ A first step would be to use `visualize_single_parameter`, which takes
 the same arguments as the previous visualization function:
 
 ``` r
+
 visualize_single_parameter(
   sims_output, par = "lambda[5]", 
   theta_scenario = 1, 
@@ -1037,6 +1070,7 @@ interval widths (and the IQR for interval widths) across scenarios based
 on the number of recordings validated. For example:
 
 ``` r
+
 # obtain summary of validation effort as an object that can be used with 
 # the summary plot functions plot_x_vs_calls
 s <-  summarize_n_validated(
@@ -1047,6 +1081,7 @@ s <-  summarize_n_validated(
 ```
 
 ``` r
+
 plot_width_vs_calls(
   sim_summary = sims_output, 
   calls_summary = s, 
@@ -1078,14 +1113,15 @@ We provide analogous functions `plot_coverage_vs_calls` and
 `plot_bias_vs_calls` taking identical arguments that show how coverage
 and estimation error change with the number of calls validated. Note
 that in all of our visualization functions, if no fitted models have
-$\widehat{R} \leq c$ for all parameters, where $c$ is the specified
+$`\hat{R} \leq c`$ for all parameters, where $`c`$ is the specified
 convergence threshold under a given scenario, then the scenario will not
-appear on the x-axis. In our example, we used $c = 1.1$.
+appear on the x-axis. In our example, we used $`c = 1.1`$.
 
 To ensure that there aren’t substantial problems with estimation of
-other model parameters, we can create plots for $\psi$ and $\Theta$:
+other model parameters, we can create plots for $`\psi`$ and $`\Theta`$:
 
 ``` r
+
 visualize_parameter_group(
   sim_summary = sims_output, 
   pars = "psi", 
@@ -1104,12 +1140,13 @@ parameters is slightly low. For the purpose of exposition, we only fit
 
 We encourage users to check inference for other model parameters, even
 if they are not explicitly of interest based on measurable objectives.
-Here, we examine $\mathbf{ψ}$. Note that coverage for several parameters
-is slightly low. For the purpose of exposition, we only fit 10 datasets
-and we expect that coverage would be near nominal levels if 50 or more
-datasets were used in simulation.
+Here, we examine $`\boldsymbol{\psi}`$. Note that coverage for several
+parameters is slightly low. For the purpose of exposition, we only fit
+10 datasets and we expect that coverage would be near nominal levels if
+50 or more datasets were used in simulation.
 
 ``` r
+
 visualize_parameter_group(
   sim_summary = sims_output, 
   pars = "theta", 
@@ -1125,12 +1162,12 @@ lead to minimal estimation error and near-nominal
 coverage.](figure/plotTheta-1.png)
 
 Checking inference for the elements of the classification matrix
-$\Theta$. For most parameters (facets), validation scenario 2 appears to
-lead to minimal estimation error and near-nominal coverage.
+$`\Theta`$. For most parameters (facets), validation scenario 2 appears
+to lead to minimal estimation error and near-nominal coverage.
 
-The simulation results for $\mathbf{ψ}$ and $\Theta$ don’t immediately
-cause concern that inference for relative activity rates will be
-severely compromised for any of these validation designs. Some
+The simulation results for $`\boldsymbol{\psi}`$ and $`\Theta`$ don’t
+immediately cause concern that inference for relative activity rates
+will be severely compromised for any of these validation designs. Some
 parameters have slightly low coverage, but we believe this is mostly due
 to the small number of datasets used in this example; users should
 increase the number of datasets to at least 50, which we expect would
@@ -1145,10 +1182,10 @@ might choose validation scenario 2 as one possible fixed effort
 validation design. This fixed effort design assumes that 10% of
 recordings from each site-night are randomly selected for validation,
 leading to around 375 recordings being validated per dataset. In our
-simulations, posterior means for each $\lambda_{k}$ appear to be nearly
+simulations, posterior means for each $`\lambda_k`$ appear to be nearly
 unbiased, with near-nominal coverage and average posterior interval
 widths less than or equal to 3 for this scenario. However, it is
-possible that for a given dataset, the interval width for $\lambda_{5}$
+possible that for a given dataset, the interval width for $`\lambda_5`$
 will be larger than 3, regardless of the number of validated calls; in
 the plot of calls versus interval widths, error bars overlap or exceed
 the dotted line in all scenarios.
@@ -1187,6 +1224,7 @@ example, we simulate data using `simulate_validatedData` with
 validating a selected recording using the `confirmable_limits` argument.
 
 ``` r
+
 sim_data <- simulate_validatedData(
   n_datasets = 10, 
   design_type = "BySpecies",
@@ -1226,12 +1264,14 @@ are summarized in the additional output `sim_data$scenarios_df` that is
 available when `design_type = "BySpecies"` is specified:
 
 ``` r
+
 names(sim_data)
 ```
 
     ## [1] "full_datasets" "zeros"         "masked_dfs"    "scenarios_df"
 
 ``` r
+
 sim_data$scenarios_df
 ```
 
@@ -1248,6 +1288,7 @@ this can be done through the `scen_expand` and `scen_df` arguments as
 follows:
 
 ``` r
+
 # Define the scenarios dataframe. Each row is a scenario, each column is a spp
 my_scenarios <- data.frame(
   spp1 = c(0.05, 0.05, 0.1), 
@@ -1287,6 +1328,7 @@ combine the `scenarios_df` output with the output of
 many recordings are validated under each.
 
 ``` r
+
 summary1 <- sim_data$scenarios_df
 summary2 <- summarize_n_validated(
   sim_data$masked_dfs, 
@@ -1328,6 +1370,7 @@ tune the MCMC in the fixed effort example. We begin by fitting a model
 to one dataset using the `tune_mcmc` function.
 
 ``` r
+
 i <- sample(1:length(sim_data$full_datasets), 1)
 
 tune_list <- tune_mcmc(
@@ -1345,18 +1388,21 @@ Based on these plots, chains appear to be mixing well as no one chain
 stands out visually.
 
 ``` r
+
 tune_list$min_warmup
 ```
 
     ## [1] 500
 
 ``` r
+
 tune_list$min_iter
 ```
 
     ## [1] 1500
 
 ``` r
+
 # increase iters to visualize beyond the warmup and 
 # iterations output from tune_mcmc 
 fit <- tune_list$fit
@@ -1370,6 +1416,7 @@ BSV_lambdaWindow_trace](figure/BSV_lambdaWindow_trace-1.png)
 plot of chunk BSV_lambdaWindow_trace
 
 ``` r
+
 mcmc_trace(fit, regex_pars = "psi", window = c(0, tune_list$min_iter + 500))
 ```
 
@@ -1378,6 +1425,7 @@ mcmc_trace(fit, regex_pars = "psi", window = c(0, tune_list$min_iter + 500))
 plot of chunk BSV_psiWindow_trace
 
 ``` r
+
 mcmc_trace(fit, regex_pars = "theta", window = c(0, tune_list$min_iter + 500))
 ```
 
@@ -1391,9 +1439,10 @@ convergence well before the warmup value of 500 draws output from
 `tune_mcmc`.
 
 Next, we examine the effective sample sizes in the tails and bulk of the
-posteriors and the $\widehat{R}$ values:
+posteriors and the $`\hat{R}`$ values:
 
 ``` r
+
 tune_list$MCMC_diagnostics
 ```
 
@@ -1450,11 +1499,12 @@ tune_list$MCMC_diagnostics
 For all parameters, the bulk and tail effective sample sizes are fairly
 large: if we slightly decrease the number of post-warmup draws, we could
 expect to characterize both the center and tails of the posteriors well.
-Additionally, $\widehat{R} \approx 1.00$ for all parameters, indicating
+Additionally, $`\hat{R} \approx 1.00`$ for all parameters, indicating
 good mixing for chains. As before, we check this suspicion by computing
 MCMC diagnostic statistics for truncated chains:
 
 ``` r
+
 # for each chain, extract iterations 501:2000 for all parameters
 shortened <- lapply(fit, function(x) x[(tune_list$min_warmup):tune_list$min_iter + 1000,])
 
@@ -1523,6 +1573,7 @@ likely to produce good results for our simulation study.
 ### Fit models
 
 ``` r
+
 sims_out <- run_sims(
   data_list = sim_data$masked_dfs,
   zeros_list = sim_data$zeros,
@@ -1554,6 +1605,7 @@ We begin with detailed plots of relative activity rates, occurrence
 probabilities, and classification probabilities.
 
 ``` r
+
 visualize_parameter_group(
   sim_summary = sims_out, 
   pars = "lambda",
@@ -1579,13 +1631,15 @@ fitted models that converged. Larger colored error bars are average 95%
 posterior intervals with the color indicating the coverage. Black dots
 are the true parameter value and red dots are average posterior means.
 
-Based on the simulation results for $\mathbf{λ}$, any of validation
-scenarios 1-6 is expected to produce a posterior mean estimate for each
-relative activity parameter that is near the true value. All models
-converged for all scenarios. Coverage varies by scenario for each
-parameter, but recall that we only fit models to 10 datasets.
+Based on the simulation results for $`\boldsymbol{\lambda}`$, any of
+validation scenarios 1-6 is expected to produce a posterior mean
+estimate for each relative activity parameter that is near the true
+value. All models converged for all scenarios. Coverage varies by
+scenario for each parameter, but recall that we only fit models to 10
+datasets.
 
 ``` r
+
 visualize_parameter_group(
   sim_summary = sims_out, 
   pars = "psi",
@@ -1616,11 +1670,12 @@ estimation error for all occurrence probabilities, with the size and
 direction varying depending on the species. For species with larger
 estimation error, coverage is also slightly low. However, since we are
 most concerned with relative activity, the goal is to check results for
-each $\psi_{k}$ for severe estimation error and/or lack of coverage,
+each $`\psi_k`$ for severe estimation error and/or lack of coverage,
 which are not shown in the figure above. Similarly, we do not observe
-alarming simulation results for $\Theta$:
+alarming simulation results for $`\Theta`$:
 
 ``` r
+
 visualize_parameter_group(
   sim_summary = sims_out, 
   pars = "theta",
@@ -1653,6 +1708,7 @@ than 3 calls per night for each species’ relative activity rate. The
 directly:
 
 ``` r
+
 plot_width_vs_calls(
   sim_summary = sims_out, 
   calls_summary = call_sum, 
@@ -1689,7 +1745,7 @@ desired accuracy and precision for estimates of occurrence probability,
 it may be desirable to consider alternative validation scenarios. For
 example, we consistently underestimated the occurrence probability for
 species 6 (see plot of average posterior means and average 95% credible
-intervals for each $\psi_{k}$), and additional simulations under
+intervals for each $`\psi_k`$), and additional simulations under
 validation designs that varied the level of effort for species 6 would
 be warranted if measurable objectives related to occurrence probability
 for this species.
@@ -1720,14 +1776,13 @@ Gabry, Jonah, Daniel Simpson, Aki Vehtari, Michael Betancourt, and
 Andrew Gelman. 2019. “Visualization in Bayesian Workflow.” *J. R. Stat.
 Soc. A* 182: 389–402. <https://doi.org/10.1111/rssa.12378>.
 
-Loeb, Susan C., Thomas J. Rodhouse, Laura E. Ellison, Cori L. Lausen,
-Jonathan D. Reichard, Kathryn M. Irvine, Thomas E. Ingersoll, et al.
-2015. “A Plan for the North American Bat Monitoring Program (NABat).”
-SRS-208. USDA Forest Service.
+Loeb, Susan C., Thomas J. Rodhouse, Laura E. Ellison, et al. 2015. *A
+Plan for the North American Bat Monitoring Program (NABat)*. SRS-208.
+USDA Forest Service.
 
 Stratton, Christian, Kathryn M. Irvine, Katharine M. Banner, Wilson J.
 Wright, Cori Lausen, and Jason Rae. 2022. “Coupling Validation Effort
 with in Situ Bioacoustic Data Improves Estimating Relative Activity and
 Occupancy for Multiple Species with Cross-Species Misclassifications.”
-*Methods in Ecology and Evolution* 13 (6): 1288–1303.
+*Methods in Ecology and Evolution* 13 (6): 1288–303.
 https://doi.org/<https://doi.org/10.1111/2041-210X.13831>.
